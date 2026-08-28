@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>MODEL // gateway</title>
+    <!-- This screen's OWN theme - not /shared. Complete independent component. -->
+    <link rel="stylesheet" href="/page/theme_for_model.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="head">
+        <h1 class="title">
+          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M9 5a3 3 0 0 0-3 3 3 3 0 0 0-1 5.8V16a3 3 0 0 0 5 2 3 3 0 0 0 5-2v-2.2A3 3 0 0 0 15 8a3 3 0 0 0-3-3 3 3 0 0 0-3 0z"
+              fill="none"
+              stroke="#ff7a00"
+              stroke-width="1.5"
+              stroke-linejoin="round"
+            />
+          </svg>
+          MODEL <span class="accent">gateway</span>
+        </h1>
+        <p class="sub">LiteLLM &middot; local &middot; auto-routing + fallback</p>
+      </header>
+
+      <section class="panel">
+        <p class="panel-label">Gateway status</p>
+        <p>
+          <span class="state" id="state" data-s="loading"><span class="dot"></span><span id="state-text">checking&hellip;</span></span>
+        </p>
+        <p id="why" style="margin-top: 10px"></p>
+        <ul class="rows" id="models"></ul>
+      </section>
+
+      <section class="panel">
+        <p class="panel-label">Wiring in progress</p>
+        <p>
+          The navigation is live and this screen exists as its own independent
+          component (wayfinder ticket T2). Next: a project-managed local LiteLLM
+          proxy, Postgres-backed (T3&ndash;T6), then this page&rsquo;s real data
+          blocks (T7) &mdash; models &amp; health, usage &amp; cost by day/model/
+          provider, latency, and a request log &mdash; read from the gateway&rsquo;s
+          own REST API, never a third-party web UI.
+        </p>
+      </section>
+
+      <a class="back" href="/">&larr; Back to menu</a>
+    </main>
+
+    <script>
+      // One fetch, honest states. This screen carries its own tiny bit of
+      // page JS - no shared script bundle.
+      (function () {
+        var stateEl = document.getElementById("state");
+        var textEl = document.getElementById("state-text");
+        var whyEl = document.getElementById("why");
+        var modelsEl = document.getElementById("models");
+
+        var LABEL = {
+          ok: "gateway up",
+          unreachable: "gateway unreachable",
+          error: "gateway error",
+        };
+
+        fetch("/api/model/overview", { headers: { accept: "application/json" } })
+          .then(function (r) {
+            return r.ok ? r.json() : Promise.reject(new Error(String(r.status)));
+          })
+          .then(function (d) {
+            var s = d.gateway || "error";
+            stateEl.setAttribute("data-s", s);
+            textEl.textContent = LABEL[s] || s;
+            whyEl.textContent = d.why || "";
+            (d.models || []).forEach(function (m) {
+              var li = document.createElement("li");
+              var k = document.createElement("span");
+              k.className = "k";
+              k.textContent = m.id;
+              li.appendChild(k);
+              modelsEl.appendChild(li);
+            });
+          })
+          .catch(function (e) {
+            stateEl.setAttribute("data-s", "error");
+            textEl.textContent = "status unavailable";
+            whyEl.textContent = "could not reach this screen's own API (" + e.message + ")";
+          });
+      })();
+    </script>
+  </body>
+</html>

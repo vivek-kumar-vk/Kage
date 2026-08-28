@@ -35,6 +35,7 @@ desktop.ini
 Secrets_Keys/
 .env
 .env.*
+!.env.example
 google_service_account.json
 *_service_account.json
 credentials.json
@@ -64,3 +65,7 @@ restart_requested.flag
 *.sqlite
 *.sqlite3
 *.db
+
+# --- Kage's project-managed Postgres cluster + gateway logs (T3/T4) ---
+Start_Inky/pgdata/
+Tools/*.log

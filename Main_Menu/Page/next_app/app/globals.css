@@ -116,3 +116,10 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The navigation lives inside the top-left panel (NavPanel.tsx), reusing
+   .rubric-panel / .rubric-label / .pill and the reference's row layout.
+   The one addition it needs: the amber "you are here" cue on a row. */
+.rubric-panel a[data-active] .text-white {
+  color: #ff7a00;
+}

@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RUBRIC // Agentic OS",
+  title: "Kage.GG",
   description:
-    "The main menu of INKY, rebuilt as the RUBRIC Agentic OS dashboard: a rotating agent ring around a live 3D particle core.",
+    "The Kage main menu: a rotating agent ring around a live 3D particle core.",
 };
 
 // The responsive contract (C9): follow the device width, and reach past

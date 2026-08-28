@@ -50,9 +50,12 @@ API_PREFIX = "/api/main_menu"
 # has no Backend/settings file and no port of its own. Keyed by the
 # Screens/ folder name (discovery still reports it in the usual place);
 # the value is the absolute URL the pill links to.
-EXTERNAL_LINKS = {
-    "Models": "http://127.0.0.1:8003/ui",   # LiteLLM's own dashboard
-}
+#
+# Empty since 2026-08-28: the "Models" pill pointed at LiteLLM's own
+# admin dashboard. Replaced by a real, discovered Screens/Model/ screen
+# that reads the gateway's REST API into Kage's own UI instead
+# (wayfinder effort .scratch/model-page-litellm/, decision D-W2).
+EXTERNAL_LINKS: dict[str, str] = {}
 
 # The folders the /dev/changed-since endpoint fingerprints: this
 # screen's own code plus everything shared. Data folders are excluded

@@ -20,6 +20,14 @@ set "VPY=%VENV%\Scripts\python.exe"
 set "BASE="
 
 REM --- find a Python to build the private folder with ----------------
+REM Prefer 3.11-3.13: the LiteLLM gateway's Prisma client (Tools\) hangs
+REM on import under 3.14. The py launcher can pick an exact version.
+where py >nul 2>&1 && (
+    for %%V in (3.13 3.12 3.11) do (
+        py -%%V --version >nul 2>&1 && if not defined BASE set "BASE=py -%%V"
+    )
+)
+if defined BASE goto :havepy
 where py >nul 2>&1 && set "BASE=py"
 if defined BASE goto :havepy
 where python >nul 2>&1 && set "BASE=python"
@@ -41,12 +49,24 @@ if errorlevel 1 goto :fail
 
 :haveenv
 REM --- install what the screens need --------------------------------
+REM Gate on litellm too, not just fastapi: an older .venv predates the
+REM Tools\ gateway and still needs that one install.
 "%VPY%" -m pip show fastapi >nul 2>&1
+if errorlevel 1 goto :install
+"%VPY%" -m pip show litellm >nul 2>&1
 if not errorlevel 1 goto :run
 
+:install
 echo.
 echo Installing what the screens need  (first run only, takes a minute)
 "%VPY%" -m pip install --upgrade pip --quiet
+
+REM Shared local infrastructure (the LiteLLM gateway).
+for %%R in ("%PROJECT%\Tools\requirements_*.txt") do (
+    echo   from %%~nxR
+    "%VPY%" -m pip install -r "%%R" --quiet
+    if errorlevel 1 goto :fail
+)
 
 REM Every screen keeps its own list of what it needs. Install all of
 REM them, whatever they are called - no screen is named in this file.

@@ -73,10 +73,10 @@ export function CenterCore() {
             />
           </svg>
           <h1 className="text-xl font-semibold tracking-[0.14em]">
-            RUBRIC <span className="rubric-accent font-normal">Agentic OS</span>
+            Kage<span className="rubric-accent font-normal">.GG</span>
           </h1>
         </div>
-        <p className="rubric-sub text-[10px]">Jay E &nbsp;|&nbsp; RoboNuggets</p>
+        <p className="rubric-sub text-[10px]">Vivek Kumar &nbsp;|&nbsp; KageEnsui</p>
         <div className="mt-1 flex items-center gap-2">
           <HeaderIcon
             label="edit"
