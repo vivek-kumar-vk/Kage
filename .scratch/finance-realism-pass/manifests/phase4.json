@@ -1,0 +1,25 @@
+{
+  "phase": "4",
+  "repo": "B:/inky_code",
+  "cwd": "B:/inky_code/Screens/Finance/Page/next_app",
+  "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
+  "ask_excerpt_file": "B:/inky_code/.scratch/finance-realism-pass/ask_excerpt.md",
+  "progress_file": "B:/inky_code/.scratch/finance-realism-pass/phase4-progress.md",
+  "ledger_file": "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
+  "cooldown_s": 90,
+  "max_retries": 2,
+  "max_tokens": 1600,
+  "grill_rounds": 3,
+  "min_free_ram_mb": 1800,
+  "min_free_vram_mb": 700,
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 8192 --n-gpu-layers 24 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "final_build": true,
+  "tasks": [
+    {
+      "id": "TelemetryPanelDedup",
+      "out": "app/components/TelemetryPanel.tsx",
+      "client": true,
+      "spec": "REWRITE this file. It currently renders PulseCore, BucketSchematic, CashFlowPanel, GoalsGauges, InvestmentsSpark, DebtReadout, PortfolioReadout. The Overview tab now owns cash-flow, goals, investments, debt and the 3-bucket view, so the TELEMETRY tab must drop the duplicates and keep only the hero. New file EXACTLY:\n\n\"use client\";\n\nimport { PulseCore } from \"./PulseCore\";\n\n/** TELEMETRY tab \u2014 slimmed (P9 Phase 4). Overview now owns the cash-flow / goals / investments / debt / bucket panels; only the PulseCore hero stays here. Inherits the Ferrari livery from the shell. */\nexport function TelemetryPanel() {\n  return (\n    <section aria-label=\"Telemetry\" className=\"flex flex-col gap-4\">\n      <PulseCore />\n    </section>\n  );\n}\n\nOutput that file verbatim \u2014 do not add anything else, do not re-add the removed imports."
+    }
+  ]
+}

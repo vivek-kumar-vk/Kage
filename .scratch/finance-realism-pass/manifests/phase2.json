@@ -55,5 +55,7 @@
       "client": false,
       "spec": "Imports: `import { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";` `import { TelemetryCard, TimingRow } from \"../f1\";`. Export `export function GoalsList()`. Comment noting icon images go at public/goals/<slug>.png later (not wired now). Return <TelemetryCard label=\"Goals \\u2014 timing tower\">{BLUEPRINT_SEED.goals.map((g, i) => (<TimingRow key={g.label} rank={String(i + 1).padStart(2, \"0\")} name={g.label} value={`${g.pct}%`} pct={g.pct} tone={g.pct >= 75 ? \"best\" : g.pct >= 40 ? \"ahead\" : \"flat\"} />))}</TelemetryCard>. No 'use client'. Under 18 lines."
     }
-  ]
+  ],
+  "ask_excerpt_file": "B:/inky_code/.scratch/finance-realism-pass/ask_excerpt.md",
+  "grill_rounds": 3
 }

@@ -79,3 +79,96 @@ Signals:
   space-joined; not M..L.. per point".
 - note: new tag `svg-path-logic`. The gate (tsc + eslint) passes valid-but-wrong
   SVG math; overnight autonomous runs need a morning visual pass for this class.
+
+### 2026-08-29 01:00 · DeltaBadge · app/components/f1/DeltaBadge.tsx
+- verdict: clean
+- retries: 0
+- gate: clean
+
+### 2026-08-29 01:02 · StatDial · app/components/f1/StatDial.tsx
+- verdict: clean
+- retries: 0
+- gate: clean
+
+### 2026-08-29 01:04 · SegmentMeter · app/components/f1/SegmentMeter.tsx
+- verdict: clean
+- retries: 0
+- gate: clean
+
+### 2026-08-29 01:37 · TimingRow · app/components/f1/TimingRow.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:39 · TelemetryCard · app/components/f1/TelemetryCard.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:41 · WipeIn · app/components/f1/WipeIn.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:43 · TotalBalanceBlock · app/components/overview/TotalBalanceBlock.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:45 · CashFlowBlock · app/components/overview/CashFlowBlock.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:46 · InvestmentsBlock · app/components/overview/InvestmentsBlock.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:48 · DebtBlock · app/components/overview/DebtBlock.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:50 · EmergencyFundBlock · app/components/overview/EmergencyFundBlock.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:52 · BucketBlock · app/components/overview/BucketBlock.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:53 · GoalsList · app/components/overview/GoalsList.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:56 · ReplicaSummary · app/components/investments/ReplicaSummary.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 01:59 · ReplicaTable · app/components/investments/ReplicaTable.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean
+
+### 2026-08-29 02:01 · TelemetryPanelDedup · app/components/TelemetryPanel.tsx
+- verdict: clean
+- retries: 0
+- self-grill: 1 round(s) — self-grill PASS
+- gate: clean

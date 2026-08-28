@@ -1,35 +1,26 @@
 #!/usr/bin/env python
 """run_phase.py <manifest.json> [<manifest2.json> ...]
 
-Autonomous overnight build loop. For each task in a manifest:
-  resource-gate wait -> assemble prompt (contract + preamble + spec)
-  -> POST to llama-server -> strip fence -> write file
-  -> gate (tsc for THIS file + eslint THIS file) -> fix-loop (<=max_retries)
-  -> git commit (pass) or revert (fail, mark BLOCKED) -> ledger + progress
-  -> cooldown.
-After all tasks: `npx next build`, record status.
-Multiple manifests run in sequence.
+Autonomous build loop. NO GIT — files land in the working tree only; the user
+commits after verifying. For each task in a manifest:
+  snapshot target bytes -> resource-gate wait -> assemble prompt (contract +
+  preamble + spec) -> POST llama-server -> strip fence -> write file
+  -> machine gate (tsc for THIS file + eslint THIS file) -> fix-loop (<=max_retries)
+  -> self-grill loop (<=grill_rounds: model reviews its file vs spec + the ask
+     excerpt, outputs a corrected file or "PASS"; re-gate each revision)
+  -> on unrecoverable failure: restore the snapshot, mark BLOCKED
+  -> ledger + progress line -> cooldown.
+After all tasks: `npx next build`, record status. Multiple manifests run in order.
 
-Manifest shape:
-{
-  "phase": "1",
-  "repo": "B:/inky_code",
-  "cwd":  "B:/inky_code/Screens/Finance/Page/next_app",
-  "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
-  "progress_file": "B:/inky_code/.scratch/finance-realism-pass/phase1-progress.md",
-  "ledger_file":   "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
-  "cooldown_s": 90, "max_retries": 2, "max_tokens": 2600,
-  "min_free_ram_mb": 1800, "min_free_vram_mb": 700,
-  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model ... ",
-  "final_build": true,
-  "tasks": [
-    {"id": "Sparkline", "out": "app/components/f1/Sparkline.tsx",
-     "client": false, "spec": "Default export `Sparkline`. Props {...}. ..."}
-  ]
-}
+Task shape:
+  {"id": "...", "out": "app/.../X.tsx", "client": false, "spec": "...",
+   "op": "write" | "rm"}   # op defaults to "write"; "rm" deletes `out`
+
+Manifest adds (vs the earlier version): "ask_excerpt_file", "grill_rounds".
+No "git" anywhere.
 """
 from __future__ import annotations
-import json, sys, time, subprocess, urllib.request, pathlib, re, os, datetime
+import json, sys, time, subprocess, urllib.request, pathlib, re, os, shutil, datetime
 
 ENDPOINT = "http://127.0.0.1:8080/v1/chat/completions"
 HEALTH   = "http://127.0.0.1:8080/health"
@@ -39,7 +30,7 @@ PREAMBLE = (
     "You are Model A. Output ONE complete file for the path below and nothing "
     "else: no prose, no explanation, no markdown fence. Next.js 16 App Router "
     "(output:export) + React 19 + Tailwind v4 + framer-motion ^13. This repo "
-    "runs a PATCHED Next.js \u2014 follow THIS spec, not your training data.\n"
+    "runs a PATCHED Next.js — follow THIS spec, not your training data.\n"
 )
 
 
@@ -94,7 +85,7 @@ def ensure_llama(cmd: str, progress: pathlib.Path) -> None:
     if llama_up():
         return
     if not cmd:
-        log(progress, "!! llama-server down and no llama_cmd given \u2014 waiting 5 min")
+        log(progress, "!! llama-server down and no llama_cmd given — waiting 5 min")
         for _ in range(10):
             time.sleep(30)
             if llama_up():
@@ -124,12 +115,12 @@ def resource_gate(m: dict, progress: pathlib.Path) -> None:
                           f"free VRAM {vram}MB (need {need_vram})")
         time.sleep(30)
         waited += 30
-        if waited >= 3600:  # 1h ceiling, then proceed anyway (idle machine)
-            log(progress, "resource wait hit 1h ceiling \u2014 proceeding")
+        if waited >= 3600:
+            log(progress, "resource wait hit 1h ceiling — proceeding")
             return
 
 
-def call_model(prompt: str, max_tokens: int, task_id: str) -> str:
+def call_model(prompt: str, max_tokens: int, task_id: str, tag: str = "") -> str:
     body = json.dumps({
         "model": "model-a", "temperature": 0, "max_tokens": max_tokens,
         "messages": [{"role": "user", "content": prompt}],
@@ -143,7 +134,7 @@ def call_model(prompt: str, max_tokens: int, task_id: str) -> str:
             with urllib.request.urlopen(req, timeout=600) as r:
                 data = json.loads(r.read().decode("utf-8"))
             (HERE / "raw").mkdir(exist_ok=True)
-            (HERE / "raw" / f"{task_id}.json").write_text(
+            (HERE / "raw" / f"{task_id}{tag}.json").write_text(
                 json.dumps(data, indent=2), encoding="utf-8")
             return data["choices"][0]["message"]["content"]
         except Exception as e:  # noqa: BLE001
@@ -164,9 +155,9 @@ def run_cmd(args: list[str], cwd: str) -> tuple[int, str]:
 
 
 def gate(cwd: str, out_rel: str) -> tuple[bool, str]:
-    """True + '' if this file passes; False + errors otherwise.
-    Only tsc errors whose path is this file block; siblings not built yet
-    are tolerated. eslint on this file blocks."""
+    """True + '' if this file passes; else False + errors. Only tsc errors whose
+    path is this file block (siblings not built yet are tolerated); eslint on
+    this file blocks."""
     norm = out_rel.replace("\\", "/")
     _, tsc_out = run_cmd(["npx", "tsc", "--noEmit"], cwd)
     mine = [ln for ln in tsc_out.splitlines()
@@ -181,27 +172,81 @@ def gate(cwd: str, out_rel: str) -> tuple[bool, str]:
     return (not problems), "\n\n".join(problems)
 
 
-def git(repo: str, *args: str) -> tuple[int, str]:
-    return run_cmd(["git", *args], repo)
+def self_grill(out_abs: pathlib.Path, cwd: str, out_rel: str, base: str,
+               ask_excerpt: str, rounds: int, task_id: str,
+               max_tokens: int, progress: pathlib.Path) -> tuple[int, str]:
+    """Model reviews its own file against the spec + the ask, up to `rounds`.
+    Keeps the last machine-gate-clean version. Returns (rounds_used, verdict)."""
+    last_good = out_abs.read_text(encoding="utf-8")
+    used = 0
+    for rnd in range(1, rounds + 1):
+        used = rnd
+        resource_gate({"min_free_ram_mb": 1500, "min_free_vram_mb": 600}, progress)
+        review = (
+            base
+            + "\n\n=== SELF-REVIEW ROUND " + str(rnd) + " ===\n"
+            + "Here is the file you produced:\n\n" + last_good
+            + "\n\n=== THE ASK (what the finished screen must feel like) ===\n"
+            + ask_excerpt
+            + "\n\n=== YOUR JOB NOW ===\n"
+            "Go through the SPEC line by line and the ASK point by point. For "
+            "each, decide MET or NOT-MET with one line of evidence from the "
+            "file. If EVERYTHING is met, reply with exactly the single word "
+            "PASS and nothing else. Otherwise reply with the COMPLETE corrected "
+            "file (only the file, no prose, no fence)."
+        )
+        resp = strip_fence(call_model(review, max_tokens, task_id, tag=f"-grill{rnd}"))
+        if resp.strip().upper().rstrip(".") == "PASS":
+            log(progress, f"{task_id}: self-grill PASS at round {rnd}")
+            out_abs.write_text(last_good, encoding="utf-8")
+            return used, "self-grill PASS"
+        out_abs.write_text(resp, encoding="utf-8")
+        ok, errs = gate(cwd, out_rel)
+        if ok:
+            last_good = resp
+            log(progress, f"{task_id}: self-grill round {rnd} revised + gate clean")
+        else:
+            log(progress, f"{task_id}: self-grill round {rnd} revision broke the "
+                          f"gate — reverting to last clean, stopping grill")
+            out_abs.write_text(last_good, encoding="utf-8")
+            return used, "self-grill stopped (revision broke gate)"
+    out_abs.write_text(last_good, encoding="utf-8")
+    return used, f"self-grill ran {rounds} rounds, no PASS"
 
 
-def ledger_entry(ledger: pathlib.Path, task_id: str, out_rel: str,
-                 verdict: str, retries: int, tail: str) -> None:
+def ledger_entry(ledger: pathlib.Path, task_id: str, out_rel: str, verdict: str,
+                 retries: int, grill_rounds: int, grill_verdict: str, tail: str) -> None:
     ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-    block = (f"\n### {ts} \u00b7 {task_id} \u00b7 {out_rel}\n"
+    block = (f"\n### {ts} · {task_id} · {out_rel}\n"
              f"- verdict: {verdict}\n- retries: {retries}\n"
-             f"- gate: {'clean' if verdict.startswith('clean') else tail[:400].replace(chr(10),' / ')}\n")
+             f"- self-grill: {grill_rounds} round(s) — {grill_verdict}\n"
+             f"- gate: {'clean' if verdict != 'BLOCKED' else tail[:400].replace(chr(10), ' / ')}\n")
     with ledger.open("a", encoding="utf-8") as f:
         f.write(block)
 
 
-def do_task(m: dict, t: dict, contract: str) -> str:
+def do_task(m: dict, t: dict, contract: str, ask_excerpt: str) -> str:
     cwd, repo = m["cwd"], m["repo"]
     progress = pathlib.Path(m["progress_file"])
     ledger = pathlib.Path(m["ledger_file"])
     out_rel = t["out"]
     out_abs = pathlib.Path(cwd) / out_rel
     max_retries = m.get("max_retries", 2)
+    grill_rounds = t.get("grill_rounds", m.get("grill_rounds", 3))
+
+    if t.get("op") == "rm":
+        if out_abs.is_dir():
+            shutil.rmtree(out_abs)
+            log(progress, f"{t['id']}: removed dir {out_rel}")
+        elif out_abs.exists():
+            out_abs.unlink()
+            log(progress, f"{t['id']}: removed {out_rel}")
+        else:
+            log(progress, f"{t['id']}: nothing to remove at {out_rel}")
+        return "ok"
+
+    # snapshot for restore-on-failure (works whether or not the file is tracked)
+    snap = out_abs.read_text(encoding="utf-8") if out_abs.exists() else None
 
     client_line = ('First line MUST be exactly: "use client";  (with the quotes).\n'
                    if t.get("client") else
@@ -226,38 +271,26 @@ def do_task(m: dict, t: dict, contract: str) -> str:
         ensure_llama(m.get("llama_cmd", ""), progress)
         fix = (base + "\n\nThe file you produced has these problems:\n" + errs +
                "\n\nReturn the COMPLETE corrected file. Output only the file.")
-        raw = call_model(fix, m.get("max_tokens", 2600), t["id"])
+        raw = call_model(fix, m.get("max_tokens", 2600), t["id"], tag=f"-fix{retries}")
         out_abs.write_text(strip_fence(raw), encoding="utf-8")
         ok, errs = gate(cwd, out_rel)
 
-    if ok:
-        git(repo, "add", str(out_abs))
-        git(repo, "commit", "-m",
-            f"P9 Phase {m['phase']}: {t['id']}\n\n"
-            f"Local-model-authored ({retries} fix{'es' if retries != 1 else ''}). "
-            f"tsc(this file)+eslint clean.\n\n"
-            f"Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>")
-        verdict = "clean" if retries == 0 else f"fixed-by-model({retries})"
-        ledger_entry(ledger, t["id"], out_rel, verdict, retries, "")
-        log(progress, f"{t['id']}: OK ({verdict}) \u2014 committed")
-        return "ok"
-
-    # failed: leave a marker file so siblings can still type-check against a stub
-    stub = t.get("stub", "")
-    if stub:
-        out_abs.write_text(stub, encoding="utf-8")
-        git(repo, "add", str(out_abs))
-        git(repo, "commit", "-m", f"P9 Phase {m['phase']}: {t['id']} STUB (model failed gate)\n\n"
-                                  f"Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>")
-    else:
-        rc, _ = git(repo, "ls-files", "--error-unmatch", str(out_abs))
-        if rc == 0:
-            git(repo, "checkout", "--", str(out_abs))
+    if not ok:
+        if snap is not None:
+            out_abs.write_text(snap, encoding="utf-8")
         elif out_abs.exists():
             out_abs.unlink()
-    ledger_entry(ledger, t["id"], out_rel, "BLOCKED", retries, errs)
-    log(progress, f"{t['id']}: BLOCKED after {retries} retries {'(stub committed)' if stub else '(reverted)'}")
-    return "blocked"
+        ledger_entry(ledger, t["id"], out_rel, "BLOCKED", retries, 0, "n/a", errs)
+        log(progress, f"{t['id']}: BLOCKED after {retries} retries — snapshot restored")
+        return "blocked"
+
+    g_rounds, g_verdict = self_grill(out_abs, cwd, out_rel, base, ask_excerpt,
+                                     grill_rounds, t["id"], m.get("max_tokens", 2600),
+                                     progress)
+    verdict = "clean" if retries == 0 else f"fixed-by-model({retries})"
+    ledger_entry(ledger, t["id"], out_rel, verdict, retries, g_rounds, g_verdict, "")
+    log(progress, f"{t['id']}: DONE ({verdict}; {g_verdict}) — left in working tree, no commit")
+    return "ok"
 
 
 def run_manifest(path: str) -> None:
@@ -267,13 +300,17 @@ def run_manifest(path: str) -> None:
     cf = m.get("contract_file")
     if cf and pathlib.Path(cf).exists():
         contract = pathlib.Path(cf).read_text(encoding="utf-8")
+    ask_excerpt = ""
+    af = m.get("ask_excerpt_file")
+    if af and pathlib.Path(af).exists():
+        ask_excerpt = pathlib.Path(af).read_text(encoding="utf-8")
 
-    log(progress, f"=== PHASE {m['phase']} START ({len(m['tasks'])} tasks) ===")
+    log(progress, f"=== PHASE {m['phase']} START ({len(m['tasks'])} tasks) === (no git)")
     tally = {"ok": 0, "blocked": 0, "error": 0}
     for i, t in enumerate(m["tasks"], 1):
         log(progress, f"--- task {i}/{len(m['tasks'])}: {t['id']} ---")
         try:
-            tally[do_task(m, t, contract)] += 1
+            tally[do_task(m, t, contract, ask_excerpt)] += 1
         except Exception as e:  # noqa: BLE001
             tally["error"] += 1
             log(progress, f"{t['id']}: EXCEPTION {e!r}")
@@ -295,6 +332,7 @@ def main() -> None:
             run_manifest(path)
         except Exception as e:  # noqa: BLE001
             print(f"manifest {path} crashed: {e!r}", flush=True)
+    print("ALL MANIFESTS DONE", flush=True)
 
 
 if __name__ == "__main__":
