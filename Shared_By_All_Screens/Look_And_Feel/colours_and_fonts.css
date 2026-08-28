@@ -1,0 +1,208 @@
+/* =====================================================================
+   INKY.GG - every colour, font and size, defined once
+   =====================================================================
+   What this file is:
+     The single definition of every colour, font and size used anywhere
+     in INKY. Nothing else defines a colour.
+
+   Why it lives in Shared_By_All_Screens/Look_And_Feel/:
+     There is one page per screen. If each kept its own copy of these
+     colours they would drift apart within a month, and a "red" on one
+     screen would stop matching the "red" on another.
+
+   How to use it, from any page:
+       @import url('/shared/colours_and_fonts.css');
+     Then use the names, never the raw values:
+         color: var(--bone);          <- yes
+         color: #E8E4DA;              <- no
+
+     Every screen's server publishes this folder at /shared, so that one
+     line works from every page without knowing where the file sits on
+     disk.
+
+   Two palettes, on purpose (ADR-037):
+     The P5 names are the loud Persona 5 frame - banners, menus, the
+     arcade feel. The ink names are the quiet surfaces that data sits on,
+     where a screaming red background would make numbers unreadable.
+
+   This file holds NO layout. No grids, no widths, no positions.
+   Layout is written by hand in each page.
+   ===================================================================== */
+
+:root {
+
+  /* -------------------------------------------------------------
+     THE PERSONA 5 FRAME (ADR-037)
+     The loud half. Banners, menu slabs, angled cutouts, mascots.
+     ------------------------------------------------------------- */
+  --p5-red:       #d90000;   /* the frame itself */
+  --p5-dark-red:  #9e0000;   /* the shadow under a red slab */
+  --p5-black:     #000000;
+  --p5-white:     #ffffff;
+  --p5-cyan:      #00e5ff;   /* accents, the row you are on */
+  --p5-yellow:    #ffe600;   /* highlights */
+  --p5-lime:      #4ade80;   /* good, on track */
+  --p5-orange:    #ff9800;   /* getting close to a limit */
+  --p5-violet:    #7C6FF2;   /* an AI wrote this, not you */
+
+  /* THE RULE THIS DESIGN LIVES OR DIES BY:
+     There is a lot of red in the frame. Red on a STATE BADGE still has
+     to mean "do something today". The moment a badge turns red for
+     decoration, the badge stops meaning anything. */
+
+
+  /* -------------------------------------------------------------
+     SURFACES — ink wash, not flat black
+     Four shades of near-black. Depth comes from stacking these,
+     not from shadows.
+     ------------------------------------------------------------- */
+  --ink-void:    #0B0D10;   /* the page itself */
+  --ink-panel:   #14181D;   /* a panel sitting on the page */
+  --ink-raised:  #1C222A;   /* a row you are hovering over */
+  --sumi-line:   #2A3038;   /* hairlines, dividers, panel borders */
+
+  /* -------------------------------------------------------------
+     TEXT
+     Warm off-white, not pure white. Reads as paper on ink.
+     ------------------------------------------------------------- */
+  --bone:        #E8E4DA;   /* normal text and fresh numbers */
+  --bone-dim:    #8B9099;   /* small labels, units, captions */
+
+  /* -------------------------------------------------------------
+     STATE COLOURS — these mean something. They are never decoration.
+     ------------------------------------------------------------- */
+  --jade:        #3FD9A4;   /* healthy, on track, within budget */
+  --amber:       #F2A93B;   /* getting close to a limit */
+  --vermilion:   #E33B2E;   /* breached. ACT NOW */
+  --violet:      #7C6FF2;   /* an AI wrote this, not you */
+
+  /* THE RULE THAT MAKES THIS WORK:
+     --vermilion is never used to make something look nice. If a thing
+     is red, it needs action today. The moment red appears for style,
+     it stops meaning anything and the whole scheme is dead. */
+
+  /* -------------------------------------------------------------
+     FONTS
+     Today the pages pull these from Google Fonts, so a page opened with
+     the wifi off falls back to the system font and still reads fine.
+     The Fonts folder next to this file is where the .woff2 files go
+     when they get downloaded, which is the point at which INKY stops
+     asking anyone else for anything.
+     ------------------------------------------------------------- */
+  --font-display: "Chakra Petch", system-ui, sans-serif;   /* headings */
+  --font-body:    "IBM Plex Sans", system-ui, sans-serif;  /* text */
+  --font-data:    "IBM Plex Mono", ui-monospace, monospace;/* numbers */
+  --font-pixel:   "Press Start 2P", "Silkscreen", monospace; /* arcade labels */
+
+  /* -------------------------------------------------------------
+     FRESHNESS — how old a number is
+     A stale number that looks current is a worse lie than a made-up
+     one, because nothing looks wrong.
+     ------------------------------------------------------------- */
+  --age-fresh:   var(--bone);       /* under 7 days */
+  --age-stale:   var(--bone-dim);   /* 7 to 30 days */
+  --age-old:     var(--amber);      /* over 30 days - show a clock too */
+
+  /* -------------------------------------------------------------
+     SPACING — one scale, so edges line up without thinking
+     ------------------------------------------------------------- */
+  --gap-xs: 4px;
+  --gap-sm: 8px;
+  --gap-md: 16px;
+  --gap-lg: 24px;
+  --gap-xl: 40px;
+
+  /* -------------------------------------------------------------
+     FIXED SIZES
+     ------------------------------------------------------------- */
+  --rail-height:    64px;   /* the vitals strip under the header */
+  --header-height:  48px;
+  --sidebar-width: 140px;
+
+  /* -------------------------------------------------------------
+     MOTION — one moment, not six
+     Too much animation is what makes an interface look generated
+     rather than designed.
+     ------------------------------------------------------------- */
+  --move-fast: 60ms;    /* hover */
+  --move-tab: 120ms;    /* switching tabs */
+}
+
+
+/* =====================================================================
+   EVERY NUMBER IS MONOSPACE
+   =====================================================================
+   Not a style choice. Tabular figures means each digit takes the same
+   width, so a column of rupee amounts lines up and you can scan it
+   without reading it. Same idea as never renaming a CSV column.
+
+   Put class="num" on anything showing a figure.
+   ===================================================================== */
+.num {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =====================================================================
+   AI MARKER
+   =====================================================================
+   Anything a model produced carries a violet left edge. Anything you
+   typed does not. Makes "no fabricated data" visible instead of just
+   written down in a rules file.
+   ===================================================================== */
+.ai-generated {
+  border-left: 2px solid var(--violet);
+  padding-left: var(--gap-sm);
+}
+
+
+/* =====================================================================
+   ACCESSIBILITY
+   =====================================================================
+   If the operating system says "reduce motion", obey it.
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =====================================================================
+   TERMINAL FRAME (additive, ADR-128 era)
+   The CLI landing look: green-on-black, mono everything. These alias
+   existing values on purpose - the palette stays one palette.
+   ===================================================================== */
+:root {
+  --term-green:      var(--p5-lime);   /* the terminal's main ink      */
+  --term-green-dim:  #2e7d4f;          /* comments, sub-lines          */
+  --term-green-faint:#1c3a2a;          /* rules, box-drawing borders   */
+  --term-cursor:     var(--p5-lime);   /* the blinking block cursor    */
+  --font-term: ui-monospace, 'Cascadia Mono', 'JetBrains Mono', Consolas,
+               'Courier New', monospace;
+}
+
+/* =====================================================================
+   NEON ACCENT (Main Menu cyberpunk-terminal redesign, 2026-08-27)
+   One more accent alongside --p5-cyan and --term-green, for the same
+   reason the terminal aliases exist above: a page that wants a
+   cyberpunk-on-black look reaches for one more named colour instead of
+   inventing a page-local one. Shared here so any future screen can use
+   the same magenta without redefining it.
+   ===================================================================== */
+:root {
+  --neon-magenta: #ff2bd6;
+}
+
+/* =====================================================================
+   AGENTIC-OS AMBER (Main Menu redesign, 2026-08-27, second pass)
+   The copper/amber accent from the "Agentic OS" reference layout - one
+   more named colour, same reasoning as --neon-magenta above.
+   ===================================================================== */
+:root {
+  --agentic-amber: #ff7a00;
+  --agentic-panel: #141212;
+}

@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   INKY.GG - Main Menu, "Agentic OS" redesign (2026-08-27, second pass)
+   Every colour and font comes from Look_And_Feel via /shared/
+   colours_and_fonts.css, loaded by the layout. This is an exact-copy
+   pass of a reference layout (see
+   27-08_UI_Plans/Main_Menu_Agentic_OS_Redesign_Plan.md): near-black
+   panels, thin borders, copper/amber accent, a rotating agent ring
+   around a decorative particle core. See
+   Documentation/Guide_To_Main_Menu_UI_Design.md for the full writeup.
+   ===================================================================== */
+
+@theme inline {
+  --color-void: var(--ink-void);
+  --color-panel: var(--ink-panel);
+  --color-raised: var(--ink-raised);
+  --color-line: var(--sumi-line);
+  --color-bone: var(--bone);
+  --color-dim: var(--bone-dim);
+  --color-p5red: var(--p5-red);
+  --color-cyan: var(--p5-cyan);
+  --color-yellow: var(--p5-yellow);
+  --color-jade: var(--jade);
+  --color-amber: var(--amber);
+  --color-violet: var(--violet);
+  --color-magenta: var(--neon-magenta);
+  --color-agentic-amber: var(--agentic-amber);
+  --font-mono: var(--font-term);
+}
+
+body {
+  background: #0b0b0b;
+  color: #ffffff;
+  font-family: var(--font-body, "IBM Plex Sans", system-ui, sans-serif);
+}
+
+/* Every number is monospace - same rule as every other INKY page. */
+.num {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Anything a model produced carries a violet left edge. */
+.ai-generated {
+  border-left: 2px solid var(--violet);
+  padding-left: 8px;
+}
+
+/* =====================================================================
+   AGENTIC-OS PANEL
+   Sharp corners, a thin border, no heavy drop shadow - a subtle inner
+   glow instead, exactly like the reference layout.
+   ===================================================================== */
+.agentic-panel {
+  background: var(--agentic-panel, #141212);
+  border: 1px solid #333;
+  border-radius: 6px;
+  box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.02);
+}
+
+.agentic-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8b9099;
+}
+
+.agentic-accent {
+  color: var(--agentic-amber, #ff7a00);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

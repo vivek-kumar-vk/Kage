@@ -1,0 +1,276 @@
+{
+  "_comment": "Frozen column contracts. A column name here is a promise: renaming or reordering one breaks every file and every reader that already uses it. Change these only by adding a new version, never by editing in place. See Guide_To_Column_Contracts.md.",
+  "version": 16,
+  "schemas": {
+    "model_eval_ledger": {
+      "owner": "models",
+      "path": "Screens/Models/Model_Evals/model_eval_ledger.csv",
+      "_note": "Added v16 (2026-08-25) alongside keep_the_model_eval_ledger.py - the ledger the Model_Eval_Runner appends real evaluation results to (W4.1 schema; W4.2 writes ROWS only, never this contract). One row per (suite, task, model) run: score/max_score, seed and temperature so a run can be reproduced, tokens/duration so its cost is visible, machine so nobody mistakes a GPU number for a laptop one, notes for honest labelling, version for the envelope convention. Append-only: corrections are new rows with the same key shape and a later run_ts - never an overwrite. An untested model shows NO rows; 'untested' is rendered honestly on the grid, never guessed.",
+      "columns": [
+        "eval_id",
+        "run_ts",
+        "model",
+        "quant",
+        "suite",
+        "task",
+        "score",
+        "max_score",
+        "seed",
+        "temperature",
+        "tokens_in",
+        "tokens_out",
+        "duration_s",
+        "machine",
+        "notes",
+        "version"
+      ]
+    },
+    "equity_price_ledger": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/equity_price_ledger.csv",
+      "_note": "Added v15 (2026-08-25) alongside append_the_price_ledger.py - the contract the module promised in its docstring before any column existed. One row per held exchange-traded symbol per day. v15 also carries the FIRST event envelope (see Guide_To_The_Trace_Ledger.md): every row written since has event_id (UUID), written_at (IST instant), version (envelope version 1) and supersedes (the event_id this row corrects - empty for a first observation). Corrections are NEW rows that supersede; nothing is ever overwritten, so pre-envelope six-column rows remain valid history and are all still 'current'. Readers that want today's truth use current_rows(), which drops rows another row's supersedes points at.",
+      "columns": [
+        "date",
+        "symbol",
+        "name",
+        "close",
+        "currency",
+        "source",
+        "event_id",
+        "written_at",
+        "version",
+        "supersedes"
+      ]
+    },
+    "fund_analysis_ledger": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/fund_analysis_ledger.csv",
+      "_note": "Added v13 (2026-08-22) alongside analyse_a_fund.py. One row per fund per day: the holdings-analysis numbers behind each fund's button on the Investments tab - splits, market-cap buckets, top sector, weighted P/E / P/B and the advanced ratios. Same-day re-runs replace that day's row; history across days is kept so a portfolio review can watch a fund drift. Company facts come from Yahoo via yfinance; sector coverage depends on the unverified hand map, which classified_coverage_pct admits.",
+      "columns": [
+        "date",
+        "amfi_code",
+        "scheme_name",
+        "as_of",
+        "equity_pct",
+        "debt_pct",
+        "cash_pct",
+        "large_cap_pct",
+        "mid_cap_pct",
+        "small_cap_pct",
+        "unknown_mcap_pct",
+        "top_sector",
+        "top_sector_pct",
+        "pe",
+        "pb",
+        "beta",
+        "alpha_pct",
+        "sharpe",
+        "sortino",
+        "return_1y_pct",
+        "volatility_pct",
+        "max_drawdown_pct",
+        "classified_coverage_pct",
+        "source"
+      ]
+    },
+    "fund_nav_ledger": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/fund_nav_ledger.csv",
+      "_note": "Added v12 (2026-08-22) alongside track_the_nav_ledger.py. One row per fund per refresh: the NAV mfapi.in published, when it published it, and when INKY wrote it down. Re-running on the same day replaces that day's row; history across days is kept so staleness has a file behind it. The Investments tab's freshness badge reads this.",
+      "columns": [
+        "date",
+        "scheme_name",
+        "amfi_code",
+        "nav",
+        "nav_date",
+        "source"
+      ]
+    },
+    "finance_monthly": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/monthly_summary_all_months.csv",
+      "columns": [
+        "month",
+        "income",
+        "fixed_bills",
+        "debt_service",
+        "base_sips",
+        "slice_usage",
+        "surplus",
+        "emergency_added",
+        "notes"
+      ]
+    },
+    "debt_ledger": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/debt_payments_record.csv",
+      "columns": [
+        "date",
+        "account",
+        "outstanding",
+        "rate_pct",
+        "payment",
+        "interest_component",
+        "principal_component",
+        "payoff_eta"
+      ]
+    },
+    "restoration_ledger": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/money_owed_back_to_funds.csv",
+      "columns": [
+        "date",
+        "scheme_name",
+        "amount_owed",
+        "amount_restored",
+        "balance"
+      ]
+    },
+    "portfolio_holdings": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/portfolio_holdings.csv",
+      "columns": [
+        "date",
+        "scheme_name",
+        "amfi_code",
+        "category",
+        "units",
+        "invested",
+        "current",
+        "pl_abs",
+        "pl_pct",
+        "pledged_units",
+        "source"
+      ],
+      "_note": "Was frozen with owner 'market' and no file, for a screen that was never built separately. Finance absorbed the Investments concept instead (see Start_Here_Main_Guide.md) - owner and path updated 2026-08-16, columns unchanged since the contract was never touched by a reader. read_portfolio_holdings.py is the only writer; scheme_name and amfi_code are never editable from the UI, since changing either would silently turn one holding into a different one."
+    },
+    "active_sips": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/active_sips.csv",
+      "_note": "Recurring monthly SIP amounts, one row per fund. Informational - never added into the surplus formula automatically, same rule as assets_and_liabilities.",
+      "columns": ["scheme_name", "monthly_amount", "notes"]
+    },
+    "realized_capital_gains": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/realized_capital_gains.csv",
+      "_note": "One row per matched buy/sell pair from a capital-gains report, written once by import_from_broker_statements.py. Deliberately has no folio_number column - C2, that is exactly the kind of identifier .gitignore's raw-statement rule exists to keep out of a tracked file.",
+      "columns": ["scheme_name", "amfi_code", "category", "purchase_date", "purchase_price", "matched_quantity", "redeem_date", "redeem_price", "short_term_gain", "long_term_gain", "financial_year", "source"]
+    },
+    "job_applications": {
+      "owner": "admin",
+      "path": null,
+      "_note": "Contract frozen. No file yet - this screen is not built.",
+      "columns": [
+        "date_applied",
+        "company",
+        "role",
+        "channel",
+        "stage",
+        "next_action",
+        "next_action_date"
+      ]
+    },
+    "notable_expenses": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/big_or_recurring_expenses.csv",
+      "_note": "Manual entry only. Big or recurring items. Not a daily expense log — everything else stays inside slice_usage_actual.",
+      "columns": [
+        "date",
+        "amount",
+        "category",
+        "note",
+        "recurring"
+      ]
+    },
+    "model_call_log": {
+      "owner": "models",
+      "path": "Screens/Models/Saved_Records/model_call_log.csv",
+      "_note": "One row per model call. Written by the router when it is built. Every number on the Models screen is counted from this file - nothing is stored twice. 'check_results' used to be called 'gate_results', which collided with Finance's four investment gates; renamed in ADR-044 while the file was still empty.",
+      "columns": [
+        "timestamp",
+        "session_id",
+        "screen",
+        "task_shape",
+        "model_id",
+        "provider",
+        "tier",
+        "tokens_in",
+        "tokens_out",
+        "latency_ms",
+        "check_results",
+        "escalated",
+        "outcome",
+        "notes"
+      ]
+    },
+    "free_tier_ledger": {
+      "owner": "models",
+      "path": "Screens/Models/Saved_Records/free_tier_ledger.csv",
+      "_note": "One row per attempt against a free allowance, written by keep_the_free_tier_ledger.py. Counts what has already been used so a scheduled job never discovers a limit by hitting it.",
+      "columns": [
+        "timestamp",
+        "provider",
+        "model_id",
+        "outcome",
+        "tokens_in",
+        "tokens_out"
+      ]
+    },
+    "assets_and_liabilities": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/assets_and_liabilities.csv",
+      "_note": "Hand-typed. What I own and what I owe, outside the surplus formula - track_assets_and_liabilities.py never feeds this back into the noticeboard automatically, so nothing is counted twice.",
+      "columns": ["date_added", "kind", "category", "name", "monthly_amount", "value", "notes"]
+    },
+    "my_investments": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/my_investments.csv",
+      "_note": "Hand-typed, one row per transaction, never per holding. A correction is a new row, so the history survives. read_what_i_own.py derives every holding from this file.",
+      "columns": ["date", "kind", "name", "identifier", "amount", "units", "notes"]
+    },
+    "my_watchlist": {
+      "owner": "finance",
+      "path": "Screens/Finance/Saved_Records/my_watchlist.csv",
+      "columns": ["identifier", "name", "why_i_am_watching", "added_on"]
+    },
+    "resource_guardian_actions": {
+      "owner": "shared",
+      "path": "Shared_By_All_Agents/Saved_Records/resource_guardian_actions.csv",
+      "_note": "One row per process the_resource_guardian.py ever actually ends - append-only, so a morning read of what happened overnight is a file, not a guess. Only ever a process named in resource_guardian_kill_list.json, which a person writes in advance.",
+      "columns": ["timestamp", "reason", "process_name", "outcome"]
+    },
+    "needs_human": {
+      "owner": "shared",
+      "path": "Shared_By_All_Screens/Current_Numbers/NEEDS_HUMAN.csv",
+      "_note": "Where the router and the agent supervisor both escalate - one file, one schema, so a person has one place to look. A model may never write or clear this file - only do_one_task.escalate_to_human() appends, and only a person clears it.",
+      "columns": [
+        "timestamp",
+        "screen",
+        "task_shape",
+        "reason",
+        "attempts_tried"
+      ]
+    },
+    "study_sessions": {
+      "owner": "learning",
+      "path": "Screens/Learning/Saved_Records/study_sessions.csv",
+      "_note": "One row per completed study block, written by track_study_sessions.py when a block is stopped, never on start. A block abandoned without stopping leaves no row - an unfinished session is not a lie half-told, it is simply not recorded yet. `capture` was appended as the LAST column at v14 (the work-capture line: what day-job work taught or produced today); rows written before v14 read as an empty capture cell, never a missing column.",
+      "columns": ["date", "started_at", "minutes", "topic", "notes", "recall_note_file", "capture"]
+    },
+    "recall_reviews": {
+      "owner": "learning",
+      "path": "Screens/Learning/Saved_Records/recall_reviews.csv",
+      "_note": "One row per time a Knowledge_Base note was marked reviewed, written by manage_recall_schedule.py. box_after is the Leitner box the note moved to - never edited by hand, always the result of the review just recorded.",
+      "columns": ["date", "note_file", "topic", "remembered", "box_before", "box_after", "next_due"]
+    },
+    "waiting_for_you": {
+      "owner": "shared",
+      "path": "Shared_By_All_Screens/Current_Numbers/WAITING_FOR_YOU.csv",
+      "_note": "The reversibility gate (Shared_By_All_Agents/the_reversibility_gate.py). An agent stops here before anything irreversible and waits for approve/refuse - never a third state.",
+      "columns": [
+        "asked_at", "request_id", "agent", "ticket", "kind", "what_it_would_do",
+        "what_cannot_be_undone", "how_many_things", "answer", "answered_at"
+      ]
+    }
+  }
+}

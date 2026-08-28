@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   Learning rebuild (Phase 12.4)
+   Every colour and font comes from Look_And_Feel via /shared/
+   colours_and_fonts.css, loaded by the layout. Nothing here invents a
+   second palette; this file only maps the shared names into Tailwind's
+   theme so utilities like bg-panel resolve to them - the same mapping
+   Main_Menu's, Enhancement's and Models' rebuilds use, because the
+   tokens are the one thread every screen's own design pass shares.
+   ===================================================================== */
+
+@theme inline {
+  --color-void: var(--ink-void);
+  --color-panel: var(--ink-panel);
+  --color-raised: var(--ink-raised);
+  --color-line: var(--sumi-line);
+  --color-bone: var(--bone);
+  --color-dim: var(--bone-dim);
+  --color-p5red: var(--p5-red);
+  --color-cyan: var(--p5-cyan);
+  --color-yellow: var(--p5-yellow);
+  --color-jade: var(--jade);
+  --color-amber: var(--amber);
+  --color-violet: var(--violet);
+  --font-mono: var(--font-term);
+}
+
+body {
+  background: var(--ink-void, #0b0d10);
+  color: var(--bone, #e8e4da);
+  font-family: var(--font-ui, system-ui, sans-serif);
+}
+
+/* Every number is monospace - same rule as every other INKY page. */
+.num {
+  font-family: var(--font-data, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Anything a model produced carries a violet left edge. */
+.ai-generated {
+  border-left: 2px solid var(--violet);
+  padding-left: 8px;
+}
+
+/* Panels that can outgrow their box (the module task list, the recall
+   queues on a narrow phone) scroll their own overflow-x, never the page
+   body (C9's "every table lives inside scroll-x" rule). */
+.panel-scroll {
+  scrollbar-width: thin;
+}
+
+/* A ring built from conic-gradient - no chart library, one honest
+   percentage. 0% reads as an empty ring, not a hidden one. */
+.progress-ring {
+  --pct: 0;
+  background: conic-gradient(var(--jade, #3ddc97) calc(var(--pct) * 1%), var(--sumi-line, #2a2f36) 0);
+}

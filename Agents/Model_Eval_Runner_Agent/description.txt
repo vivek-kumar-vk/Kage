@@ -1,0 +1,1 @@
+Runs small fixed task suites - GSM8K-style maths, MMLU-style multiple choice, and INKY's own fit tasks - against the local qwen3:8b model with locked seeds and temperature zero, scores the answers with pure-Python graders, and appends one honest row per task to the frozen eval ledger. 'Tested' on the Models screen means these numbers or nothing.

@@ -1,0 +1,38 @@
+{
+  "generated_by": "Start_Inky/write_ports_for_inky.py",
+  "note": "Generated snapshot - the single source of truth stays each screen's Backend/settings_for_<name>.py. Regenerate after changing any port.",
+  "screens": [
+    {
+      "name": "Main_Menu",
+      "label": "Main Menu",
+      "host": "127.0.0.1",
+      "port": 8000,
+      "settings_file": "Main_Menu\\Backend\\settings_for_main_menu.py"
+    },
+    {
+      "name": "Enhancement",
+      "label": "Enhancement",
+      "host": "127.0.0.1",
+      "port": 8004,
+      "settings_file": "Screens\\Enhancement\\Backend\\settings_for_enhancement.py"
+    },
+    {
+      "name": "Finance",
+      "label": "Finance",
+      "host": "127.0.0.1",
+      "port": 8001,
+      "settings_file": "Screens\\Finance\\Backend\\settings_for_finance.py"
+    },
+    {
+      "name": "Learning",
+      "label": "Learning",
+      "host": "127.0.0.1",
+      "port": 8002,
+      "settings_file": "Screens\\Learning\\Backend\\settings_for_learning.py"
+    }
+  ],
+  "reserved_not_running": {
+    "local_model_a_llama_cpp": 8080,
+    "local_model_b_llama_cpp_moe": 8081
+  }
+}

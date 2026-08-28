@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────────
+# Kage — .gitignore
+# Public code only. Everything private lives in Google Drive.
+# ─────────────────────────────────────────────────────────────
+
+# --- Python ---
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Node / frontend builds ---
+node_modules/
+**/next_app/out/
+**/next_app/.next/
+**/svelte_app/build/
+**/svelte_app/.svelte-kit/
+dist/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+
+# --- Secrets & credentials (NEVER commit) ---
+Secrets_Keys/
+.env
+.env.*
+google_service_account.json
+*_service_account.json
+credentials.json
+token.json
+
+# --- Private input data (NEVER commit) ---
+My_Investement_details/
+My_Investment_details/
+Dump/
+
+# --- Runtime-generated private data (NEVER commit) ---
+**/Saved_Records/
+Shared_By_All_Screens/Knowledge_Base/
+Shared_By_All_Screens/Trace_Ledger/
+Shared_By_All_Screens/Current_Numbers/NEEDS_HUMAN.csv
+Shared_By_All_Screens/Current_Numbers/WAITING_FOR_YOU.csv
+Shared_By_All_Agents/Lease_Board/
+Shared_By_All_Agents/*_state.json
+Shared_By_All_Agents/*_requests.json
+Shared_By_All_Agents/*_process.json
+Shared_By_All_Agents/*_kill_list.json
+Agents/*/Memory/
+Documentation/Daily_Notes/
+restart_requested.flag
+
+# --- Databases ---
+*.sqlite
+*.sqlite3
+*.db

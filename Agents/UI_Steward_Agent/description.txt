@@ -1,0 +1,1 @@
+Watches the screens' own definition files - the five-tab ceiling, naming contracts, guide files - so the interface stays honest as screens grow. Finds drift, writes dated proposals for what to fix, and edits nothing itself.

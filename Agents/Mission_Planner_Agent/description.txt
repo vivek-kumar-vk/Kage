@@ -1,0 +1,1 @@
+Turns a vague goal into a five-W mission plan - Why, What, When, Where, Who - before anyone codes, and audits existing plans for the Ws they forgot.

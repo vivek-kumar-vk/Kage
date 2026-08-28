@@ -1,0 +1,65 @@
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "INKY - Finance",
+  description:
+    "Real money, honestly stated - surplus, the four gates, the health score, holdings, debt and portfolio structure. No recommendation is ever computed here (C5).",
+};
+
+// The responsive contract (C9): follow the device width, and reach past
+// the notch so env(safe-area-inset-*) means something on a real phone.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
+// The four widths every INKY page changes its mind at (ADR-060) and the
+// one question that is not about width. Written in
+// Shared_By_All_Screens/Look_And_Feel/responsive_layout.css; repeated
+// here because CSS cannot read a custom property inside a @media query.
+const RESPONSIVE_CONTRACT = `
+@media (max-width: 1100px) {
+  .grid-main { grid-template-columns: 1fr; }
+}
+@media (max-width: 820px) {
+  .rail { flex-direction: row; flex-wrap: wrap; }
+  .rail > * { flex: 1 1 260px; }
+  .tab-strip { justify-content: space-between; }
+  .sub-tab-strip { justify-content: flex-start; }
+}
+@media (max-width: 560px) {
+  .page-title { font-size: 1.1rem; }
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+  .tab-strip { gap: 6px; }
+  .tab-strip button { flex: 1 1 auto; padding-left: 10px; padding-right: 10px; }
+  .gate-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+@media (max-width: 420px) {
+  .header-pad { padding-left: 12px; padding-right: 12px; }
+}
+/* A phone held sideways is wide and very short: panels already scroll
+   their own overflow, so only the header needs to shrink to keep
+   everything reachable without vertical scroll. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .page-header { position: static; }
+  .page-main { padding-top: 8px; }
+}
+`;
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className="h-full antialiased">
+      <body className="min-h-full flex flex-col">
+        {/* The shared look, published by this screen's own server at
+            /shared exactly as it is for every other INKY page - the
+            palette cannot drift between the old page and this one. */}
+        <link rel="stylesheet" href="/shared/colours_and_fonts.css" />
+        <link rel="stylesheet" href="/shared/responsive_layout.css" />
+        <style>{RESPONSIVE_CONTRACT}</style>
+        {children}
+      </body>
+    </html>
+  );
+}

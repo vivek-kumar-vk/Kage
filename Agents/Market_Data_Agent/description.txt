@@ -1,0 +1,1 @@
+Fetches public market data - fund NAVs from AMFI's published file, raw factsheet pages - into its own cache ledgers, and says honestly how old every cached number is. Data fetching only: analysing what the data means belongs to Portfolio_Analyst_Agent.

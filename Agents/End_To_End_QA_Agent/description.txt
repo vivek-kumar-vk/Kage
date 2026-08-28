@@ -1,0 +1,1 @@
+Presses INKY's screens end to end through a real browser over HTTP - the way a person would - and records honestly what broke, what was merely empty, and what was faked. QA reaches screens on their ports, never by importing them.

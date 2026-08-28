@@ -1,0 +1,51 @@
+================================================================================
+KAGE — WHAT TO FILL IN
+================================================================================
+Everything the Finance screen asks for and cannot find, in one place. Nothing
+here is required for the app to run. Every blank is handled honestly: a missing
+figure is reported as missing, never guessed, never defaulted to zero.
+
+Fill in what you know. Leave the rest blank. Then run:
+
+    python Screens\Finance\Calculations\Overview_Tab\write_the_finance_report.py
+
+--------------------------------------------------------------------------------
+HOW THIS FILE WORKS
+--------------------------------------------------------------------------------
+This file is a WORKSHEET, not a config file. Nothing reads it automatically.
+It tells you which line of which file to edit, because that is where the number
+actually lives and the app has exactly one source for each figure.
+
+Three places numbers live:
+
+  1. The noticeboard   Shared_By_All_Screens\Current_Numbers\all_current_numbers.md
+                       Plain "key: value" lines. Edit in any text editor.
+
+  2. Finance's records Screens\Finance\Saved_Records\*.csv
+                       Ordinary CSVs. (Runtime-created; not in the repo.)
+
+  3. The rulebook      Screens\Finance\Reference_Data\*.json
+                       Tax rates and planning assumptions.
+
+A BLANK IS NOT A ZERO. Leaving `emergency_fund:` empty means "nobody has
+checked". Writing `emergency_fund: 0` means "there is genuinely nothing there".
+The app treats those as different facts and so should you.
+
+--------------------------------------------------------------------------------
+FIELDS THE SCORE CARES ABOUT MOST
+--------------------------------------------------------------------------------
+Edit these keys in the noticeboard (all blank by default):
+
+    income                  take-home pay per month
+    fixed_bills             rent + utilities + subscriptions, per month
+    emergency_fund          cash set aside for emergencies, total
+    edu_loan_outstanding    education loan principal still owed
+    portfolio_total         current market value of all investments
+
+See all_current_numbers.md for the full list, grouped by area.
+
+--------------------------------------------------------------------------------
+PRIVATE DATA
+--------------------------------------------------------------------------------
+Real figures live outside this repo (Google Drive — see immediate_plan.md).
+This worksheet ships with no personal values in it on purpose.

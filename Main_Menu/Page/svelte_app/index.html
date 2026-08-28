@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>INKY - Main Menu (Svelte pilot)</title>
+    <!--
+      The shared look is pulled in here, on purpose: this file is what
+      actually gets served at / when USE_SVELTE is on, and the
+      responsive contract has to travel with it. The server publishes
+      Shared_By_All_Screens/Look_And_Feel at /shared, so this is one
+      pointer to the one true copy - never a duplicate of it.
+      Breakpoints used anywhere in this app are only ever the four
+      agreed widths (1100 / 820 / 560 / 420).
+    -->
+    <link rel="stylesheet" href="/shared/responsive_layout.css" />
+    <style>
+      * { box-sizing: border-box; }
+
+      /* The terminal frame (ADR-128): green ink on the ink-wash void,
+         mono everywhere. Colours come from the one shared palette's
+         --term-* aliases - no raw hex defined here. */
+      body {
+        margin: 0;
+        padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right))
+                 calc(16px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+        font-family: var(--font-term, ui-monospace, 'Cascadia Mono', Consolas, monospace);
+        background: var(--ink-void, #0B0D10);
+        color: var(--term-green, #4ade80);
+        min-height: 100svh;
+      }
+
+      ::selection { background: var(--term-green-faint, #1c3a2a); }
+
+      .pilot {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .pilot h1 {
+        grid-column: 1 / -1;
+        margin: 0;
+        font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      }
+
+      .pilot-note {
+        grid-column: 1 / -1;
+        margin: 0;
+        opacity: 0.7;
+        font-size: 0.85rem;
+      }
+
+      .card {
+        border: 1px solid rgba(242, 237, 227, 0.25);
+        border-radius: 10px;
+        padding: 16px;
+        min-width: 0;
+      }
+
+      /* A phone held upright: one card per row, nothing squeezed. */
+      @media (max-width: 560px) {
+        .pilot { grid-template-columns: 1fr; }
+        .card { padding: 12px; }
+      }
+
+      /* A phone turned sideways is short, not narrow: tighten the
+         vertical rhythm so both cards stay within reach. */
+      @media (max-height: 560px) and (orientation: landscape) {
+        body { padding-top: 8px; padding-bottom: 8px; }
+        .pilot { gap: 8px; }
+        .pilot-note { display: none; }
+        .card { padding: 8px 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

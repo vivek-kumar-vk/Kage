@@ -1,0 +1,218 @@
+/* =====================================================================
+   INKY.GG - the responsive contract, written down once  (ADR-060, C9)
+   =====================================================================
+   What this file is:
+     The rules that make every INKY page usable on a phone held upright,
+     the same phone turned sideways, a tablet, and a laptop - without
+     each page inventing its own idea of what "small" means.
+
+   What it is NOT:
+     It is not layout. Layout is still written by hand in each page,
+     because every screen is a different shape and one enormous shared
+     stylesheet is how a project stops being safe to change.
+
+     What is shared is the *contract*: the four widths at which every
+     page changes its mind, how big a thing you tap has to be, what
+     happens to a wide table, and the promise that no page ever scrolls
+     sideways by accident. Those are the same everywhere or they are
+     worthless, exactly like the colours next door.
+
+   How to use it, from any page - directly under the colours import:
+       @import url('/shared/colours_and_fonts.css');
+       @import url('/shared/responsive_layout.css');
+
+     Every screen's server publishes this folder at /shared, so that one
+     line works from every page without knowing where the file sits on
+     disk.
+   ===================================================================== */
+
+
+/* =====================================================================
+   THE FOUR WIDTHS
+   =====================================================================
+   CSS cannot read a custom property inside a @media query, so these
+   values have to be typed out by hand in every media query anywhere in
+   INKY. They are written here so there is one place that says what the
+   numbers are and what each one means. Copy them; do not invent a fifth.
+
+     --break-wide    1100px   below this, a three-column page is two
+     --break-tablet   820px   below this, a sidebar stops being a sidebar
+     --break-phone    560px   below this, everything is one column
+     --break-small    420px   below this, padding and type shrink again
+
+   And one that is not a width at all:
+
+     a phone held sideways - (orientation: landscape) and
+     (max-height: 560px) - is WIDE and very SHORT. A page that only ever
+     asks about width looks fine there and is unusable, because the
+     header, the tab strip and the first row of cards fill the whole
+     screen and nothing below them can be reached. Every page answers
+     that question too.
+   ===================================================================== */
+:root {
+  --break-wide:   1100px;
+  --break-tablet:  820px;
+  --break-phone:   560px;
+  --break-small:   420px;
+
+  /* The smallest thing a finger can reliably hit. 44px is the figure
+     both Apple and Google publish, and it is a floor, not a target. */
+  --tap-min: 44px;
+
+  /* Full viewport height that survives a mobile browser's address bar
+     sliding in and out. Plain 100vh is the height the page WOULD have
+     if the bar were hidden, so a 100vh page on a phone is always a
+     little taller than the screen and always scrolls slightly. The
+     chain below degrades safely on a browser that knows neither unit.
+     Use var(--screen-height), never 100vh. */
+  --screen-height: 100vh;
+
+  /* The notch, the rounded corners and the home indicator. Zero on
+     every device that does not have them. */
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+}
+
+@supports (height: 100svh) {
+  :root { --screen-height: 100svh; }
+}
+
+
+/* =====================================================================
+   NO PAGE EVER SCROLLS SIDEWAYS
+   =====================================================================
+   A vertical scrollbar is a page being longer than the screen, which is
+   normal. A horizontal one is nearly always a single element that is too
+   wide, and it makes every other thing on the page drift out of reach.
+
+   `overflow-x: clip` rather than `hidden`, because `hidden` on <body>
+   silently kills `position: sticky` for everything inside it.
+   ===================================================================== */
+html {
+  max-width: 100%;
+  overflow-x: clip;
+
+  /* Stops iOS inflating text when the phone is turned sideways, which
+     is what breaks a landscape layout that was fine in portrait. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+/* Anything with its own natural width is allowed to be smaller than that
+   width, and never larger than the space it was given. */
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+/* A long unbroken string - a model id, a file path, a URL - is a common
+   cause of a page that will not fit. Let it break rather than push. */
+code,
+pre {
+  overflow-wrap: anywhere;
+}
+
+
+/* =====================================================================
+   A WIDE TABLE SCROLLS INSIDE ITSELF, NOT INSIDE THE PAGE
+   =====================================================================
+   A table of eight money columns does not become readable on a phone by
+   being squeezed. It becomes readable by keeping its columns and letting
+   you push it sideways with a thumb, while the page around it stays put.
+
+   Put the wrapper around every table:
+       <div class="scroll-x"><table>...</table></div>
+   ===================================================================== */
+.scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* Slim, so it does not steal a row of height on a short screen. */
+.scroll-x::-webkit-scrollbar { height: 6px; }
+.scroll-x::-webkit-scrollbar-track { background: transparent; }
+.scroll-x::-webkit-scrollbar-thumb {
+  background: var(--sumi-line, #2A3038);
+  border-radius: 3px;
+}
+
+
+/* =====================================================================
+   TOUCH
+   =====================================================================
+   `pointer: coarse` is the browser saying "this is being driven by a
+   finger, not a mouse". It is true of a phone and a tablet and false of
+   a laptop, which is a better question than asking how wide the screen
+   is - a small window on a desktop is still driven by a mouse.
+   ===================================================================== */
+@media (pointer: coarse) {
+
+  /* Anything you tap is at least a finger wide and a finger tall. */
+  button,
+  a.back-to-menu,
+  a.back-btn,
+  .side-tab,
+  .tab-btn,
+  .mini-btn,
+  [role="button"] {
+    min-height: var(--tap-min);
+  }
+
+  /* iOS Safari zooms the entire page in when you focus a field whose
+     text is smaller than 16px, and never zooms back out. This is the
+     one place a shared file overrules a page on purpose: a page that
+     sets 0.78rem on an input is not wrong about how it should look, it
+     just cannot know it is being read on an iPhone. */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Hover states that only ever appear on a mouse should not be what
+     reveals a control on a touch screen. */
+  .card-go-arrow,
+  .menu-accent-arrow {
+    opacity: 1;
+  }
+}
+
+
+/* =====================================================================
+   THE NOTCH
+   =====================================================================
+   A phone with rounded corners hides the first and last few pixels of
+   the page. Anything pinned to an edge has to be pushed in past them.
+   ===================================================================== */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, var(--safe-left));
+    padding-right: max(0px, var(--safe-right));
+  }
+}
+
+
+/* =====================================================================
+   PRINT AND REDUCED MOTION
+   =====================================================================
+   `prefers-reduced-motion` is already obeyed in colours_and_fonts.css.
+   This is the other half of the same idea: a decorative layer is not
+   worth a repaint on a phone that is already struggling.
+   ===================================================================== */
+@media (max-width: 560px) {
+  .scanlines,
+  .bg-star {
+    display: none;
+  }
+}

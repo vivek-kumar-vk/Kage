@@ -1,0 +1,1 @@
+Keeps the knowledge base curated over time: counts what is in it, finds duplicate and unsourced notes, spots index chunks whose note has vanished, and records every finding in an append-only change feed (Knowledge_Base/ledger.jsonl) other agents can diff against instead of re-reading everything.

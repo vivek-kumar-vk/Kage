@@ -1,0 +1,121 @@
+{
+  "_what_this_is": "Every assumption the planning maths leans on, in one file, with the reason for each one written next to it. None of these are facts. They are the numbers a projection has to pick before it can produce anything, and picking them silently inside a calculation is how a projection ends up looking more certain than it is.",
+
+  "_why_this_file_exists_separately_from_the_tax_file": "Tax rates are law - somebody can look them up and be right. These are judgements. Keeping them apart means a person can disagree with an assumption, change one number here, re-run everything, and see exactly what it moved. That is the whole point.",
+
+  "as_of": "2026-08-20",
+  "country": "India",
+
+  "inflation": {
+    "general_pct": 6.0,
+    "_general_source": "India's long-run CPI. RBI's mandated target is 4% with a +/-2% band, and realised CPI has spent most of the last decade in the upper half of it. 6% is the conservative end of reasonable.",
+    "education_pct": 10.0,
+    "_education_note": "Indian education costs have compounded far faster than headline CPI. A college fund planned at 6% will be short.",
+    "medical_pct": 12.0,
+    "_medical_note": "Health insurance premiums and hospitalisation costs in India have run at roughly double CPI. This is why retirement corpus maths for India cannot use one blended inflation number.",
+    "lifestyle_pct": 7.0
+  },
+
+  "expected_returns_pct": {
+    "_note": "Nominal, before tax, long run. Every one of these is an assumption and none of them is a promise. INKY never uses these to say what to buy - only to show what a given contribution would grow to IF this rate held.",
+    "indian_equity": 11.0,
+    "_indian_equity_source": "Long-run Nifty 50 TRI. Deliberately below the ~13% often quoted, because the commonly quoted figure is measured from a low base and over a window chosen after the fact.",
+    "international_equity": 9.0,
+    "debt_and_bonds": 6.5,
+    "gold": 8.0,
+    "epf": 8.25,
+    "_epf_source": "EPFO declared rate for 2024-25. Set annually by the EPFO board, so it is a real published number rather than a projection - but next year's is not knowable.",
+    "ppf": 7.1,
+    "_ppf_source": "Government-notified small savings rate, reviewed quarterly.",
+    "nps_moderate_lifecycle": 10.0,
+    "liquid_fund": 6.5,
+    "savings_account": 3.0,
+    "fixed_deposit": 7.0
+  },
+
+  "safe_withdrawal_rate_pct": {
+    "value": 3.25,
+    "_why_not_four": "The 4% rule comes from the Trinity study, run on US market and US inflation history. India is not that. Inflation has averaged roughly double, the equity market has a much shorter usable record, and an early retiree in India has no state pension or Medicare underneath them. Indian FIRE discussion generally lands between 3% and 3.5%. INKY uses 3.25% and shows what 3%, 3.5% and 4% would each imply, so the choice is visible rather than buried.",
+    "also_show": [3.0, 3.5, 4.0],
+    "corpus_multiple": 30.8,
+    "_corpus_multiple_note": "100 / 3.25. The US shorthand is 25x annual spending; the Indian equivalent at this rate is about 31x. A plan built on 25x in India is roughly a fifth short."
+  },
+
+  "emergency_fund_months": {
+    "_why_indian_numbers_are_bigger": "The US framework starts at 3 months. India has no unemployment insurance, no COBRA-equivalent for health cover between jobs, and notice periods that cut both ways. Employer health cover typically ends with the job. Every band below starts where a US band ends.",
+    "by_situation": {
+      "two_earners_both_salaried_no_dependants": 6,
+      "single_earner_salaried_no_dependants": 6,
+      "single_earner_salaried_with_dependants": 9,
+      "single_earner_volatile_sector": 9,
+      "freelance_or_consultant": 12,
+      "business_owner_variable_income": 12,
+      "sole_earner_supporting_parents": 12,
+      "within_five_years_of_retiring": 24
+    },
+    "adjustments_in_months": {
+      "no_personal_health_insurance_outside_employer": 2,
+      "no_term_life_cover_and_has_dependants": 1,
+      "carrying_a_revolving_credit_line_balance": 1,
+      "supporting_parents_with_no_pension": 2,
+      "has_a_fully_liquid_backup_such_as_an_undrawn_lamf_limit": -1
+    },
+    "_what_counts_as_the_fund": "Money reachable within 24 hours without selling something at a loss and without a tax event. A savings account, a sweep-in FD, or a liquid fund. Equity mutual funds do not count - the month you need the money is disproportionately likely to be a month the market is down.",
+    "_what_does_not_count": [
+      "Equity mutual funds and stocks",
+      "An undrawn credit card limit - that is new debt, not savings",
+      "An undrawn revolving credit line - same reason",
+      "EPF and PPF - withdrawal is restricted and slow",
+      "Money already promised to somebody else"
+    ]
+  },
+
+  "where_to_keep_the_emergency_fund": [
+    { "vehicle": "Savings account", "typical_return_pct": 3.0, "access": "instant", "tax": "interest at slab; 80TTA covers 10,000 in the old regime only", "best_for": "The first month of it. Nothing else beats instant." },
+    { "vehicle": "Sweep-in fixed deposit", "typical_return_pct": 6.5, "access": "instant, breaks in slices", "tax": "interest at slab, TDS above 40,000", "best_for": "The bulk of it, for most people. Behaves like a savings account and pays like an FD." },
+    { "vehicle": "Liquid mutual fund", "typical_return_pct": 6.5, "access": "instant up to 50,000/day, otherwise T+1", "tax": "slab, since it is a debt fund bought after Apr 2023", "best_for": "Anyone comfortable with a redemption request. Slightly better than a sweep-in, slightly slower." },
+    { "vehicle": "Arbitrage fund", "typical_return_pct": 6.5, "access": "T+2", "tax": "treated as equity - 12.5% above the 1,25,000 exemption", "best_for": "The slowest tranche, for someone in the 30% slab, where the tax treatment is the entire point." },
+    { "vehicle": "RBI Floating Rate Savings Bonds", "typical_return_pct": 8.05, "access": "locked 7 years", "tax": "interest at slab", "best_for": "Not an emergency fund. Listed here because it is what people reach for when they hear I-Bonds and want the Indian equivalent - the lock-in makes it a different instrument." }
+  ],
+
+  "healthy_ratio_targets": {
+    "_note": "Thresholds, not verdicts. Each one is a line INKY can say you are on one side of. What to do about it is not INKY's call.",
+    "savings_rate_pct": { "weak_below": 10, "fair_below": 20, "healthy_at_or_above": 30 },
+    "foir_pct": {
+      "healthy_at_or_below": 35,
+      "watch_above": 40,
+      "critical_above": 50,
+      "_what_foir_is": "Fixed Obligation to Income Ratio - every fixed monthly obligation divided by monthly income. This is what an Indian lender actually computes, and it is the local equivalent of the American DTI. Most Indian lenders will not sanction beyond about 50-55%, and many stop at 40% for an unsecured loan."
+    },
+    "emergency_months_covered": { "critical_below": 1, "weak_below": 3, "fair_below": 6, "healthy_at_or_above": 6 },
+    "equity_allocation_rule": {
+      "formula": "100 minus age, as a starting point only",
+      "_note": "A rule of thumb with no evidence behind it beyond being easy to remember. INKY shows it as a reference line, never as a target to move a portfolio towards."
+    },
+    "term_cover_multiple_of_annual_income": { "minimum": 10, "comfortable": 15, "_note": "Only relevant where somebody depends on the income." },
+    "health_cover_per_person": { "metro_minimum": 1000000, "_note": "In rupees. A single cardiac or oncology episode in a metro private hospital clears 5-10 lakh." }
+  },
+
+  "financial_health_score_weights": {
+    "_note": "Five categories, 20 points each, matching the shape of the framework this was adapted from - but each category is measured against the Indian thresholds above rather than American ones. A category with no data scores nothing and says so; it is never given a middling default, because a made-up 10/20 moves the total and looks like a measurement.",
+    "cash_flow": 20,
+    "debt": 20,
+    "protection": 20,
+    "investing": 20,
+    "future_security": 20
+  },
+
+  "score_bands": [
+    { "at_least": 85, "grade": "A+", "signal": "Strong across the board" },
+    { "at_least": 70, "grade": "A",  "signal": "Sound, with one or two soft spots" },
+    { "at_least": 55, "grade": "B",  "signal": "Working, with real gaps" },
+    { "at_least": 40, "grade": "C",  "signal": "Several things need attention" },
+    { "at_least": 25, "grade": "D",  "signal": "Under strain" },
+    { "at_least": 0,  "grade": "F",  "signal": "Foundations not in place yet" }
+  ],
+
+  "_what_this_file_deliberately_does_not_contain": [
+    "Any list of funds, stocks, banks or insurers to buy from. C5 - INKY computes availability and shows gates. It never names a thing to buy.",
+    "Age-based net worth benchmarks. The American version of this framework ranks a person against national percentiles; the Indian household wealth data to do that honestly does not exist in a form worth quoting, and inventing one would breach C4."
+  ]
+}

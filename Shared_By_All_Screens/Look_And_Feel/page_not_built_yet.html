@@ -1,0 +1,150 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NOT BUILT YET</title>
+<style>
+  @import url('/shared/colours_and_fonts.css');
+  @import url('/shared/responsive_layout.css');
+  @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=IBM+Plex+Mono:wght@400;700&family=Press+Start+2P&display=swap');
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--ink-void, #0B0D10);
+    color: var(--bone, #E8E4DA);
+    font-family: var(--font-display, sans-serif);
+  }
+
+  .frame {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 64px;
+  }
+
+  /* The red slab is the Persona 5 frame, not a state badge. Nothing on
+     this page is asking you to act, so no state badge appears at all. */
+  .banner {
+    background: var(--p5-red, #d90000);
+    color: var(--p5-white, #fff);
+    display: inline-block;
+    padding: 14px 28px;
+    transform: skewX(-8deg);
+    box-shadow: 8px 8px 0 var(--p5-black, #000);
+    margin-bottom: 32px;
+  }
+  .banner span {
+    display: block;
+    transform: skewX(8deg);
+    font-family: var(--font-pixel, monospace);
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    margin: 0 0 12px;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-family: var(--font-body, sans-serif);
+    line-height: 1.6;
+    color: var(--bone-dim, #8B9099);
+    max-width: 56ch;
+  }
+
+  .panel {
+    border: 1px solid var(--sumi-line, #2A3038);
+    background: var(--ink-panel, #14181D);
+    padding: 20px 24px;
+    margin: 28px 0;
+  }
+  .panel h2 {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: var(--bone-dim, #8B9099);
+    margin: 0 0 14px;
+    text-transform: uppercase;
+  }
+
+  ul { margin: 0; padding-left: 20px; }
+  li {
+    font-family: var(--font-data, monospace);
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+  li a { color: var(--p5-cyan, #00e5ff); text-decoration: none; }
+  li a:hover { text-decoration: underline; }
+
+  .back {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 12px 24px;
+    background: var(--p5-white, #fff);
+    color: var(--p5-black, #000);
+    font-family: var(--font-pixel, monospace);
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-decoration: none;
+    box-shadow: 5px 5px 0 var(--p5-red, #d90000);
+  }
+  .back:hover { background: var(--p5-yellow, #ffe600); }
+
+  /* ── RESPONSIVE ──
+     The four widths from /shared/responsive_layout.css, plus the phone
+     turned sideways. This page is one column already, so all it has to
+     do is stop wasting margin and stop shouting. */
+  @media (max-width: 560px) {
+    .frame { padding: 28px 18px 44px; }
+    .banner { padding: 10px 20px; margin-bottom: 22px; box-shadow: 5px 5px 0 var(--p5-black, #000); }
+    .banner span { font-size: 0.9rem; }
+    h1 { font-size: 1.7rem; }
+    p { max-width: none; }
+    .panel { padding: 16px 16px; margin: 20px 0; }
+    .back { width: 100%; text-align: center; }
+  }
+
+  @media (max-width: 420px) {
+    .frame { padding: 20px 14px 36px; }
+    h1 { font-size: 1.45rem; }
+    .banner span { font-size: 0.78rem; letter-spacing: 1px; }
+    li { font-size: 0.82rem; }
+  }
+
+  /* A phone held sideways is wide and very short. Give the height back. */
+  @media (orientation: landscape) and (max-height: 560px) {
+    .frame { padding: 18px 24px 32px; }
+    .banner { margin-bottom: 14px; }
+    h1 { font-size: 1.6rem; margin-bottom: 8px; }
+    .panel { margin: 16px 0; padding: 14px 18px; }
+  }
+</style>
+
+<div class="frame">
+
+  <div class="banner"><span>SCREEN_LABEL_HERE</span></div>
+
+  <h1>Not built yet.</h1>
+
+  <p>
+    This screen has a folder, a name and a place in the menu, but nobody
+    has written its page. That is the honest state of it. It is not
+    showing you an empty chart or a row of zeros, because an empty
+    screen tells the truth and a fake one does not.
+  </p>
+
+  <p>
+    The page belongs at <code>PAGE_PATH_HERE</code>. The moment that file
+    exists, this screen serves it instead of this notice — nothing else
+    has to change.
+  </p>
+
+  <div class="panel">
+    <h2>What already works behind this screen</h2>
+    <ul>
+      ENDPOINTS_HERE
+    </ul>
+  </div>
+
+  <a class="back" href="MENU_ADDRESS_HERE">&#8592; BACK TO MENU</a>
+
+</div>

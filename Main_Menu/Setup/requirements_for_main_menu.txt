@@ -1,0 +1,16 @@
+# What the main menu screen needs installed.
+#
+# Every screen keeps its own list, so one screen can be installed and run
+# on its own without dragging in the others. Start_Everything.bat installs
+# every one of these files it can find.
+#
+# Install just this one:
+#   cd <repo root>
+#   python -m pip install -r Main_Menu\Setup\requirements_for_main_menu.txt
+
+# The small web server behind this screen.
+fastapi>=0.110
+uvicorn[standard]>=0.27
+
+# Nothing else. Finding screens and reading the noticeboard are plain
+# Python.
