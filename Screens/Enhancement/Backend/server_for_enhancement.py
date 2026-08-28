@@ -43,6 +43,10 @@ import settings_for_enhancement as cfg                                 # noqa: E
 import manage_enhancement_ideas as ideas                               # noqa: E402
 import find_similar_ideas as similar                                   # noqa: E402
 
+# A fresh board starts with the project's planned work already on it
+# (tracked seed file). A re-run is a no-op once the board has cards.
+ideas.seed_ideas_if_empty()
+
 from Shared_By_All_Screens.show_not_built_yet import page_html          # noqa: E402
 from Shared_By_All_Screens.trace_every_action import (                  # noqa: E402
     new_correlation_id, trace,

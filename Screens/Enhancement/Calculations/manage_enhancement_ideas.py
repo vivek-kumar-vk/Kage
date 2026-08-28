@@ -73,6 +73,7 @@ IST = timezone(timedelta(hours=5, minutes=30), "IST")
 
 SAVED_RECORDS = SCREEN / "Saved_Records"
 IDEAS_FILE = SAVED_RECORDS / "enhancement_ideas.json"   # migration source, never rewritten
+SEED_FILE = SCREEN / "enhancement_ideas_starter_seed.json"  # tracked; loaded once on a fresh board
 DB_PATH = SAVED_RECORDS / "enhancement_board.db"
 
 STATUSES = ("ideas", "todo", "in_progress", "done")
@@ -175,6 +176,52 @@ def _migrate_if_first_open(conn: sqlite3.Connection) -> None:
 
     conn.execute("INSERT INTO meta (key, value) VALUES ('migrated', 'yes')")
     conn.commit()
+
+
+def seed_ideas_if_empty() -> bool:
+    """Load the tracked starter cards from enhancement_ideas_starter_seed.json,
+    once, only when the board has no cards yet.
+
+    Mirrors the Learning screen's seed_topics_if_empty / seed_cards_if_empty:
+    a fresh clone starts with the project's planned work already on the board.
+    A `meta` flag records that the seed ran, so deleting every card does not
+    pull them back on the next start. Returns True when it seeded, else False.
+    """
+    if not SEED_FILE.exists():
+        return False
+
+    conn = _connect()
+    try:
+        if conn.execute("SELECT value FROM meta WHERE key = 'seeded'").fetchone():
+            return False
+        if conn.execute("SELECT 1 FROM ideas LIMIT 1").fetchone():
+            conn.execute("INSERT INTO meta (key, value) VALUES ('seeded', 'yes')")
+            conn.commit()
+            return False
+
+        payload = json.loads(SEED_FILE.read_text(encoding="utf-8"))
+        stamp = _now()
+        for position, card in enumerate(payload.get("ideas", [])):
+            title = (card.get("title") or "").strip()
+            if not title:
+                continue
+            priority = card.get("priority", "medium")
+            if priority not in PRIORITIES:
+                priority = "medium"
+            conn.execute(
+                """INSERT INTO ideas
+                   (id, enh_key, title, note, area, source,
+                    status, priority, order_index, added_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'ai', 'ideas', ?, ?, ?, ?)""",
+                (uuid.uuid4().hex[:12], next_enh_key(conn), title,
+                 (card.get("note") or "").strip(), (card.get("area") or "").strip(),
+                 priority, float(position), stamp, stamp),
+            )
+        conn.execute("INSERT INTO meta (key, value) VALUES ('seeded', 'yes')")
+        conn.commit()
+        return True
+    finally:
+        conn.close()
 
 
 def next_enh_key(conn: sqlite3.Connection) -> str:
