@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { AuroraBackground } from "./components/AuroraBackground";
 
 export const metadata: Metadata = {
   title: "INKY - Finance",
@@ -46,7 +45,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <AuroraBackground />
         {/* The shared look, published by this screen's own server at
             /shared exactly as it is for every other INKY page - the
             palette cannot drift between the old page and this one. */}
