@@ -57,3 +57,48 @@ bottom. Status: `queued` | `in progress` | `done`.
   Node.js Google Drive MCP server (app is the MCP client) → RAG/smart-retrieval
   extending `add_and_search_the_knowledge_base.py`. Goal: nothing personal on
   local disk.
+
+## P8 — Wire the Finance telemetry panels to live endpoints
+- **Status:** queued
+- The TELEMETRY tab and the two blueprint blocks on Overview
+  (`TotalBalanceReadout`, `FundTiers`) currently read
+  `Screens/Finance/Page/next_app/app/lib/blueprintSeed.ts`. Real numbers there
+  (total balance, the three emergency-fund tiers, the target) come from the
+  blueprint; everything tagged `SEED` is a demo placeholder.
+- Swap each `SEED` field for its source and delete it from the seed file:
+  - `totalBalance` ← `/api/finance/liabilities` `total_assets`
+  - `cashFlow` ← `/api/finance/money` (income / fixed-bills lines)
+  - `totalDebt` ← `/api/finance/debt`
+  - `investments` / `portfolioValue` ← `/api/finance/portfolio-analysis`
+  - `goals` ← no endpoint yet; add one or drop the RPM gauges
+  - `buckets` fill % ← derive from buffer tiers + surplus allocation, or keep illustrative
+- The 3-tier emergency-fund view (`FundTiers`) is richer than the backend's
+  2-tier `g2_buffer` gate (`buffer_tier_1` / `buffer_tier_2` in
+  `check_investment_gates.py`) — reconcile when wiring.
+- Built 2026-08-28 as an F1/telemetry skin, additive, local-model-authored;
+  orchestration notes in `.scratch/finance-telemetry/`.
+
+## P9 — Finance realism pass (F1-feel Overview + Investments)
+- **Status:** in progress — building (Phase 1 of 6)
+- Replace the AI-generated F1 costume with a **researched F1 broadcast/team-tool
+  feel**: **Ferrari livery on Overview** (red `#DC0000` anchor, evening
+  charcoal-navy, yellow sparing), **Red Bull livery on Investments** (blue
+  `#1E5BC6` dominant, midnight navy, red/yellow trim), a **shared F1 interaction
+  language** (timing-tower rows, sector-colour deltas, tabular nums, wipe-in
+  entrances, ▲▼ trend glyphs, one livery edge per panel), drifting sakura +
+  evening tone. Overview: per-block viz on seed data, remove `ActivityRail` +
+  chrome, `224041.png`-style goals timing-row list (4 placeholder rows).
+  Investments: `090804.png` holdings-table replica, RB livery, replacing the
+  panel. Shared "paddock" shell with a per-tab team-accent indicator; Debt +
+  Portfolio inherit it, internals a follow-up.
+- **Overrides D1** (amber-only) → log **D1.1** + the D-a two-livery revision in
+  `AGENTS.md` at Phase 5.
+- Map: `.scratch/finance-realism-pass/map.md` → "Phased build" (Phases 0–5,
+  replaces decision tickets 01–07). F1-UX research:
+  `.scratch/finance-realism-pass/research/f1-feel.md`.
+- Local-model-authored via the caged loop; **one commit per finished task**;
+  `ui-gap-scout` (runs on the local model) reviews each finished task + does an
+  end-of-effort reconcile vs. the ask (`.scratch/lm-ui-gaps/`).
+- **Out of scope here:** live endpoint wiring (P8), Portfolio Analysis tab
+  rebuild (needs its own research-first plan), real goal/holding values.
+- Session plan: `~/.claude/plans/yes-please-procced-and-zazzy-dawn.md`.
