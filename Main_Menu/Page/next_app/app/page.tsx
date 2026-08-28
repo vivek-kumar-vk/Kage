@@ -1,47 +1,33 @@
-"use client";
-
+import { MicroAppsPanel } from "./components/MicroAppsPanel";
+import { CalendarPanel } from "./components/CalendarPanel";
+import { YouTubeStudioPanel } from "./components/YouTubeStudioPanel";
 import { CenterCore } from "./components/CenterCore";
-import { SystemMetricsPanel } from "./components/SystemMetricsPanel";
-import { TodayPanel } from "./components/TodayPanel";
-import { TerminalChatPanel } from "./components/TerminalChatPanel";
 import { EmailPanel } from "./components/EmailPanel";
 import { SkillsDeckPanel } from "./components/SkillsDeckPanel";
-import { TopPanel } from "./components/TopPanel";
-import { useAgentFleetActivity } from "./components/useAgentFleetActivity";
+import { RoutinesPanel } from "./components/RoutinesPanel";
 
-/** The Main Menu home screen - "Agentic OS" redesign (2026-08-27, second
-    pass). An exact-copy layout of the reference image in
-    27-08_UI_Plans/Main_Menu_Agentic_OS_Redesign_Plan.md: strict 3
-    columns, a rotating agent ring around a decorative particle core in
-    the centre. Every panel reuses a fetch this screen already had -
-    nothing here invents a new data source. See
-    Documentation/Guide_To_Main_Menu_UI_Design.md for the full writeup. */
+/** The Main Menu home screen - an exact-copy rebuild of the "RUBRIC
+    Agentic OS" reference (this type of desing..png): a strict 3-column
+    dashboard with a rotating agent ring around a real Three.js particle
+    core in the centre. Every panel is its own self-contained component
+    with its own content (AGENTS.md rule 4) - this shell only places
+    them on the grid. */
 export default function Home() {
-  const { agents, fleetFailed, pulsing, state, rows } = useAgentFleetActivity();
-
   return (
-    <div className="home-grid mx-auto grid w-full max-w-[1400px] gap-4 p-4">
-      <div className="flex flex-col gap-4">
-        <SystemMetricsPanel />
-        <TodayPanel />
-        <TerminalChatPanel />
+    <div className="home-grid mx-auto grid w-full max-w-[1512px] flex-1 gap-6 p-6">
+      <div className="flex min-w-0 flex-col gap-5">
+        <MicroAppsPanel />
+        <CalendarPanel />
+        <YouTubeStudioPanel />
       </div>
 
-      <CenterCore agents={agents} pulsing={pulsing} fleetFailed={fleetFailed} streamState={state} rows={rows} />
+      <CenterCore />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-5">
         <EmailPanel />
         <SkillsDeckPanel />
-        <TopPanel />
+        <RoutinesPanel />
       </div>
-
-      <footer className="col-span-full pb-2 pt-1">
-        <p className="num text-center text-[10px] leading-relaxed text-dim">
-          every number traces to its source file &middot; empty means not built
-          yet, stated plainly &middot; the centre ring reacts only to real
-          trace-ledger events
-        </p>
-      </footer>
     </div>
   );
 }

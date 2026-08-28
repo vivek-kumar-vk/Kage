@@ -1,109 +1,132 @@
 "use client";
 
-import { useEffect, useState } from "react";
+/** Right column, middle module - "SKILLS DECK" from the reference: a
+    + ADD SKILL pill, a "tap play to run" hint, then a 2x2 grid of skill
+    cards, each with a glyph, a /name, a MODEL . TIER line, and a
+    play + gear control row. Static content, an exact copy of the
+    reference image. */
 
-interface LocalEngine {
-  name: string;
-  size_bytes: number | null;
+type Skill = { name: string; model: string; tier: string; glyph: React.ReactNode };
+
+const SKILLS: Skill[] = [
+  {
+    name: "/sprint-planning",
+    model: "OPUS",
+    tier: "XHIGH",
+    glyph: (
+      <>
+        <rect x="4" y="5" width="16" height="15" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M4 9h16M8 3v4M16 3v4M8 13h4M8 16h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+      </>
+    ),
+  },
+  {
+    name: "/newsletter",
+    model: "OPUS",
+    tier: "XHIGH",
+    glyph: (
+      <>
+        <rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M3.5 6.5 12 13l8.5-6.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      </>
+    ),
+  },
+  {
+    name: "/games",
+    model: "OPUS",
+    tier: "XHIGH",
+    glyph: (
+      <>
+        <rect x="3" y="7" width="18" height="10" rx="4" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        <path d="M7 12h3M8.5 10.5v3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <circle cx="15.5" cy="11" r="1" fill="currentColor" />
+        <circle cx="17.5" cy="13" r="1" fill="currentColor" />
+      </>
+    ),
+  },
+  {
+    name: "/clean-up",
+    model: "FABLE",
+    tier: "XHIGH",
+    glyph: (
+      <>
+        <path d="M6 21 4 8h16l-2 13z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+        <path d="M9 8V5a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      </>
+    ),
+  },
+];
+
+function PlayIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 6 18 12 8 18z" fill="currentColor" />
+    </svg>
+  );
+}
+function GearIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.3" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M12 3v2.4M12 18.6V21M21 12h-2.4M5.4 12H3M18.1 5.9l-1.7 1.7M7.6 16.4l-1.7 1.7M18.1 18.1l-1.7-1.7M7.6 7.6 5.9 5.9"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
-/** Right column, middle module - "SKILLS DECK" in the reference image's
-    card-grid layout, built around the one real "skill" INKY actually
-    has today: the local Ollama engines this laptop can run
-    (call_the_local_model.py). Names come from Ollama's own live
-    /api/tags, never typed in (Rule 4) - Ollama not running reads as an
-    honest empty deck, not a guessed one.
-
-    The per-card switch is UI only for now, same "backend later" the
-    owner asked for: it flips its own look and nothing else. The one
-    real switch behind all local-model calls today is the single
-    project-wide toggle in Shared_By_All_Agents/local_model_toggle.json
-    (Models screen, Agents tab) - flipping a card here does not touch
-    that file yet, and the caption says so rather than pretending it
-    does (C12: no button that looks alive and does nothing silently). */
 export function SkillsDeckPanel() {
-  const [engines, setEngines] = useState<LocalEngine[] | null>(null);
-  const [reachable, setReachable] = useState(true);
-  const [on, setOn] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/main_menu/local_ai")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((body: { reachable: boolean; engines: LocalEngine[] }) => {
-        if (cancelled) return;
-        setReachable(body.reachable);
-        setEngines(body.engines);
-        setOn(Object.fromEntries(body.engines.map((m) => [m.name, true])));
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setReachable(false);
-          setEngines([]);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const freshness = engines === null ? "empty" : engines.length > 0 ? "fresh" : "empty";
-
   return (
-    <section
-      aria-label="Skills deck"
-      data-figure="skills-deck"
-      data-fresh={freshness}
-      className="agentic-panel p-3"
-    >
-      <header className="mb-2 flex items-baseline justify-between">
-        <p className="agentic-label">Skills Deck</p>
-        <span className="text-[10px] text-dim">local engines</span>
+    <section aria-label="Skills deck" className="rubric-panel p-4">
+      <header className="mb-3 flex items-center justify-between">
+        <p className="rubric-label flex items-center gap-2">
+          <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" className="text-dim">
+            <path d="M13 2 5 14h5l-1 8 8-13h-5l1-7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+          </svg>
+          Skills Deck
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="rubric-sub text-[8px] normal-case tracking-normal text-dim">tap &#9654; to run</span>
+          <button type="button" className="pill">+ Add Skill</button>
+        </div>
       </header>
 
-      {engines === null && <p className="text-xs text-dim">asking Ollama&hellip;</p>}
-      {engines !== null && !reachable && (
-        <p className="text-xs text-amber">Ollama not reachable on this laptop at 127.0.0.1:11434</p>
-      )}
-      {engines !== null && reachable && engines.length === 0 && (
-        <p className="text-xs text-dim">no local engines pulled yet</p>
-      )}
-
-      {engines !== null && engines.length > 0 && (
-        <div className="grid grid-cols-2 gap-2">
-          {engines.map((m) => (
-            <div
-              key={m.name}
-              className="flex flex-col gap-2 rounded border border-[#262626] bg-[#1a1a1a] p-2"
-            >
-              <span className="num truncate text-[11px] text-white" title={m.name}>
-                /{m.name}
-              </span>
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] uppercase tracking-wide text-dim">local &middot; ollama</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={!!on[m.name]}
-                  aria-label={`toggle ${m.name} (UI only, not wired yet)`}
-                  title="UI only - not wired to the real local-engine switch yet"
-                  onClick={() => setOn((p) => ({ ...p, [m.name]: !p[m.name] }))}
-                  className="relative h-4 w-8 shrink-0 rounded-full transition-colors"
-                  style={{ background: on[m.name] ? "var(--agentic-amber, #ff7a00)" : "#333" }}
-                >
-                  <span
-                    className="absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all"
-                    style={{ left: on[m.name] ? "18px" : "2px" }}
-                  />
-                </button>
-              </div>
+      <div className="grid grid-cols-2 gap-2.5">
+        {SKILLS.map((s) => (
+          <div key={s.name} className="flex flex-col gap-2 rounded border border-[#2a2a2a] bg-[#1a1818] p-2.5">
+            <span className="text-dim">
+              <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                {s.glyph}
+              </svg>
+            </span>
+            <span className="num truncate text-[11px] font-medium text-white" title={s.name}>
+              {s.name}
+            </span>
+            <span className="rubric-sub text-[7px]">
+              <span className="rubric-accent">{s.model}</span> &middot; {s.tier}
+            </span>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              <button
+                type="button"
+                aria-label={`run ${s.name}`}
+                className="flex h-5 w-5 items-center justify-center rounded border border-[#ff7a00] text-[#ff7a00]"
+              >
+                <PlayIcon />
+              </button>
+              <button
+                type="button"
+                aria-label={`configure ${s.name}`}
+                className="flex h-5 w-5 items-center justify-center rounded border border-[#333] text-dim"
+              >
+                <GearIcon />
+              </button>
             </div>
-          ))}
-        </div>
-      )}
-      <p className="mt-2 text-[9px] leading-relaxed text-dim">
-        names read live from Ollama &middot; the switch is UI only, not wired to a real on/off yet
-      </p>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }

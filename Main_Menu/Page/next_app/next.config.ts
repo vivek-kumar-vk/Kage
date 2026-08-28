@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
     // The static export has no image optimization server behind it.
     unoptimized: true,
   },
+  // Don't let `next dev` drop its own AGENTS.md / CLAUDE.md into this
+  // folder - this repo keeps one AGENTS.md at the root (its rule 7/8
+  // numbering convention), and a second, tool-authored one here would
+  // only confuse that.
+  agentRules: false,
 };
 
 export default nextConfig;

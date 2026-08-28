@@ -18,6 +18,7 @@ __pycache__/
 node_modules/
 **/next_app/out/
 **/next_app/.next/
+**/next_app/next-env.d.ts
 **/svelte_app/build/
 **/svelte_app/.svelte-kit/
 dist/
