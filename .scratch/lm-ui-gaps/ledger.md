@@ -60,3 +60,22 @@ Signals:
 - prompt-fix: "When colour tokens are supplied as inline CSS variables (var(--x)), you MUST style with the `style={{}}` prop only — NEVER `className`/Tailwind. Spacing = literal numbers in `style`. Tailwind classes only resolve for tokens registered in the project's `@theme` block; prototype-local vars are not."
 - prompt-fix: "Given a numeric data series for a chart, compute the SVG path from it (map index→x, value→y by min/max). Do not hand-draw an approximation."
 - meta: `invented-tailwind-class` now 1x; `style-in-wrong-place` 1x; `ignored-seed-module` now the 2nd signal (backfill flagged the inverse as good:reads-seed). Watch all three on the first real build task — the inline-style rule is the highest-value new contract line.
+
+### 2026-08-29 00:58 · Sparkline · app/components/f1/Sparkline.tsx
+- verdict: clean
+- retries: 0
+- gate: clean
+
+### 2026-08-29 00:58 · Sparkline (P9 Phase 1) · app/components/f1/Sparkline.tsx
+- verdict: fixed-by-human
+- retries: 0 (tsc+eslint both passed — semantic bug the gate can't see)
+- tags: svg-path-logic, good:reads-props, good:no-extra-imports
+- evidence: built the path as `series.map(p => "M x,y L x,y").join("")` — a run
+  of disconnected zero-length segments, renders as nothing. Structure, prop
+  destructure, min/max scaling, and the area/line split were all correct.
+- carry-forward: primitives P1 remaining (DeltaBadge/StatDial/SegmentMeter/
+  TimingRow/TelemetryCard/WipeIn) — no series math in those, low risk.
+- prompt-fix: contract line sharpened — "polyline = ONE M then L per next point,
+  space-joined; not M..L.. per point".
+- note: new tag `svg-path-logic`. The gate (tsc + eslint) passes valid-but-wrong
+  SVG math; overnight autonomous runs need a morning visual pass for this class.

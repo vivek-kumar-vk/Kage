@@ -4,13 +4,12 @@ export function Sparkline({ series, height = 60, stroke = "var(--liv-accent)", f
   const min = Math.min(...series);
   const max = Math.max(...series);
   const span = (max - min) || 1;
-  const points = series.map((value, index) => {
+  const line = series.map((value, index) => {
     const x = (index * 240) / (series.length - 1);
     const y = (height - 6) - ((value - min) / span) * (height - 12);
-    return `M ${x},${y} L ${x},${y}`;
-  }).join('');
+    return `${index === 0 ? "M" : "L"} ${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
 
-  const line = points;
   const area = `${line} L240,${height} L0,${height} Z`;
 
   return (

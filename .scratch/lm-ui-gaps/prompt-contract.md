@@ -15,7 +15,9 @@
   Tailwind classes resolve only for tokens in the project's `@theme`; task-local
   vars are not there. Arbitrary Tailwind values need brackets: `max-w-[920px]`.
 - Given a data series for a chart, COMPUTE the SVG path from it (index→x,
-  value→y via min/max). Never hand-draw an approximation.
+  value→y via min/max). Never hand-draw an approximation. A polyline is ONE
+  `M` (first point) then `L` for every next point, space-joined — NOT `M..L..`
+  per point (that draws disconnected zero-length dots).
 - Read figures from the seed module named in the task
   (`app/lib/blueprintSeed.ts` or `app/lib/replicaHoldings.ts`). Never invent a
   number.

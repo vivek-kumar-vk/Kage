@@ -153,8 +153,13 @@ def call_model(prompt: str, max_tokens: int, task_id: str) -> str:
 
 
 def run_cmd(args: list[str], cwd: str) -> tuple[int, str]:
-    p = subprocess.run(args, cwd=cwd, capture_output=True, text=True,
-                       shell=(os.name == "nt"), timeout=900)
+    if os.name == "nt":
+        cmd = subprocess.list2cmdline(args)
+        p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
+                           shell=True, timeout=900)
+    else:
+        p = subprocess.run(args, cwd=cwd, capture_output=True, text=True,
+                           timeout=900)
     return p.returncode, (p.stdout or "") + (p.stderr or "")
 
 
