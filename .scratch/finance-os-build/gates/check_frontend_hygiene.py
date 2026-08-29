@@ -89,6 +89,12 @@ def check():
         if '"use client"' in s or CLIENT_HOOKS.search(s):
             violations.append("app/layout.tsx: root layout must be a server component (no 'use client', no client hooks)")
 
+    # Tailwind needs a postcss.config for Next to run it as a plugin — without
+    # it the build "succeeds" but every utility class is purged (Phase 0 gap).
+    pc = FRONTEND / "postcss.config.js"
+    if not pc.exists() or "tailwindcss" not in pc.read_text(encoding="utf-8"):
+        violations.append("frontend/postcss.config.js missing or does not register tailwindcss — utilities will be purged")
+
     if violations:
         print("FRONTEND HYGIENE GATE — fix these (Phase 2 lesson-set):", file=sys.stderr)
         for v in violations:
