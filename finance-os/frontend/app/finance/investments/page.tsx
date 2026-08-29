@@ -41,7 +41,7 @@ function HoldingsTable() {
     setBusy(id);
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE ?? "http://127.0.0.1:8000"}/api/finance/investments/holdings/${id}/archive`,
+        `${process.env.NEXT_PUBLIC_API_BASE ?? ""}/api/finance/investments/holdings/${id}/archive`,
         { method: "POST" }
       );
       refetch();

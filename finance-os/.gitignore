@@ -9,3 +9,6 @@ frontend/.next/
 **/node_modules/
 *.tsbuildinfo
 backend/static/
+
+# local server logs
+backend/.serve.*
