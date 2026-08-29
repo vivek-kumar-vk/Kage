@@ -76,6 +76,19 @@ def _normalize_py(text: str) -> str:
     return "\n".join(out) + ("\n" if text.endswith("\n") else "")
 
 
+def _classify_err(err: str) -> str:
+    """Severity of a gate failure. high = module is broken (won't import/parse);
+    mid = imports but has a bad reference / logic / failing test; low = the rest."""
+    e = (err or "").lower()
+    if ("syntaxerror" in e or "generation loop" in e or "invalid json" in e
+            or "file is missing" in e or "unexpected eof" in e):
+        return "high"
+    if ("f821" in e or "undefined name" in e or "f82" in e or "f7" in e
+            or "f63" in e or "pytest" in e or "importerror" in e or "no module named" in e):
+        return "mid"
+    return "low"
+
+
 def _runaway(text: str, limit: int = 6) -> str | None:
     """Detect the degenerate repetition loop (same non-trivial line N+ times)."""
     c = Counter(ln.strip() for ln in text.splitlines() if len(ln.strip()) > 12)
@@ -104,7 +117,13 @@ def _py_gate(cwd: str, out_rel: str, pytest_k: str | None) -> tuple[bool, str]:
     return (not probs), "\n\n".join(probs)
 
 
-def do_task_lite(m: dict, t: dict, contract: str, ask: str, progress: pathlib.Path) -> str:
+def do_task_lite(m: dict, t: dict, contract: str, ask: str, progress: pathlib.Path,
+                 fix_hint: str = "") -> tuple[str, str]:
+    """Returns (status, errtext). status in {ok, dirty, blocked, error}.
+    phase_fix mode (m['phase_fix'] true) OR a non-empty fix_hint => the task is
+    NEVER blocked mid-phase and the snapshot is NOT restored: a failing file is
+    left on disk and reported as 'dirty' for the post-phase fix loop to repair.
+    fix_hint = the gate errors from a prior attempt; folded into the prompt."""
     cwd = t.get("cwd", m["cwd"])
     lang = t.get("lang", m.get("lang", "tsx"))
     out_rel = t["out"]
@@ -112,12 +131,13 @@ def do_task_lite(m: dict, t: dict, contract: str, ask: str, progress: pathlib.Pa
     max_retries = m.get("max_retries", 2)
     grill_rounds = t.get("grill_rounds", m.get("grill_rounds", 3))
     mt = m.get("max_tokens", 2600)
+    soft = bool(m.get("phase_fix")) or bool(fix_hint)
 
     if t.get("op") == "rm":
         if out_abs.exists():
             out_abs.unlink()
         rp.log(progress, f"{t['id']}: removed {out_rel}")
-        return "ok"
+        return ("ok", "")
 
     snap = out_abs.read_text(encoding="utf-8") if out_abs.exists() else None
 
@@ -149,6 +169,14 @@ def do_task_lite(m: dict, t: dict, contract: str, ask: str, progress: pathlib.Pa
                  if ask else "")
     base = (contract + "\n\n" + preamble + client_line + phase_ctx +
             f"\nFILE: {out_rel}\n\nSPEC (this file only):\n{t['spec']}\n")
+    if fix_hint:
+        _cur = out_abs.read_text(encoding="utf-8") if out_abs.exists() else "(file is missing — recreate it in full)"
+        _disc = ("Use top-level imports (from services.db import ...), never a leading dot, "
+                 "never a `backend.` prefix. Do NOT repeat any line. "
+                 if lang == "py" else "")
+        base += ("\n\n=== YOUR CURRENT FILE (" + out_rel + ") — it FAILED its gate ===\n" + _cur +
+                 "\n\n=== GATE ERRORS TO FIX ===\n" + fix_hint +
+                 "\n\nReturn the COMPLETE corrected file and nothing else. " + _disc)
 
     rp.resource_gate(m, progress)
     rp.ensure_llama(m.get("llama_cmd", ""), progress)
@@ -159,14 +187,21 @@ def do_task_lite(m: dict, t: dict, contract: str, ask: str, progress: pathlib.Pa
             txt = _normalize_py(txt)
         out_abs.parent.mkdir(parents=True, exist_ok=True)
         out_abs.write_text(txt, encoding="utf-8")
-        loop = _runaway(txt)
+        # runaway = the degenerate import/def repetition loop; only Python does it.
+        # SQL/CSS/JSON legitimately repeat lines (identical column defs across 15
+        # CREATE TABLEs), so don't false-positive them.
+        loop = _runaway(txt) if lang == "py" else None
         return (loop is None), (loop or "")
 
-    raw = call_model_resilient(m, base, mt, t["id"])
+    raw = call_model_resilient(m, base, mt, t["id"], tag="-pfix" if fix_hint else "")
     clean, loop_err = _emit(raw)
     ok, errs = (False, loop_err) if not clean else gate_fn()
+
+    # inline retries: full budget in legacy mode; at most 1 cheap one in soft mode
+    # (the post-phase fix loop does the real remediation there).
+    cap = 1 if soft else max_retries
     retries = 0
-    while not ok and retries < max_retries:
+    while not ok and retries < cap:
         retries += 1
         rp.log(progress, f"{t['id']}: gate failed, retry {retries}")
         rp.resource_gate(m, progress)
@@ -180,6 +215,15 @@ def do_task_lite(m: dict, t: dict, contract: str, ask: str, progress: pathlib.Pa
         ok, errs = (False, loop_err) if not clean else gate_fn()
 
     ledger = pathlib.Path(m["ledger_file"])
+
+    if soft:
+        # never block, never restore: leave the file (even if imperfect) and let
+        # the phase-fix loop repair it after every task in the phase has run.
+        verdict = "clean" if ok else "DIRTY -> phase-fix"
+        rp.ledger_entry(ledger, t["id"], out_rel, verdict, retries, 0, "n/a", "" if ok else errs)
+        rp.log(progress, f"{t['id']}: {verdict}")
+        return ("ok", "") if ok else ("dirty", errs)
+
     if not ok:
         if snap is not None:
             out_abs.write_text(snap, encoding="utf-8")
@@ -187,7 +231,7 @@ def do_task_lite(m: dict, t: dict, contract: str, ask: str, progress: pathlib.Pa
             out_abs.unlink()
         rp.ledger_entry(ledger, t["id"], out_rel, "BLOCKED", retries, 0, "n/a", errs)
         rp.log(progress, f"{t['id']}: BLOCKED after {retries} retries — snapshot restored")
-        return "blocked"
+        return ("blocked", errs)
 
     # self_grill uses the module-global rp.gate; point it at our gate for this task
     _orig = rp.gate
@@ -208,7 +252,7 @@ def do_task_lite(m: dict, t: dict, contract: str, ask: str, progress: pathlib.Pa
         except Exception as e:  # noqa: BLE001
             rp.log(progress, f"{t['id']}: scout EXCEPTION {e!r} (non-fatal)")
         time.sleep(m.get("scout_cooldown_s", 30))
-    return "ok"
+    return ("ok", "")
 
 
 def run_manifest(path: str) -> dict:
@@ -221,6 +265,17 @@ def run_manifest(path: str) -> dict:
     if m.get("ask_excerpt_file") and pathlib.Path(m["ask_excerpt_file"]).exists():
         ask = pathlib.Path(m["ask_excerpt_file"]).read_text(encoding="utf-8")
 
+    # RESUME: if this phase's gate is already green, skip the whole phase. Makes a
+    # relaunch after a halt cheap — already-built phases cost ~1 gate run, not a
+    # full regen. Fresh run: nothing built -> gate fails -> we build normally.
+    if m.get("gate_cmd") and os.environ.get("NO_RESUME") != "1":
+        pre = subprocess.run(m["gate_cmd"], cwd=m["repo"], shell=True,
+                             capture_output=True, text=True, timeout=1800)
+        if pre.returncode == 0:
+            rp.log(progress, f"=== PHASE {m['phase']} SKIP (gate already green on resume) ===")
+            return {"phase": m["phase"], "tally": {"ok": len(m["tasks"]), "dirty": 0, "blocked": 0, "error": 0},
+                    "gate_rc": 0, "gate_tail": "(skipped on resume — gate already green)"}
+
     rp.log(progress, f"=== PHASE {m['phase']} START ({len(m['tasks'])} tasks) === (no git)")
     for sc in m.get("setup_cmds", []):
         rp.log(progress, f"setup: {sc}")
@@ -228,15 +283,77 @@ def run_manifest(path: str) -> dict:
                            text=True, timeout=1800)
         rp.log(progress, f"setup rc={p.returncode} "
                          + "\n".join(((p.stdout or '') + (p.stderr or '')).strip().splitlines()[-6:]))
-    tally = {"ok": 0, "blocked": 0, "error": 0}
+    tally = {"ok": 0, "dirty": 0, "blocked": 0, "error": 0}
+    failing: list[tuple[dict, str]] = []
     for i, t in enumerate(m["tasks"], 1):
         rp.log(progress, f"--- task {i}/{len(m['tasks'])}: {t['id']} ---")
         try:
-            tally[do_task_lite(m, t, contract, ask, progress)] += 1
+            st, err = do_task_lite(m, t, contract, ask, progress)
+            tally[st if st in tally else "error"] += 1
+            if st == "dirty":
+                failing.append((t, err))
         except Exception as e:  # noqa: BLE001
             tally["error"] += 1
             rp.log(progress, f"{t['id']}: EXCEPTION {e!r}")
         time.sleep(m.get("cooldown_s", 50))
+
+    # REVIEW GATE: with "pause_before_fix", stop here — BEFORE any file goes back
+    # to the local model — emit a one-line summary and wait for the reviewer to
+    # drop an approve/skip sentinel next to the progress files.
+    if m.get("phase_fix") and failing and m.get("pause_before_fix"):
+        sev = {"high": 0, "mid": 0, "low": 0}
+        for _t, _e in failing:
+            sev[_classify_err(_e)] += 1
+        line = (f"PHASE {m['phase']} REVIEW: tasks={len(m['tasks'])} "
+                f"errors={len(failing)} | high={sev['high']} mid={sev['mid']} low={sev['low']} "
+                f"| {', '.join(x[0]['id'] for x in failing)}")
+        rp.log(progress, f"=== {line} ===")
+        pdir = progress.parent
+        (pdir / f"phase{m['phase']}_review.md").write_text(
+            line + "\n\n" + "\n\n".join(f"### {t['id']}  ({t['out']})  [{_classify_err(e)}]\n{e}"
+                                        for t, e in failing), encoding="utf-8")
+        appr = pdir / f"phase{m['phase']}_fix_approved"
+        skip = pdir / f"phase{m['phase']}_fix_skip"
+        for s in (appr, skip):
+            s.unlink(missing_ok=True)
+        rp.log(progress, f"AWAITING REVIEW — create {appr.name} to run the fix loop, "
+                         f"or {skip.name} to skip it and go straight to the gate")
+        while not appr.exists() and not skip.exists():
+            time.sleep(15)
+        approved = appr.exists()
+        appr.unlink(missing_ok=True)
+        skip.unlink(missing_ok=True)
+        rp.log(progress, f"=== PHASE {m['phase']} fix loop "
+                         f"{'APPROVED by reviewer' if approved else 'SKIPPED by reviewer'} ===")
+        if not approved:
+            failing = []
+
+    # POST-PHASE FIX LOOP: no task was blocked mid-phase; now hand every file that
+    # still fails its gate back to the local model, with the file + its errors,
+    # up to phase_fix_rounds passes over the whole set.
+    if m.get("phase_fix") and failing:
+        rounds = m.get("phase_fix_rounds", 3)
+        for k in range(1, rounds + 1):
+            if not failing:
+                break
+            rp.log(progress, f"=== PHASE {m['phase']} FIX ROUND {k}/{rounds} "
+                             f"({len(failing)} file(s): {', '.join(x[0]['id'] for x in failing)}) ===")
+            still = []
+            for t, err in failing:
+                try:
+                    st, err2 = do_task_lite(m, t, contract, ask, progress, fix_hint=err)
+                    if st != "ok":
+                        still.append((t, err2))
+                except Exception as e:  # noqa: BLE001
+                    rp.log(progress, f"{t['id']}: phase-fix EXCEPTION {e!r}")
+                    still.append((t, err))
+                time.sleep(m.get("cooldown_s", 50))
+            failing = still
+        tally["ok"] += tally["dirty"] - len(failing)
+        tally["dirty"] = len(failing)
+        if failing:
+            rp.log(progress, f"=== PHASE {m['phase']} still-dirty after {rounds} fix rounds: "
+                             f"{', '.join(x[0]['id'] for x in failing)} ===")
 
     gate_rc, gate_tail = 0, "(no gate_cmd)"
     if m.get("gate_cmd"):
@@ -247,7 +364,7 @@ def run_manifest(path: str) -> dict:
         gate_tail = "\n".join(((p.stdout or "") + (p.stderr or "")).strip().splitlines()[-20:])
         rp.log(progress, f"gate_cmd rc={gate_rc}\n{gate_tail}")
 
-    rp.log(progress, f"=== PHASE {m['phase']} DONE ok={tally['ok']} "
+    rp.log(progress, f"=== PHASE {m['phase']} DONE ok={tally['ok']} dirty={tally['dirty']} "
                      f"blocked={tally['blocked']} error={tally['error']} gate_rc={gate_rc} ===")
     return {"phase": m["phase"], "tally": tally, "gate_rc": gate_rc, "gate_tail": gate_tail}
 

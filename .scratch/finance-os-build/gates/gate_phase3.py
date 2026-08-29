@@ -1,6 +1,8 @@
 """Phase 3 gate — Investments. Fresh import then check time-series + archive semantics."""
 import time, pathlib
 from _util import BACKEND, FRONTEND, must, ok, die, fresh_db, backend_server, get, post
+from check_frontend_hygiene import check as _fe_hygiene
+_fe_hygiene()
 
 db = fresh_db()
 with backend_server(db) as base:

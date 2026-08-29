@@ -1,16 +1,23 @@
-"""Phase 1 gate — ingestion & CRUD. Spins up the backend against a fresh DB."""
-import time, pathlib, sys
-from _util import REPO, BACKEND, must, ok, die, fresh_db, backend_server, get, post, grep_repo
+"""Phase 1 gate — ingestion & CRUD. Spins the backend against a fresh DB and
+exercises ONLY what Phase 1 delivers: accounts CRUD, the Groww CSV import
+(idempotent), the weighted-avg upsert, and the background price backfill.
 
-FIX = pathlib.Path(__file__).resolve().parent / "fixtures"
+Cross-surface checks (rolling-returns, portfolio-pulse, bond exclusion) live in
+the Phase 2 / Phase 3 gates, where the routers they need exist."""
+import sqlite3
+import time
+
+from _util import BACKEND, backend_server, fresh_db, get, must, ok, post
+
 db = fresh_db()
 
-# --- static: specialists must not import an LLM client at module level  [I] ---
+# --- static: specialists never import an LLM SDK at module level  [I] ---
 spec_dir = BACKEND / "services" / "agents"
 bad = []
-for p in spec_dir.glob("*_specialist.py") if spec_dir.exists() else []:
+for p in (list(spec_dir.glob("*specialist*.py")) if spec_dir.exists() else []):
     head = "\n".join(p.read_text(encoding="utf-8").splitlines()[:40])
-    if any(k in head for k in ("import openai", "from openai", "Ollama(", "import ollama", "litellm")):
+    if any(k in head for k in ("import openai", "from openai", "Ollama(",
+                               "import ollama", "litellm", "llama_cpp")):
         bad.append(p.name)
 must(not bad, "no module-level LLM import in specialists  [I]: " + ", ".join(bad))
 
@@ -18,44 +25,46 @@ must(not bad, "no module-level LLM import in specialists  [I]: " + ", ".join(bad
 up = BACKEND / "services" / "calculations" / "holdings_upsert.py"
 must(up.exists(), "holdings_upsert.py exists")
 src = up.read_text(encoding="utf-8")
-must("mode" in src and ("set_snapshot" in src or "add_lot" in src),
+must("mode" in src and "set_snapshot" in src and "add_lot" in src,
      "upsert_holding has add_lot vs set_snapshot mode  [C]")
 
 with backend_server(db) as base:
-    # CRUD smoke
-    s, _ = post(base, "/api/finance/accounts", {"name": "Groww Demat", "type": "demat"})
-    must(s in (200, 201), f"create account -> {s}")
+    # accounts CRUD
+    s, body = post(base, "/api/finance/accounts", {"name": "Groww Demat", "type": "demat"})
+    must(s in (200, 201), f"create account -> {s}: {body}")
+    s, rows = get(base, "/api/finance/accounts")
+    must(s == 200 and any(r.get("name") == "Groww Demat" for r in rows),
+         f"new account shows in GET /accounts -> {s}: {rows}")
 
-    # double Groww CSV import: units set once, no crash, avg_cost stable  [C]
-    csv = (FIX / "groww_sample.csv").read_bytes() if (FIX / "groww_sample.csv").exists() else \
-        b"symbol,name,quantity,average_price\nINFY,Infosys,10,1500\n"
-    body = b"--b\r\nContent-Disposition: form-data; name=\"file\"; filename=\"g.csv\"\r\n" \
-           b"Content-Type: text/csv\r\n\r\n" + csv + b"\r\n--b--\r\n"
-    s1, r1 = post(base, "/api/finance/import/groww-csv", files=body, ctype="multipart/form-data; boundary=b")
+    # double Groww CSV import: units set once, not doubled  [C]
+    csv = b"symbol,name,quantity,average_price\nINFY,Infosys,10,1500\n"
+    multipart = (b"--b\r\nContent-Disposition: form-data; name=\"file\"; "
+                 b"filename=\"g.csv\"\r\nContent-Type: text/csv\r\n\r\n" + csv + b"\r\n--b--\r\n")
+    ct = "multipart/form-data; boundary=b"
+    s1, r1 = post(base, "/api/finance/import/groww-csv", files=multipart, ctype=ct)
     must(s1 == 200, f"first groww import -> {s1}: {r1}")
-    s2, r2 = post(base, "/api/finance/import/groww-csv", files=body, ctype="multipart/form-data; boundary=b")
+    s2, r2 = post(base, "/api/finance/import/groww-csv", files=multipart, ctype=ct)
     must(s2 == 200, f"second (idempotent) groww import -> {s2}: {r2}")
-    s, hold = get(base, "/api/finance/investments/holdings")
-    infy = [h for h in hold if h.get("symbol", "").startswith("INFY")]
-    must(len(infy) == 1, f"exactly one INFY holding after double import (got {len(infy)})  [C]")
-    must(abs(float(infy[0]["units"]) - 10) < 1e-6, f"units set to 10 not doubled (got {infy[0]['units']})  [C]")
 
-    # background backfill populated price_history within ~30s  [B]
-    got = False
+    # verify against the DB directly (no investments router in Phase 1)
+    con = sqlite3.connect(db)
+    con.row_factory = sqlite3.Row
+    infy = con.execute("SELECT units, avg_cost FROM holdings WHERE symbol='INFY'").fetchall()
+    must(len(infy) == 1, f"exactly one INFY holding after double import (got {len(infy)})  [C]")
+    must(abs(float(infy[0]["units"]) - 10) < 1e-6,
+         f"INFY units set to 10, not doubled (got {infy[0]['units']})  [C]")
+    lots = con.execute("SELECT COUNT(*) FROM lots l JOIN holdings h ON h.id=l.holding_id "
+                       "WHERE h.symbol='INFY'").fetchone()[0]
+    must(lots == 1, f"exactly one INFY lot after double import (got {lots})  [C]")
+
+    # background backfill populated price_history for the new symbol  [B]
+    got = 0
     for _ in range(15):
-        s, r = get(base, "/api/finance/investments/visuals/rolling-returns")
-        if s == 200 and r and (isinstance(r, dict) and r.get("series") or isinstance(r, list) and r):
-            got = True
+        got = con.execute("SELECT COUNT(*) FROM price_history WHERE symbol='INFY'").fetchone()[0]
+        if got:
             break
         time.sleep(2)
-    must(got, "price_history backfilled for new symbol via background task  [B]")
-
-    # bond excluded from portfolio value, never a ₹0 row  [J/M]
-    post(base, "/api/finance/import/manual",
-         {"entity": "holding", "account_id": 1, "symbol": "SGB2031", "type": "bond", "units": 5})
-    s, pulse = get(base, "/api/finance/overview/portfolio-pulse")
-    txt = str(pulse)
-    must("SGB2031" not in txt or "excluded" in txt.lower(),
-         "bond holding excluded from portfolio value, not shown as ₹0  [J/M]")
+    con.close()
+    must(got > 0, "price_history backfilled for INFY via background task  [B]")
 
 ok("phase 1 ingestion & CRUD")

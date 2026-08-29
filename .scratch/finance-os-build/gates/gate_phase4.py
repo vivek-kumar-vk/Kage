@@ -1,5 +1,7 @@
 """Phase 4 gate — Debt. /debt/simulate returns sane months/interest saved."""
 from _util import must, ok, die, fresh_db, backend_server, get, post
+from check_backend_hygiene import check as _be_hygiene
+_be_hygiene()
 
 db = fresh_db()
 with backend_server(db) as base:

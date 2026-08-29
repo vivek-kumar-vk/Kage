@@ -13,7 +13,7 @@
   "grill_rounds": 1,
   "min_free_ram_mb": 400,
   "min_free_vram_mb": 200,
-  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 24576 --parallel 1 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
   "final_build": false,
   "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase1.py",
   "setup_cmds": [
@@ -58,12 +58,12 @@
     {
       "id": "P1-imports-transactions",
       "out": "services/imports/transactions.py",
-      "spec": "dedupe_transaction(conn, account_id, date, amount, description) -> bool (True if new, inserts; False if a row with the same normalized date+amount+description exists). parse_upi_csv(file_bytes) and parse_sms(text) both return normalized txn dicts and BOTH persist via dedupe_transaction â€” one code path, no double counting."
+      "spec": "dedupe_transaction(conn, account_id, date, amount, description) -> bool (True if new, inserts; False if a row with the same normalized date+amount+description exists). parse_upi_csv(file_bytes) and parse_sms(text) both return normalized txn dicts and BOTH persist via dedupe_transaction \u00e2\u20ac\u201d one code path, no double counting."
     },
     {
       "id": "P1-router-accounts",
       "out": "routers/accounts.py",
-      "spec": "APIRouter. GET/POST /accounts (POST body: name,type,institution?,currency?). GET/PUT/DELETE /accounts/{id} â€” DELETE returns 409 with a message pointing to archive when ON DELETE RESTRICT trips. POST /accounts/{id}/archive sets archived_at. List excludes archived unless ?include_archived=true. Uses services.db.connect()."
+      "spec": "APIRouter. GET/POST /accounts (POST body: name,type,institution?,currency?). GET/PUT/DELETE /accounts/{id} \u00e2\u20ac\u201d DELETE returns 409 with a message pointing to archive when ON DELETE RESTRICT trips. POST /accounts/{id}/archive sets archived_at. List excludes archived unless ?include_archived=true. Uses services.db.connect()."
     },
     {
       "id": "P1-router-entities",
@@ -83,7 +83,10 @@
     {
       "id": "P1-specialist-stubs",
       "out": "services/agents/specialists.py",
-      "spec": "InvestmentSpecialist, DebtSpecialist, TrackerSpecialist, LearningSpecialist â€” each __init__(self, llm_client, calc_services). NO module-level 'import openai'/'ollama'/'litellm'. Each exposes analyze() returning a deterministic dict; the llm_client is used only to render a narrative string field."
+      "spec": "InvestmentSpecialist, DebtSpecialist, TrackerSpecialist, LearningSpecialist \u00e2\u20ac\u201d each __init__(self, llm_client, calc_services). NO module-level 'import openai'/'ollama'/'litellm'. Each exposes analyze() returning a deterministic dict; the llm_client is used only to render a narrative string field."
     }
-  ]
+  ],
+  "phase_fix": true,
+  "phase_fix_rounds": 2,
+  "pause_before_fix": false
 }

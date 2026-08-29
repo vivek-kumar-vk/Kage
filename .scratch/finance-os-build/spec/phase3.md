@@ -1,5 +1,23 @@
 # Phase 3 — Investments tab
 
+## LESSONS FROM PHASE 2 — do not repeat (full list in prompt-contract.md "LESSONS LEDGER")
+- These files are FROZEN — import, never regenerate: `lib/api.ts`, `lib/types.ts`,
+  `tsconfig.json`, `tailwind.config.ts`, `app/layout.tsx`, `app/finance/layout.tsx`,
+  `components/finance/{Card,Skeleton,FormModal}.tsx`, `backend/services/db.py`,
+  `backend/app_factory.py`.
+- Import ONLY packages in `frontend/package.json`. BANNED (build dies):
+  framer-motion, shadcn-ui, @radix-ui/*, use-sync-external-store, any markdown lib.
+  Animate with Tailwind `animate-pulse` + `motion-reduce:`. Modal = plain
+  `fixed inset-0` div.
+- `"use client";` as literal line 1 of ANY file using a hook. Never a client hook
+  in a root layout.
+- Imports use `@/...` alias, never `../../` traversal. No `frontend/services/` dir.
+- `page.tsx` = content only; header/nav/tabs already live in `app/finance/layout.tsx`.
+- Guard `if (!data) return <Empty/>` before touching `data.x`. Never read a var
+  outside its block scope. No module self-import.
+- Every card/page: distinct loading / error / empty states.
+
+
 Authoritative: master doc §7 (Investments endpoints), §8 (card patterns), §9.2
 (Investment Specialist). All portfolio math reads the `active_holdings` view.
 

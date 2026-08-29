@@ -5,6 +5,10 @@ an account with active holdings must cascade-archive or block — never orphan  
 data_health writes are UPDATE-only  [singleton]."""
 from _util import BACKEND, must, ok, die, fresh_db, backend_server, get, post
 import urllib.request, urllib.error, json, sqlite3
+from check_frontend_hygiene import check as _fe_hygiene
+from check_backend_hygiene import check as _be_hygiene
+_be_hygiene()
+_fe_hygiene()
 
 
 def req(base, path, method, body=None):

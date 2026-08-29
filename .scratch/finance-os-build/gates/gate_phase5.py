@@ -5,6 +5,10 @@ built in Phase 2). Here we prove the *data* side: a mutation invalidates the
 server-derived Overview numbers immediately."""
 from _util import must, ok, die, fresh_db, backend_server, get, post
 import urllib.request, urllib.error, json
+from check_frontend_hygiene import check as _fe_hygiene
+from check_backend_hygiene import check as _be_hygiene
+_be_hygiene()
+_fe_hygiene()
 
 db = fresh_db()
 

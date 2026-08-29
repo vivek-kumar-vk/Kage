@@ -13,7 +13,7 @@
   "grill_rounds": 1,
   "min_free_ram_mb": 400,
   "min_free_vram_mb": 200,
-  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 24576 --parallel 1 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
   "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase8.py",
   "scout": false,
   "scout_profile": "ui_gap_scout",
@@ -52,5 +52,8 @@
       "out": "CUTOVER.md",
       "spec": "A short human checklist for making finance-os THE Finance screen (the one manual step after the autonomous build passes): (1) in Start_Inky/serve_everything_on_one_port.py, point the Finance route at `uvicorn main:app` from finance-os/backend + its static bundle, and stop mounting Screens/Finance/server_for_finance.py (leave the tree in git history); (2) if the served path changed, update the Finance target in Main_Menu/Page/next_app/app/components/NavPanel.tsx; (3) run finance-os/build.py; (4) smoke Start_Inky/Start_Everything.bat. List the exact lines to change if you can infer them from the current serve file."
     }
-  ]
+  ],
+  "phase_fix": true,
+  "phase_fix_rounds": 2,
+  "pause_before_fix": false
 }

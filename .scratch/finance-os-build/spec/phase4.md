@@ -1,5 +1,18 @@
 # Phase 4 — Debt & Liabilities tab
 
+## LESSONS FROM PHASE 3 — do not repeat (full list in prompt-contract.md "LESSONS LEDGER")
+- Router routes carry the tab segment (`/debt/...`, `/tracker/...`, `/scenario/...`) —
+  `app_factory` only adds `/api/finance`. Match the gate's exact paths.
+- No `pass` / placeholder route bodies. No `Depends()` for auth (middleware is
+  global). DB only via a `_db()` generator dependency.
+- Time-series = computed from `price_history` + `active_holdings`; no such table.
+  Schema frozen to `scripts/schema.sql`.
+- Verify every import resolves in the real tree (`services.calculations.xirr`,
+  plain functions not classes). No `from routers import <other>`.
+- `useFinanceData` / `useSubmit` = hooks from `@/lib/api`, called once at
+  component top level — never in `useEffect` / handlers / async.
+
+
 Authoritative: master doc §7 (Debt endpoints), §9.3 (Debt Specialist), §10
 (scenario simulator is pure math, no LLM). Finance philosophy priority order
 (master doc §2): high-interest debt sits above goals/investing — payoff plan

@@ -13,7 +13,7 @@
   "grill_rounds": 1,
   "min_free_ram_mb": 400,
   "min_free_vram_mb": 200,
-  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 24576 --parallel 1 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
   "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase5.py",
   "scout": false,
   "scout_profile": "ui_gap_scout",
@@ -47,5 +47,8 @@
       "out": "components/finance/forms/TransactionForm.tsx",
       "spec": "Controlled form: account select, date, description, amount (negative=expense), type select (from HOLDING? no - TRANSACTION_TYPES), category select populated from shared/constants/categories TRANSACTION_CATEGORIES. Submits via useSubmit to /api/finance/import/manual {entity:'transaction',...}. onSaved callback."
     }
-  ]
+  ],
+  "phase_fix": true,
+  "phase_fix_rounds": 2,
+  "pause_before_fix": false
 }

@@ -13,7 +13,7 @@
   "grill_rounds": 1,
   "min_free_ram_mb": 400,
   "min_free_vram_mb": 200,
-  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 24576 --parallel 1 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
   "final_build": true,
   "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase2.py",
   "setup_cmds": [
@@ -74,7 +74,7 @@
       "id": "P2-card-primitives",
       "lang": "tsx",
       "out": "components/finance/Card.tsx",
-      "spec": "Card({title, children, action?}) using the .card / .card-header / .card-title classes from globals.css. Plus a sibling Skeleton.tsx (shimmer block) â€” put Skeleton in components/finance/Skeleton.tsx via a second export? No: this file exports Card only."
+      "spec": "Card({title, children, action?}) using the .card / .card-header / .card-title classes from globals.css. Plus a sibling Skeleton.tsx (shimmer block) \u00e2\u20ac\u201d put Skeleton in components/finance/Skeleton.tsx via a second export? No: this file exports Card only."
     },
     {
       "id": "P2-skeleton",
@@ -94,7 +94,7 @@
       "lang": "tsx",
       "client": true,
       "out": "components/finance/cards/OverviewCards.tsx",
-      "spec": "Export CashflowCard, PortfolioPulseCard, EmergencyFundCard, DebtStatusCard, SurplusAllocationCard, GoalsCard, TopActionsCard, DataHealthCard â€” each a small component fetching its own /api/finance/overview/* endpoint via useFinanceData with explicit loading/error/empty. GoalsCard header has a <Link href='/finance/settings?tab=goals'>Manage all goals â†’</Link>. Re-export from cards/index.ts is NOT needed; app/finance/page.tsx imports named from this file and NetWorthCard from its own file."
+      "spec": "Export CashflowCard, PortfolioPulseCard, EmergencyFundCard, DebtStatusCard, SurplusAllocationCard, GoalsCard, TopActionsCard, DataHealthCard \u00e2\u20ac\u201d each a small component fetching its own /api/finance/overview/* endpoint via useFinanceData with explicit loading/error/empty. GoalsCard header has a <Link href='/finance/settings?tab=goals'>Manage all goals \u00c3\u00a2\u00e2\u20ac\u00a0\u00e2\u20ac\u2122</Link>. Re-export from cards/index.ts is NOT needed; app/finance/page.tsx imports named from this file and NetWorthCard from its own file."
     },
     {
       "id": "P2-hero-three",
@@ -117,5 +117,8 @@
       "out": "services/calculations/core.py",
       "spec": "net_worth(), cashflow() (income - expenses - EMIs - SIPs = surplus; current salary = salary row MAX(effective_date)<=today), emergency_fund() (target = 6 * monthly expenses, gap), goals_overview() (top 3 active goals + bounded goal_probability). Deterministic, read active_holdings + latest_prices. goal_probability exactly as master doc section 10."
     }
-  ]
+  ],
+  "phase_fix": true,
+  "phase_fix_rounds": 2,
+  "pause_before_fix": false
 }

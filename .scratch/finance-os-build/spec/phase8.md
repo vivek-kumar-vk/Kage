@@ -1,5 +1,15 @@
 # Phase 8 — Night worker, backups, build pipeline, cutover, polish
 
+## LESSONS FROM PHASES 2-7 — do not repeat (full list in prompt-contract.md "LESSONS LEDGER")
+- Box has only fastapi + uvicorn + numpy. No faiss/torch/sklearn/etc.
+- `services/{calculations,agents}/*` are framework-free (no APIRouter/fastapi).
+- Router prefix = tab segment only. POST bodies via `Body`/model.
+- No `pass` route bodies. DB via a `_db()` generator dependency.
+- FE: import exact paths (`@/components/finance/Card`), never a barrel or an
+  invented `Button/Input/Slider`. `useFinanceData(path)` 1-arg; hooks at top level.
+- `data_health` singleton = UPDATE WHERE id=1.
+
+
 Authoritative: master doc §11 (night worker sequence), §8.9 (build/serve), §12
 (failure modes). This phase makes Finance OS *the* Finance screen.
 

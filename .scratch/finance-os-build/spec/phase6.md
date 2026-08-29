@@ -1,5 +1,17 @@
 # Phase 6 — Learning tab & RAG
 
+## LESSONS FROM PHASE 5 — do not repeat (full list in prompt-contract.md "LESSONS LEDGER")
+- `services/agents/*.py` and `services/calculations/*.py` are framework-free (no
+  APIRouter / no fastapi import / no `pass` bodies).
+- Backend can't import `finance-os/shared/` — inline small constant tuples with a
+  source-of-truth comment. `shared/constants/categories.py` exports TUPLES
+  (`TRANSACTION_CATEGORIES` etc), not `Categories`/`CategoryEnum`.
+- Only shared FE components: `@/components/finance/{Card,Skeleton,FormModal}` +
+  `charts/InvestmentCharts`. Build anything else inline / as a new emitted file.
+- `useFinanceData<T>(path)` = one arg; `useSubmit(path, method?)`. Filter in the
+  component, not via the hook.
+
+
 Authoritative: master doc §7 (Learning endpoints), §9.5 (Learning Specialist),
 §11 (RAG). **Public educational content ONLY is ever embedded** — no user
 transaction data, account names, holding names, lender names, PAN ever enters the

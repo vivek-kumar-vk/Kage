@@ -13,7 +13,7 @@
   "grill_rounds": 1,
   "min_free_ram_mb": 400,
   "min_free_vram_mb": 200,
-  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 24576 --parallel 1 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
   "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase3.py",
   "scout": false,
   "scout_profile": "ui_gap_scout",
@@ -24,7 +24,7 @@
     {
       "id": "P3-calc-portfolio",
       "out": "services/calculations/portfolio.py",
-      "spec": "Reads active_holdings + latest_prices + price_history. current value, gain/loss, weight, allocation (asset class + geography), XIRR (reuse services.calculations.xirr), concentration score, fund overlap matrix. Bonds/other with price None are EXCLUDED from value totals and returned in a separate 'excluded' list â€” never counted as 0. rolling_returns/drawdown/portfolio_vs_benchmark helpers each return {'state':'ok'|'partial'|'pending', 'series':[...]} â€” 'pending' when no price_history rows for the symbols, 'partial' when < requested window."
+      "spec": "Reads active_holdings + latest_prices + price_history. current value, gain/loss, weight, allocation (asset class + geography), XIRR (reuse services.calculations.xirr), concentration score, fund overlap matrix. Bonds/other with price None are EXCLUDED from value totals and returned in a separate 'excluded' list \u00e2\u20ac\u201d never counted as 0. rolling_returns/drawdown/portfolio_vs_benchmark helpers each return {'state':'ok'|'partial'|'pending', 'series':[...]} \u00e2\u20ac\u201d 'pending' when no price_history rows for the symbols, 'partial' when < requested window."
     },
     {
       "id": "P3-router-investments",
@@ -42,7 +42,7 @@
       "cwd": "B:/inky_code/finance-os/frontend",
       "client": true,
       "out": "app/finance/investments/page.tsx",
-      "spec": "Holdings table (edit + archive inline via useSubmit; the hard-delete button is RENDERED only when holding.lots_count === 0), a Quality panel, a research drawer, and the visuals. Each visual reads its endpoint's {state} and renders a distinct 'Backfill pending' / 'Partial history' message for pending/partial â€” not a blank 'no data'. Fetch via useFinanceData."
+      "spec": "Holdings table (edit + archive inline via useSubmit; the hard-delete button is RENDERED only when holding.lots_count === 0), a Quality panel, a research drawer, and the visuals. Each visual reads its endpoint's {state} and renders a distinct 'Backfill pending' / 'Partial history' message for pending/partial \u00e2\u20ac\u201d not a blank 'no data'. Fetch via useFinanceData."
     },
     {
       "id": "P3-charts-investments",
@@ -52,5 +52,8 @@
       "out": "components/finance/charts/InvestmentCharts.tsx",
       "spec": "Hand-rolled SVG charts (no chart lib): AllocationDonut, RollingReturnsLine, DrawdownArea, ConcentrationBar, TreemapGrid. Each takes a data series and COMPUTES the path (index->x, value->y via min/max; polyline = one M then L per point). prefers-reduced-motion guard on any animation. A 3D AllocationPucks via @react-three/fiber lazy ssr:false is optional; the SVG donut is the baseline."
     }
-  ]
+  ],
+  "phase_fix": true,
+  "phase_fix_rounds": 2,
+  "pause_before_fix": false
 }

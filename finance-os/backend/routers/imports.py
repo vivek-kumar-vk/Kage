@@ -1,0 +1,96 @@
+"""Import endpoints. Heavy work (price backfill) is scheduled as a BackgroundTask
+— never run inline in the request."""
+from __future__ import annotations
+
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
+
+from services.calculations.backfill import backfill_price_history
+from services.calculations.holdings_upsert import upsert_holding
+from services.db import connect
+from services.imports.cas import parse_cas
+from services.imports.groww import parse_groww_csv
+
+router = APIRouter()
+
+
+def _account(db, name, atype):
+    row = db.execute("SELECT id FROM accounts WHERE name=?", (name,)).fetchone()
+    if row:
+        return row["id"]
+    return db.execute("INSERT INTO accounts(name,type) VALUES (?,?)", (name, atype)).lastrowid
+
+
+@router.post("/import/groww-csv")
+async def import_groww_csv(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    rows = parse_groww_csv(await file.read())
+    if not rows:
+        raise HTTPException(status_code=422, detail="no holdings parsed")
+    fresh: list[tuple[str, str]] = []
+    with connect() as db:
+        acc_id = _account(db, "Groww", "demat")
+        for r in rows:
+            had_prices = db.execute(
+                "SELECT 1 FROM price_history WHERE symbol=? LIMIT 1", (r["symbol"],)
+            ).fetchone()
+            upsert_holding(acc_id, r["symbol"], name=r["name"], type=r["type"],
+                           units=r["units"], cost_per_unit=r["cost_per_unit"],
+                           source="groww", purchase_date=r["purchase_date"],
+                           mode="add_lot", conn=db)
+            if not had_prices:
+                fresh.append((r["symbol"], r["type"]))
+        db.commit()
+    for sym, atype in fresh:
+        background_tasks.add_task(backfill_price_history, sym, atype)
+    return {"state": "ok", "holdings": len(rows), "backfill_queued": len(fresh)}
+
+
+@router.post("/import/cas")
+async def import_cas(file: UploadFile = File(...), pan: str | None = None):
+    rows = parse_cas(await file.read(), pan)
+    with connect() as db:
+        acc_id = _account(db, "CAS", "demat")
+        for r in rows:
+            upsert_holding(acc_id, r.get("symbol"), name=r.get("name"),
+                           type=r.get("type"), units=r.get("units", 0),
+                           cost_per_unit=r.get("cost_per_unit"),
+                           mode="set_snapshot", conn=db)
+        db.commit()
+    return {"state": "ok", "holdings": len(rows)}
+
+
+_MANUAL_TABLES = {"debt": "debts", "insurance": "insurance", "goal": "goals",
+                  "salary": "salary", "transaction": "transactions"}
+
+
+@router.post("/import/manual")
+def import_manual(payload: dict):
+    entity = (payload or {}).get("entity")
+    if entity == "holding":
+        with connect() as db:
+            upsert_holding(payload["account_id"], payload["symbol"],
+                           name=payload.get("name"), type=payload.get("type"),
+                           units=payload.get("units", 0),
+                           cost_per_unit=payload.get("cost_per_unit"),
+                           mode="set_snapshot", conn=db)
+            db.commit()
+        return {"state": "ok"}
+
+    table = _MANUAL_TABLES.get(entity)
+    if not table:
+        raise HTTPException(status_code=400,
+                            detail=f"unsupported entity '{entity}'")
+    fields = {k: v for k, v in payload.items() if k != "entity"}
+    if not fields:
+        raise HTTPException(status_code=422, detail="empty body")
+    cols = ", ".join(fields)
+    marks = ", ".join("?" for _ in fields)
+    with connect() as db:
+        try:
+            cur = db.execute(
+                f"INSERT INTO {table}({cols}) VALUES ({marks})",
+                tuple(fields.values()),
+            )
+            db.commit()
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(status_code=400, detail=str(e))
+    return {"state": "ok", "id": cur.lastrowid}
