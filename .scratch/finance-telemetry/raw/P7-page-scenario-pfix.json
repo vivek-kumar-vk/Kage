@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useState } from \"react\";\nimport { useSubmit } from \"@/lib/api\";\nimport { Card, Skeleton } from \"@/components/finance\";\nimport { useFinanceData } from \"@/lib/api\";\nimport { Button } from \"@/components/finance\";\nimport { Input } from \"@/components/finance\";\nimport { Slider } from \"@/components/finance\";\nimport { Empty } from \"@/components/finance\";\n\nconst ScenarioPage = () => {\n  const [extraDebtPayment, setExtraDebtPayment] = useState<number>(0);\n  const [salaryDelta, setSalaryDelta] = useState<number>(0);\n  const [bonus, setBonus] = useState<number>(0);\n  const [sipStepUp, setSipStepUp] = useState<number>(0);\n\n  const submit = useSubmit<{ extraDebtPayment: number; salaryDelta: number; bonus: number; sipStepUp: number }>(\"/api/finance/scenario\", \"POST\");\n\n  const { data, isLoading, error, refetch } = useFinanceData<{ netWorthDelta: number; goalProbabilityDelta: number; }>(\"/api/finance/scenario\");\n\n  if (isLoading) return <Skeleton />;\n  if (error) return <Empty />;\n\n  return (\n    <div>\n      <h1>Scenario Lab</h1>\n      <div>\n        <h2>Extra Debt Payment</h2>\n        <Slider value={extraDebtPayment} onChange={(value) => setExtraDebtPayment(value)} />\n      </div>\n      <div>\n        <h2>Salary Delta</h2>\n        <Slider value={salaryDelta} onChange={(value) => setSalaryDelta(value)} />\n      </div>\n      <div>\n        <h2>Bonus</h2>\n        <Slider value={bonus} onChange={(value) => setBonus(value)} />\n      </div>\n      <div>\n        <h2>SIP Step-Up</h2>\n        <Slider value={sipStepUp} onChange={(value) => setSipStepUp(value)} />\n      </div>\n      <Button onClick={() => submit({ extraDebtPayment, salaryDelta, bonus, sipStepUp }, { onSuccess: refetch })}>Simulate</Button>\n      {data && (\n        <div>\n          <h2>Projected Net-Worth Delta</h2>\n          <div>{data.netWorthDelta}</div>\n          <h2>Goal Probability Delta</h2>\n          <div>{data.goalProbabilityDelta}</div>\n        </div>\n      )}\n    </div>\n  );\n};\n\nexport default ScenarioPage;\n```"
+      }
+    }
+  ],
+  "created": 1788022839,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 547,
+    "prompt_tokens": 6654,
+    "total_tokens": 7201,
+    "prompt_tokens_details": {
+      "cached_tokens": 5520
+    }
+  },
+  "id": "chatcmpl-RL4eWIwe7ckNn6Yuv3DksAXwqCpHpVqx",
+  "timings": {
+    "cache_n": 5520,
+    "prompt_n": 1134,
+    "prompt_ms": 1429.505,
+    "prompt_per_token_ms": 1.2605864197530865,
+    "prompt_per_second": 793.2815904806209,
+    "predicted_n": 547,
+    "predicted_ms": 30388.55,
+    "predicted_per_token_ms": 55.65668498168498,
+    "predicted_per_second": 17.9672936023601
+  }
+}

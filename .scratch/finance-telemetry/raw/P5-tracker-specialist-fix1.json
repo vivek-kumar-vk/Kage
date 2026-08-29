@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom services.db import connect\nfrom shared.constants.categories import CategoryEnum\nfrom fastapi import APIRouter, Depends, HTTPException, Body\nfrom fastapi.responses import JSONResponse\nfrom fastapi.security import HTTPBearer, HTTPAuthorizationCredentials\nfrom typing import Dict, List, Optional\nimport math\n\nrouter = APIRouter(prefix=\"/tracker\")\n\nclass RecurringDetector:\n    def __init__(self, llm_client):\n        self.llm_client = llm_client\n\n    def detect(self, transactions: List[Dict]):\n        # Implementation of RecurringDetector\n        pass\n\nclass LeakFinder:\n    def __init__(self, llm_client):\n        self.llm_client = llm_client\n\n    def find(self, transactions: List[Dict]):\n        # Implementation of LeakFinder\n        pass\n\nclass BudgetDrift:\n    def __init__(self, llm_client):\n        self.llm_client = llm_client\n\n    def detect(self, transactions: List[Dict]):\n        # Implementation of BudgetDrift\n        pass\n```"
+      }
+    }
+  ],
+  "created": 1788018708,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 215,
+    "prompt_tokens": 4418,
+    "total_tokens": 4633,
+    "prompt_tokens_details": {
+      "cached_tokens": 4352
+    }
+  },
+  "id": "chatcmpl-cTUswghTzKtVzGHaUu9QN9kVdQ8o0Ugx",
+  "timings": {
+    "cache_n": 4352,
+    "prompt_n": 66,
+    "prompt_ms": 108.685,
+    "prompt_per_token_ms": 1.6467424242424242,
+    "prompt_per_second": 607.2595114321202,
+    "predicted_n": 215,
+    "predicted_ms": 9202.499,
+    "predicted_per_token_ms": 43.00233177570093,
+    "predicted_per_second": 23.254552920896813
+  }
+}

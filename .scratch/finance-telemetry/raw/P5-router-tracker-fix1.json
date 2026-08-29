@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import APIRouter, Depends, Body, HTTPException\nfrom fastapi.responses import JSONResponse\nfrom services.db import connect\nfrom shared.constants.categories import Categories\n\nrouter = APIRouter(prefix=\"/tracker\")\n\n@router.get(\"/transactions\")\nasync def get_transactions(date_from: str = None, date_to: str = None, category: str = None, account_id: int = None):\n    conn = connect()\n    try:\n        # Your implementation here\n        pass\n    finally:\n        conn.close()\n\n@router.get(\"/transactions/{id}\")\nasync def get_transaction(id: int):\n    conn = connect()\n    try:\n        # Your implementation here\n        pass\n    finally:\n        conn.close()\n\n@router.put(\"/transactions/{id}\")\nasync def update_transaction(id: int, payload: dict = Body(default={})):\n    conn = connect()\n    try:\n        # Your implementation here\n        pass\n    finally:\n        conn.close()\n\n@router.delete(\"/transactions/{id}\")\nasync def delete_transaction(id: int):\n    conn = connect()\n    try:\n        # Your implementation here\n        pass\n    finally:\n        conn.close()\n\n@router.get(\"/categories\")\nasync def get_categories():\n    conn = connect()\n    try:\n        # Your implementation here\n        pass\n    finally:\n        conn.close()\n\n@router.get(\"/recurring\")\nasync def get_recurring():\n    conn = connect()\n    try:\n        # Your implementation here\n        pass\n    finally:\n        conn.close()\n\n@router.get(\"/trends\")\nasync def get_trends():\n    conn = connect()\n    try:\n        # Your implementation here\n        pass\n    finally:\n        conn.close()\n\n@router.get(\"/insights\")\nasync def get_insights():\n    conn = connect()\n    try:\n        # Your implementation here\n        pass\n    finally:\n        conn.close()\n```"
+      }
+    }
+  ],
+  "created": 1788019098,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 383,
+    "prompt_tokens": 5004,
+    "total_tokens": 5387,
+    "prompt_tokens_details": {
+      "cached_tokens": 4938
+    }
+  },
+  "id": "chatcmpl-99NpqBUQod0MFbENktURKo6cjY8ss1Cw",
+  "timings": {
+    "cache_n": 4938,
+    "prompt_n": 66,
+    "prompt_ms": 114.599,
+    "prompt_per_token_ms": 1.736348484848485,
+    "prompt_per_second": 575.921255857381,
+    "predicted_n": 383,
+    "predicted_ms": 16664.576,
+    "predicted_per_token_ms": 43.6245445026178,
+    "predicted_per_second": 22.922875445495883
+  }
+}

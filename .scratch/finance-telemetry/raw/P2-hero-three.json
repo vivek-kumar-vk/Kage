@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n'use client';\nimport { useEffect, useState } from 'react';\nimport { usePathname } from 'next/navigation';\nimport { useSyncExternalStore } from 'react';\nimport { motion } from 'framer-motion';\n\nconst tabs = [\n  { name: 'Overview', href: '/finance' },\n  { name: 'Investments', href: '/finance/investments' },\n  { name: 'Debt', href: '/finance/debt' },\n  { name: 'Tracker', href: '/finance/tracker' },\n  { name: 'Learning', href: '/finance/learning' },\n];\n\nconst HeroScene = () => {\n  const pathname = usePathname();\n  const isActive = pathname === tabs[0].href;\n\n  const [isWebGLAvailable, setIsWebGLAvailable] = useState(false);\n\n  useEffect(() => {\n    setIsWebGLAvailable(!!window.WebGLRenderingContext);\n  }, []);\n\n  const [isReducedMotion, setIsReducedMotion] = useState(false);\n\n  useEffect(() => {\n    setIsReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);\n  }, []);\n\n  const HeroThreeJS = dynamic(() => import('./HeroThreeJS'), { ssr: false });\n\n  return (\n    <div className=\"hero\">\n      <div className=\"hero-content\">\n        <div className=\"max-w-md\">\n          <h1 className=\"text-5xl font-bold\">FINANCE OS</h1>\n          <p className=\"py-6\">Your personal finance assistant</p>\n          <Link href=\"/finance/settings\" className=\"btn btn-primary\">Settings</Link>\n        </div>\n      </div>\n      <div className=\"hero-image\">\n        {isWebGLAvailable && !isReducedMotion ? (\n          <HeroThreeJS />\n        ) : (\n          <svg width=\"100%\" height=\"100%\" viewBox=\"0 0 100 100\">\n            <circle cx=\"50\" cy=\"50\" r=\"40\" fill=\"blue\" />\n          </svg>\n        )}\n      </div>\n    </div>\n  );\n};\n\nexport default HeroScene;\n```"
+      }
+    }
+  ],
+  "created": 1788013074,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 455,
+    "prompt_tokens": 3159,
+    "total_tokens": 3614,
+    "prompt_tokens_details": {
+      "cached_tokens": 3065
+    }
+  },
+  "id": "chatcmpl-sopFQlVxVQ1Q2gtSoBcGky3ZRPmMIEeW",
+  "timings": {
+    "cache_n": 3065,
+    "prompt_n": 94,
+    "prompt_ms": 351.557,
+    "prompt_per_token_ms": 3.739968085106383,
+    "prompt_per_second": 267.3819608200092,
+    "predicted_n": 455,
+    "predicted_ms": 18949.134,
+    "predicted_per_token_ms": 41.73818061674008,
+    "predicted_per_second": 23.958878542945556
+  }
+}

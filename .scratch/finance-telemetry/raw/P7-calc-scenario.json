@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import APIRouter, Depends, Body\nfrom fastapi.responses import JSONResponse\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom services.db import connect\nfrom services.calculations import portfolio_value, goal_probability\nfrom datetime import datetime, timedelta\n\nrouter = APIRouter(prefix=\"/scenario\")\n\n@router.post(\"/simulate\")\nasync def simulate(extra_debt_payment: int = Body(default=0), \n                   monthly_salary_delta: int = Body(default=0), \n                   one_off_bonus: int = Body(default=0), \n                   sip_step_up_pct: float = Body(default=0.0)):\n    conn = connect()\n    try:\n        current_value = portfolio_value(conn)\n        current_goals = goal_probability(conn)\n        \n        # Simulate future values\n        future_value = current_value * (1 + monthly_salary_delta / 100) * (1 + extra_debt_payment / 100)\n        future_goals = {goal: prob * (1 + one_off_bonus / 100) * (1 + sip_step_up_pct / 100) for goal, prob in current_goals.items()}\n        \n        return JSONResponse(content={\"current_value\": current_value, \"future_value\": future_value, \"current_goals\": current_goals, \"future_goals\": future_goals})\n    finally:\n        conn.close()\n```"
+      }
+    }
+  ],
+  "created": 1788021561,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 291,
+    "prompt_tokens": 5773,
+    "total_tokens": 6064,
+    "prompt_tokens_details": {
+      "cached_tokens": 5692
+    }
+  },
+  "id": "chatcmpl-uAWLxPnys9TzNd6IngEGLumHHBnJujZb",
+  "timings": {
+    "cache_n": 5692,
+    "prompt_n": 81,
+    "prompt_ms": 362.684,
+    "prompt_per_token_ms": 4.477580246913581,
+    "prompt_per_second": 223.33491414013298,
+    "predicted_n": 291,
+    "predicted_ms": 13835.448,
+    "predicted_per_token_ms": 47.708441379310344,
+    "predicted_per_second": 20.960651219967723
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useState, useEffect } from \"react\";\nimport { useSubmit } from \"@/lib/api\";\nimport { Card, Skeleton, FormModal } from \"@/components/finance\";\nimport { TRANSACTION_CATEGORIES, ACCOUNT_TYPES, GOAL_TYPES, INSURANCE_TYPES, SALARY_TYPES } from \"@/components/finance/constants\";\nimport { AccountForm, TransactionForm, HoldingForm, DebtForm, GoalForm, InsuranceForm, SalaryForm } from \"@/components/finance/forms\";\nimport { useFinanceData } from \"@/lib/api\";\n\nconst SettingsPage = () => {\n  const [activeTab, setActiveTab] = useState(\"accounts\");\n  const [accounts, setAccounts] = useState([]);\n  const [goals, setGoals] = useState([]);\n  const [insurances, setInsurances] = useState([]);\n  const [salaries, setSalaries] = useState([]);\n\n  const { data: accountData, isLoading: accountLoading, error: accountError } = useFinanceData(\"/accounts\");\n  const { data: goalData, isLoading: goalLoading, error: goalError } = useFinanceData(\"/goals\");\n  const { data: insuranceData, isLoading: insuranceLoading, error: insuranceError } = useFinanceData(\"/insurance\");\n  const { data: salaryData, isLoading: salaryLoading, error: salaryError } = useFinanceData(\"/salary\");\n\n  useEffect(() => {\n    if (accountData) setAccounts(accountData);\n    if (goalData) setGoals(goalData);\n    if (insuranceData) setInsurances(insuranceData);\n    if (salaryData) setSalaries(salaryData);\n  }, [accountData, goalData, insuranceData, salaryData]);\n\n  const handleTabChange = (tab) => {\n    setActiveTab(tab);\n  };\n\n  const handleFormSubmit = (path, data) => {\n    useSubmit(path, \"POST\")(data);\n  };\n\n  return (\n    <div className=\"flex flex-col\">\n      <div className=\"flex justify-center space-x-4\">\n        <button\n          className={`px-4 py-2 rounded bg-blue-500 text-white ${activeTab === \"accounts\" ? \"bg-blue-700\" : \"\"}`}\n          onClick={() => handleTabChange(\"accounts\")}\n        >\n          Accounts\n        </button>\n        <button\n          className={`px-4 py-2 rounded bg-blue-500 text-white ${activeTab === \"goals\" ? \"bg-blue-700\" : \"\"}`}\n          onClick={() => handleTabChange(\"goals\")}\n        >\n          Goals\n        </button>\n        <button\n          className={`px-4 py-2 rounded bg-blue-500 text-white ${activeTab === \"insurances\" ? \"bg-blue-700\" : \"\"}`}\n          onClick={() => handleTabChange(\"insurances\")}\n        >\n          Insurances\n        </button>\n        <button\n          className={`px-4 py-2 rounded bg-blue-500 text-white ${activeTab === \"salaries\" ? \"bg-blue-700\" : \"\"}`}\n          onClick={() => handleTabChange(\"salaries\")}\n        >\n          Salaries\n        </button>\n      </div>\n      <div className=\"mt-4\">\n        {activeTab === \"accounts\" && (\n          <div>\n            <h2 className=\"text-lg font-bold\">Accounts</h2>\n            {accountLoading ? (\n              <Skeleton />\n            ) : accountError ? (\n              <div>Error: {accountError.message}</div>\n            ) : (\n              <div>\n                {accounts.map((account) => (\n                  <Card key={account.id} title={account.name} description={account.description} />\n                ))}\n              </div>\n            )}\n            <FormModal title=\"Add Account\" onSubmit={(data) => handleFormSubmit(\"/accounts\", data)}>\n              <AccountForm />\n            </FormModal>\n          </div>\n        )}\n        {activeTab === \"goals\" && (\n          <div>\n            <h2 className=\"text-lg font-bold\">Goals</h2>\n            {goalLoading ? (\n              <Skeleton />\n            ) : goalError ? (\n              <div>Error: {goalError.message}</div>\n            ) : (\n              <div>\n                {goals.map((goal) => (\n                  <Card key={goal.id} title={goal.name} description={goal.description} />\n                ))}\n              </div>\n            )}\n            <FormModal title=\"Add Goal\" onSubmit={(data) => handleFormSubmit(\"/goals\", data)}>\n              <GoalForm />\n            </FormModal>\n          </div>\n        )}\n        {activeTab === \"insurances\" && (\n          <div>\n            <h2 className=\"text-lg font-bold\">Insurances</h2>\n            {insuranceLoading ? (\n              <Skeleton />\n            ) : insuranceError ? (\n              <div>Error: {insuranceError.message}</div>\n            ) : (\n              <div>\n                {insurances.map((insurance) => (\n                  <Card key={insurance.id} title={insurance.name} description={insurance.description} />\n                ))}\n              </div>\n            )}\n            <FormModal title=\"Add Insurance\" onSubmit={(data) => handleFormSubmit(\"/insurance\", data)}>\n              <InsuranceForm />\n            </FormModal>\n          </div>\n        )}\n        {activeTab === \"salaries\" && (\n          <div>\n            <h2 className=\"text-lg font-bold\">Salaries</h2>\n            {salaryLoading ? (\n              <Skeleton />\n            ) : salaryError ? (\n              <div>Error: {salaryError.message}</div>\n            ) : (\n              <div>\n                {salaries.map((salary) => (\n                  <Card key={salary.id} title={salary.name} description={salary.description} />\n                ))}\n              </div>\n            )}\n            <FormModal title=\"Add Salary\" onSubmit={(data) => handleFormSubmit(\"/salary\", data)}>\n              <SalaryForm />\n            </FormModal>\n          </div>\n        )}\n      </div>\n    </div>\n  );\n};\n\nexport default SettingsPage;\n```"
+      }
+    }
+  ],
+  "created": 1788022422,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 1263,
+    "prompt_tokens": 7957,
+    "total_tokens": 9220,
+    "prompt_tokens_details": {
+      "cached_tokens": 5523
+    }
+  },
+  "id": "chatcmpl-oiRpx5ZLrakPcEaVVfdqMafzb3YVLrq5",
+  "timings": {
+    "cache_n": 5523,
+    "prompt_n": 2434,
+    "prompt_ms": 2631.454,
+    "prompt_per_token_ms": 1.0811232539030404,
+    "prompt_per_second": 924.9639172867927,
+    "predicted_n": 1263,
+    "predicted_ms": 68112.2,
+    "predicted_per_token_ms": 53.9716323296355,
+    "predicted_per_second": 18.528251913754072
+  }
+}

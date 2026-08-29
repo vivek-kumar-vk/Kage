@@ -5,32 +5,32 @@
       "index": 0,
       "message": {
         "role": "assistant",
-        "content": "```python\nfrom app_factory import create_app\n\napp = create_app()\n\nif __name__ == '__main__':\n    import uvicorn\n    uvicorn.run('main:app', host='127.0.0.1', port=8000, reload=False)\n```"
+        "content": "```python\nfrom app_factory import create_app\n\napp = create_app()\n\nif __name__ == \"__main__\":\n    import uvicorn\n    uvicorn.run(\"main:app\", host=\"127.0.0.1\", port=8000, reload=False)\n```"
       }
     }
   ],
-  "created": 1788000674,
+  "created": 1788005647,
   "model": "qwen2.5-coder-7b-instruct-q5_k_m",
   "system_fingerprint": "b10621-c1d0e7a00",
   "object": "chat.completion",
   "usage": {
     "completion_tokens": 61,
-    "prompt_tokens": 4050,
-    "total_tokens": 4111,
+    "prompt_tokens": 4743,
+    "total_tokens": 4804,
     "prompt_tokens_details": {
-      "cached_tokens": 3959
+      "cached_tokens": 4700
     }
   },
-  "id": "chatcmpl-zspgM6pQNReubGe4IMNly2pgkweGwTLe",
+  "id": "chatcmpl-43M82h1O1A7xAM9rSEe1bxquRQlkM8gh",
   "timings": {
-    "cache_n": 3959,
-    "prompt_n": 91,
-    "prompt_ms": 294.029,
-    "prompt_per_token_ms": 3.231087912087912,
-    "prompt_per_second": 309.4932812749763,
+    "cache_n": 4700,
+    "prompt_n": 43,
+    "prompt_ms": 265.147,
+    "prompt_per_token_ms": 6.166209302325581,
+    "prompt_per_second": 162.17419016620968,
     "predicted_n": 61,
-    "predicted_ms": 2725.019,
-    "predicted_per_token_ms": 45.41698333333333,
-    "predicted_per_second": 22.018195102492864
+    "predicted_ms": 2473.084,
+    "predicted_per_token_ms": 41.218066666666665,
+    "predicted_per_second": 24.261205846627128
   }
 }

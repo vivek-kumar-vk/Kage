@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom datetime import datetime\nfrom typing import List, Optional\n\nfrom pydantic import BaseModel\nfrom sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, select\nfrom sqlalchemy.orm import sessionmaker, relationship\nfrom sqlalchemy.ext.declarative import declarative_base\n\nBase = declarative_base()\n\nclass Holding(Base):\n    __tablename__ = 'holdings'\n    id = Column(Integer, primary_key=True)\n    ticker = Column(String)\n    units = Column(Float)\n    avg_cost = Column(Float)\n    account_id = Column(Integer, ForeignKey('accounts.id'))\n\nclass Account(Base):\n    __tablename__ = 'accounts'\n    id = Column(Integer, primary_key=True)\n    name = Column(String)\n    holdings = relationship('Holding', back_populates='account')\n\nclass Price(Base):\n    __tablename__ = 'prices'\n    id = Column(Integer, primary_key=True)\n    ticker = Column(String)\n    date = Column(String)\n    price = Column(Float)\n\nclass Goal(Base):\n    __tablename__ = 'goals'\n    id = Column(Integer, primary_key=True)\n    name = Column(String)\n    target = Column(Float)\n    start_date = Column(String)\n    created_at = Column(String)\n\nengine = create_engine('sqlite:///finance.db')\nSession = sessionmaker(bind=engine)\n\ndef net_worth():\n    session = Session()\n    query = select(Holding.ticker, Holding.units, Holding.avg_cost, Account.name).join(Account)\n    holdings = session.execute(query).fetchall()\n    total_net_worth = sum(h.units * h.avg_cost for h in holdings)\n    session.close()\n    return total_net_worth\n\ndef cashflow():\n    session = Session()\n    today = datetime.now().strftime('%Y-%m-%d')\n    query = select(Account.name, Holding.ticker, Holding.units, Holding.avg_cost, Price.price).join(Account).join(Holding).join(Price).where(Price.date == today)\n    transactions = session.execute(query).fetchall()\n    income = sum(t.units * t.price for t in transactions)\n    expenses = 0  # Placeholder for actual expenses calculation\n    emis = 0  # Placeholder for actual EMIs calculation\n    sip = 0  # Placeholder for actual SIP calculation\n    surplus = income - expenses - emis - sip\n    session.close()\n    return surplus\n\ndef emergency_fund():\n    session = Session()\n    query = select(Account.name, Holding.ticker, Holding.units, Holding.avg_cost, Price.price).join(Account).join(Holding).join(Price)\n    transactions = session.execute(query).fetchall()\n    monthly_expenses = sum(t.units * t.price for t in transactions) / 12\n    target = 6 * monthly_expenses\n    gap = target - sum(t.units * t.avg_cost for t in transactions)\n    session.close()\n    return target, gap\n\ndef goals_overview():\n    session = Session()\n    query = select(Goal.name, Goal.target, Goal.start_date, Goal.created_at).where(Goal.target > 0)\n    goals = session.execute(query).fetchall()\n    goal_probabilities = []\n    for goal in goals:\n        current = sum(t.units * t.avg_cost for t in transactions if t.ticker == goal.ticker)\n        months_left = (datetime.now() - datetime.strptime(goal.created_at, '%Y-%m-%d')).days / 30\n        total_months = (datetime.strptime(goal.start_date, '%Y-%m-%d') - datetime.strptime(goal.created_at, '%Y-%m-%d')).days / 30\n        probability = goal_probability(current, goal.target, months_left, total_months)\n        goal_probabilities.append((goal.name, goal.target, probability))\n    session.close()\n    return goal_probabilities\n\ndef goal_probability(current, target, months_left, total_months):\n    if target <= 0: return 0.0\n    if months_left <= 0: return 100.0 if current >= target else 0.0\n    time_factor = min(months_left / total_months, 1.0)\n    progress = min(current / target, 1.0)\n    return min(100.0, max(0.0, (progress * 0.7 + time_factor * 0.3) * 100))\n```"
+      }
+    }
+  ],
+  "created": 1788013201,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 907,
+    "prompt_tokens": 3336,
+    "total_tokens": 4243,
+    "prompt_tokens_details": {
+      "cached_tokens": 3234
+    }
+  },
+  "id": "chatcmpl-LNpUYIdheBs928d1nak4t5eIxPhwrmKQ",
+  "timings": {
+    "cache_n": 3234,
+    "prompt_n": 102,
+    "prompt_ms": 454.96,
+    "prompt_per_token_ms": 4.460392156862745,
+    "prompt_per_second": 224.19553367328996,
+    "predicted_n": 907,
+    "predicted_ms": 36797.868,
+    "predicted_per_token_ms": 40.615748344370864,
+    "predicted_per_second": 24.62099162918895
+  }
+}

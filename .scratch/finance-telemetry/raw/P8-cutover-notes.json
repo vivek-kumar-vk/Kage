@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```markdown\n# CUTOVER.md\n\n1. In `Start_Inky/serve_everything_on_one_port.py`, update the Finance route to use `uvicorn main:app` from `finance-os/backend` and its static bundle. Remove the mount for `Screens/Finance/server_for_finance.py`.\n   ```python\n   # Before\n   app.mount(\"/finance\", Screens_Finance.server_for_finance)\n\n   # After\n   app.mount(\"/finance\", StaticFiles(directory=\"finance-os/backend/static\", html=True))\n   ```\n\n2. If the served path changed, update the Finance target in `Main_Menu/Page/next_app/app/components/NavPanel.tsx`.\n   ```typescript\n   // Before\n   const financePath = \"/finance\";\n\n   // After\n   const financePath = \"/finance\";\n   ```\n\n3. Run `finance-os/build.py` to ensure the build process completes successfully.\n   ```sh\n   cd finance-os\n   python build.py\n   ```\n\n4. Smoke test `Start_Inky/Start_Everything.bat` to ensure everything is working as expected.\n   ```sh\n   Start_Inky/Start_Everything.bat\n   ```\n```"
+      }
+    }
+  ],
+  "created": 1788023210,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 245,
+    "prompt_tokens": 4838,
+    "total_tokens": 5083,
+    "prompt_tokens_details": {
+      "cached_tokens": 3779
+    }
+  },
+  "id": "chatcmpl-zGytTzz7LfWnK1Q13jREdSvlfnyb7AtU",
+  "timings": {
+    "cache_n": 3779,
+    "prompt_n": 1059,
+    "prompt_ms": 1221.394,
+    "prompt_per_token_ms": 1.1533465533522191,
+    "prompt_per_second": 867.0420846999411,
+    "predicted_n": 245,
+    "predicted_ms": 11762.996,
+    "predicted_per_token_ms": 48.208999999999996,
+    "predicted_per_second": 20.74301478976955
+  }
+}

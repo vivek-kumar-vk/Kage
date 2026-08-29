@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\nimport { useState, useEffect } from \"react\";\nimport { motion } from \"framer-motion\";\nimport { useFinanceData } from \"@/lib/api\";\n\nconst NetWorthCard = () => {\n  const { data, isLoading, error } = useFinanceData(\"/api/finance/overview/net-worth\");\n\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n\n  if (!data || !data.trend) return <div>No data available</div>;\n\n  const values = data.trend.map((p: { net_worth: number }) => p.net_worth);\n  const hasData = values.length > 0;\n  const max = hasData ? Math.max(...values) : 1;\n  const min = hasData ? Math.min(...values) : 0;\n  const range = (max - min) || 1;\n\n  const sparkline = (\n    <motion.path\n      d={`M0 0 L${values.length > 1 ? 100 : 50} ${35 - ((values[0] - min) / range) * 30}`}\n      fill=\"none\"\n      stroke=\"currentColor\"\n      strokeWidth=\"2\"\n    />\n  );\n\n  return (\n    <div className=\"bg-white p-4 rounded shadow\">\n      <h2 className=\"text-xl font-bold\">Net Worth</h2>\n      <div className=\"mt-4\">\n        <svg viewBox=\"0 0 100 40\" width=\"100%\" height=\"40\">\n          {sparkline}\n        </svg>\n      </div>\n    </div>\n  );\n};\n\nexport default NetWorthCard;\n```"
+      }
+    }
+  ],
+  "created": 1788014493,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 368,
+    "prompt_tokens": 3855,
+    "total_tokens": 4223,
+    "prompt_tokens_details": {
+      "cached_tokens": 1137
+    }
+  },
+  "id": "chatcmpl-3p6LmOpnuW82gr4YEmJhA2JVIuMGO3pL",
+  "timings": {
+    "cache_n": 1137,
+    "prompt_n": 2718,
+    "prompt_ms": 2398.516,
+    "prompt_per_token_ms": 0.8824562178072112,
+    "prompt_per_second": 1133.2006957635472,
+    "predicted_n": 368,
+    "predicted_ms": 15033.581,
+    "predicted_per_token_ms": 40.96343596730245,
+    "predicted_per_second": 24.412014675678403
+  }
+}

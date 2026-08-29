@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n'use client';\nimport React, { useState, useEffect } from 'react';\nimport { Dialog, DialogContent, DialogTitle, DialogTrigger } from 'shadcn-ui';\n\ninterface FormModalProps {\n  trigger: React.ReactNode;\n  title: string;\n  children: React.ReactNode;\n  open?: boolean;\n  onOpenChange?: (open: boolean) => void;\n}\n\nconst FormModal: React.FC<FormModalProps> = ({ trigger, title, children, open, onOpenChange }) => {\n  const [isOpen, setIsOpen] = useState(open || false);\n\n  useEffect(() => {\n    setIsOpen(open || false);\n  }, [open]);\n\n  const handleOpenChange = (newOpen: boolean) => {\n    setIsOpen(newOpen);\n    onOpenChange?.(newOpen);\n  };\n\n  return (\n    <Dialog open={isOpen} onOpenChange={handleOpenChange}>\n      <DialogTrigger>{trigger}</DialogTrigger>\n      <DialogContent>\n        <DialogTitle>{title}</DialogTitle>\n        {children}\n      </DialogContent>\n    </Dialog>\n  );\n};\n\nexport default FormModal;\n```"
+      }
+    }
+  ],
+  "created": 1788014158,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 229,
+    "prompt_tokens": 3592,
+    "total_tokens": 3821,
+    "prompt_tokens_details": {
+      "cached_tokens": 3065
+    }
+  },
+  "id": "chatcmpl-P824RHfd9XrA7QM58zG8cBiUnH7ntST9",
+  "timings": {
+    "cache_n": 3065,
+    "prompt_n": 527,
+    "prompt_ms": 595.341,
+    "prompt_per_token_ms": 1.1296793168880455,
+    "prompt_per_second": 885.2069654198182,
+    "predicted_n": 229,
+    "predicted_ms": 9595.259,
+    "predicted_per_token_ms": 42.084469298245615,
+    "predicted_per_second": 23.76173483175389
+  }
+}

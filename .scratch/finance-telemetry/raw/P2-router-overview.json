@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import APIRouter, Depends, HTTPException\nfrom fastapi.responses import JSONResponse\nfrom sqlalchemy.orm import Session\nfrom backend.services.db import connect\nfrom backend.services.calculations import net_worth, cashflow, emergency, goals\nfrom backend.services.calculations import goal_probability\nfrom backend.models import ActiveHoldings, Goals, DataHealth\nfrom backend.schemas import NetWorthResponse, CashflowResponse, EmergencyResponse, GoalsResponse, DataHealthResponse\n\nrouter = APIRouter()\n\n@router.get(\"/overview/net-worth\", response_model=NetWorthResponse)\ndef get_net_worth(db: Session = Depends(connect)):\n    net_worth_data = net_worth(db)\n    return JSONResponse(content={\"state\": \"ok\", \"data\": net_worth_data})\n\n@router.get(\"/overview/cashflow\", response_model=CashflowResponse)\ndef get_cashflow(db: Session = Depends(connect)):\n    cashflow_data = cashflow(db)\n    return JSONResponse(content={\"state\": \"ok\", \"data\": cashflow_data})\n\n@router.get(\"/overview/emergency\", response_model=EmergencyResponse)\ndef get_emergency(db: Session = Depends(connect)):\n    emergency_data = emergency(db)\n    return JSONResponse(content={\"state\": \"ok\", \"data\": emergency_data})\n\n@router.get(\"/overview/goals\", response_model=GoalsResponse)\ndef get_goals(db: Session = Depends(connect)):\n    goals_data = goals(db)\n    return JSONResponse(content={\"state\": \"ok\", \"data\": goals_data})\n\n@router.get(\"/overview/data-health\", response_model=DataHealthResponse)\ndef get_data_health(db: Session = Depends(connect)):\n    data_health_data = DataHealth.get(db, id=1)\n    if not data_health_data:\n        raise HTTPException(status_code=404, detail=\"Data health not found\")\n    return JSONResponse(content={\"state\": \"ok\", \"data\": data_health_data})\n\n@router.post(\"/overview/goals\", response_model=GoalsResponse)\ndef create_goal(goal: Goals, db: Session = Depends(connect)):\n    db_goal = Goals(**goal.dict())\n    db.add(db_goal)\n    db.commit()\n    db.refresh(db_goal)\n    return JSONResponse(content={\"state\": \"ok\", \"data\": db_goal})\n\n@router.put(\"/overview/goals/{goal_id}\", response_model=GoalsResponse)\ndef update_goal(goal_id: int, goal: Goals, db: Session = Depends(connect)):\n    db_goal = db.query(Goals).filter(Goals.id == goal_id).first()\n    if not db_goal:\n        raise HTTPException(status_code=404, detail=\"Goal not found\")\n    for key, value in goal.dict().items():\n        setattr(db_goal, key, value)\n    db.commit()\n    db.refresh(db_goal)\n    return JSONResponse(content={\"state\": \"ok\", \"data\": db_goal})\n\n@router.delete(\"/overview/goals/{goal_id}\", response_model=GoalsResponse)\ndef delete_goal(goal_id: int, db: Session = Depends(connect)):\n    db_goal = db.query(Goals).filter(Goals.id == goal_id).first()\n    if not db_goal:\n        raise HTTPException(status_code=404, detail=\"Goal not found\")\n    db.delete(db_goal)\n    db.commit()\n    return JSONResponse(content={\"state\": \"ok\", \"data\": db_goal})\n```"
+      }
+    }
+  ],
+  "created": 1788013143,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 701,
+    "prompt_tokens": 3330,
+    "total_tokens": 4031,
+    "prompt_tokens_details": {
+      "cached_tokens": 3234
+    }
+  },
+  "id": "chatcmpl-l4tgLWxIy2c6FfHIjVaz3OZ1Ej0Ir8qc",
+  "timings": {
+    "cache_n": 3234,
+    "prompt_n": 96,
+    "prompt_ms": 168.422,
+    "prompt_per_token_ms": 1.7543958333333334,
+    "prompt_per_second": 569.9967937680351,
+    "predicted_n": 701,
+    "predicted_ms": 28389.435,
+    "predicted_per_token_ms": 40.556335714285716,
+    "predicted_per_second": 24.65705992387661
+  }
+}

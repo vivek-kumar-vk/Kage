@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useState, useEffect } from \"react\";\nimport { useFinanceData, useSubmit } from \"@/lib/api\";\nimport { Card, Skeleton } from \"@/components/finance\";\nimport { Button, Input, Slider } from \"@/components/finance\";\nimport { motion } from \"framer-motion\";\n\nconst DebtPage = () => {\n  const { data: debts, isLoading, isError } = useFinanceData(\"/api/finance/debt/overview\");\n  const { mutate, isSubmitting, error } = useSubmit(\"/api/finance/debt/simulate\");\n\n  const [extraPayment, setExtraPayment] = useState(0);\n  const [salaryIncrease, setSalaryIncrease] = useState(0);\n  const [bonus, setBonus] = useState(0);\n  const [monthsSaved, setMonthsSaved] = useState(0);\n  const [interestSaved, setInterestSaved] = useState(0);\n\n  useEffect(() => {\n    if (debts) {\n      const totalOutstanding = debts.reduce((acc, debt) => acc + debt.outstanding, 0);\n      const highestInterest = Math.max(...debts.map(debt => debt.interest_rate));\n      const nextEMI = debts[0].emi;\n\n      const avalancheCalculator = new AvalancheCalculator();\n      const snowballCalculator = new SnowballCalculator();\n\n      const avalancheMonths = avalancheCalculator.calculateMonths(totalOutstanding, highestInterest, nextEMI);\n      const snowballMonths = snowballCalculator.calculateMonths(totalOutstanding, highestInterest, nextEMI);\n\n      setMonthsSaved(avalancheMonths);\n      setInterestSaved(snowballMonths * nextEMI);\n    }\n  }, [debts]);\n\n  const handleSimulate = async () => {\n    const response = await mutate({ extra_payment: extraPayment, salary_increase: salaryIncrease, bonus: bonus });\n    if (response) {\n      setMonthsSaved(response.months_saved);\n      setInterestSaved(response.interest_saved);\n    }\n  };\n\n  if (isLoading) return <Skeleton />;\n  if (isError) return <div>Error: {error?.message}</div>;\n\n  return (\n    <div className=\"flex flex-col gap-4\">\n      <Card title=\"Debt Overview\">\n        {debts && debts.length === 0 ? (\n          <div className=\"text-center\">No debts found.</div>\n        ) : (\n          <div className=\"flex flex-col gap-2\">\n            {debts.map((debt, index) => (\n              <div key={index} className=\"flex justify-between items-center\">\n                <div>{debt.name}</div>\n                <div>{debt.outstanding}</div>\n              </div>\n            ))}\n          </div>\n        )}\n      </Card>\n      <Card title=\"Payoff Plan\">\n        <div className=\"flex flex-col gap-2\">\n          <div className=\"flex justify-between items-center\">\n            <div>Extra Payment:</div>\n            <Input type=\"number\" value={extraPayment} onChange={(e) => setExtraPayment(Number(e.target.value))} />\n          </div>\n          <div className=\"flex justify-between items-center\">\n            <div>Salary Increase:</div>\n            <Input type=\"number\" value={salaryIncrease} onChange={(e) => setSalaryIncrease(Number(e.target.value))} />\n          </div>\n          <div className=\"flex justify-between items-center\">\n            <div>Bonus:</div>\n            <Input type=\"number\" value={bonus} onChange={(e) => setBonus(Number(e.target.value))} />\n          </div>\n          <Button onClick={handleSimulate} disabled={isSubmitting}>\n            Simulate\n          </Button>\n          <div className=\"flex justify-between items-center\">\n            <div>Months Saved:</div>\n            <div>{monthsSaved}</div>\n          </div>\n          <div className=\"flex justify-between items-center\">\n            <div>Interest Saved:</div>\n            <div>{interestSaved}</div>\n          </div>\n        </div>\n      </Card>\n      <Card title=\"Learning\">\n        <div className=\"flex flex-col gap-2\">\n          <div className=\"flex justify-between items-center\">\n            <div>Action:</div>\n            <div>Pay off high-interest debt first.</div>\n          </div>\n          <div className=\"flex justify-between items-center\">\n            <div>Reason:</div>\n            <div>High-interest debt incurs higher costs over time.</div>\n          </div>\n          <div className=\"flex justify-between items-center\">\n            <div>Learn:</div>\n            <div>Consider using the avalanche or snowball method for debt repayment.</div>\n          </div>\n        </div>\n      </Card>\n    </div>\n  );\n};\n\nexport default DebtPage;\n```"
+      }
+    }
+  ],
+  "created": 1788017799,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 993,
+    "prompt_tokens": 6186,
+    "total_tokens": 7179,
+    "prompt_tokens_details": {
+      "cached_tokens": 5244
+    }
+  },
+  "id": "chatcmpl-EgEvMmRcZKwh4RZJzkuVzl1GjeSB3Cgz",
+  "timings": {
+    "cache_n": 5244,
+    "prompt_n": 942,
+    "prompt_ms": 1167.595,
+    "prompt_per_token_ms": 1.2394851380042464,
+    "prompt_per_second": 806.7865998055833,
+    "predicted_n": 993,
+    "predicted_ms": 46754.599,
+    "predicted_per_token_ms": 47.13165221774194,
+    "predicted_per_second": 21.217164112561417
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n'use client';\nimport dynamic from 'next/dynamic';\nimport Link from 'next/link';\nimport { usePathname } from 'next/navigation';\nimport { motion } from 'framer-motion';\n\nconst HeroThreeJS = dynamic(() => import('./HeroThreeJS'), { ssr: false });\n\nconst HeroScene = () => {\n  const pathname = usePathname();\n  const isWebGLAvailable = typeof window.WebGLRenderingContext !== 'undefined';\n  const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;\n\n  return (\n    <div className=\"hero\">\n      {isWebGLAvailable && !isReducedMotion ? (\n        <HeroThreeJS />\n      ) : (\n        <svg width=\"100%\" height=\"100%\" viewBox=\"0 0 100 100\">\n          <circle cx=\"50\" cy=\"50\" r=\"40\" fill=\"blue\" />\n        </svg>\n      )}\n      <nav>\n        <Link href=\"/finance\" className={pathname === '/finance' ? 'active' : ''}>Overview</Link>\n        <Link href=\"/finance/investments\" className={pathname === '/finance/investments' ? 'active' : ''}>Investments</Link>\n        <Link href=\"/finance/debt\" className={pathname === '/finance/debt' ? 'active' : ''}>Debt</Link>\n        <Link href=\"/finance/tracker\" className={pathname === '/finance/tracker' ? 'active' : ''}>Tracker</Link>\n        <Link href=\"/finance/learning\" className={pathname === '/finance/learning' ? 'active' : ''}>Learning</Link>\n        <Link href=\"/finance/settings\">Settings</Link>\n      </nav>\n    </div>\n  );\n};\n\nexport default HeroScene;\n```"
+      }
+    }
+  ],
+  "created": 1788014684,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 385,
+    "prompt_tokens": 4012,
+    "total_tokens": 4397,
+    "prompt_tokens_details": {
+      "cached_tokens": 3786
+    }
+  },
+  "id": "chatcmpl-qj2VI7ArzSxP8msjNocZ5pRGPB6Zz36Y",
+  "timings": {
+    "cache_n": 3786,
+    "prompt_n": 226,
+    "prompt_ms": 466.988,
+    "prompt_per_token_ms": 2.0663185840707965,
+    "prompt_per_second": 483.95247843627675,
+    "predicted_n": 385,
+    "predicted_ms": 15779.373,
+    "predicted_per_token_ms": 41.0921171875,
+    "predicted_per_second": 24.33556770601722
+  }
+}

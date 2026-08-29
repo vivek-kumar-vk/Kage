@@ -5,32 +5,32 @@
       "index": 0,
       "message": {
         "role": "assistant",
-        "content": "```python\nimport logging\nimport os\nimport pathlib\nimport subprocess\nfrom starlette.middleware.base import BaseHTTPMiddleware\n\nclass PassthroughAuth(BaseHTTPMiddleware):\n    async def dispatch(self, request, call_next):\n        return await call_next(request)\n\ndef check_encrypted_volume(db_dir) -> None:\n    try:\n        if os.name == 'nt':\n            result = subprocess.run(['manage-bde', '-status', str(pathlib.Path(db_dir).anchor)], capture_output=True, text=True, timeout=10)\n            if 'Percentage Encrypted: 100' not in result.stdout:\n                logging.warning('DB dir %s may not be on an encrypted volume', db_dir)\n        else:\n            result = subprocess.run(['cryptsetup', 'status', str(pathlib.Path(db_dir).anchor)], capture_output=True, text=True, timeout=10)\n            if 'is active' not in result.stdout:\n                logging.warning('DB dir %s may not be on an encrypted volume', db_dir)\n    except Exception as e:\n        logging.warning(f'Error checking encrypted volume: {e}')\n```"
+        "content": "```python\nimport logging\nimport os\nimport pathlib\nimport subprocess\n\nfrom starlette.middleware.base import BaseHTTPMiddleware\n\n\nclass PassthroughAuth(BaseHTTPMiddleware):\n    async def dispatch(self, request, call_next):\n        return await call_next(request)\n\n\ndef check_encrypted_volume(db_dir) -> None:\n    try:\n        db_dir = pathlib.Path(db_dir)\n        if os.name == \"nt\":\n            anchor = db_dir.anchor or \"C:\\\\\"\n            res = subprocess.run([\"manage-bde\", \"-status\", anchor],\n                                 capture_output=True, text=True, timeout=10)\n            if \"Percentage Encrypted: 100\" not in (res.stdout or \"\"):\n                logging.warning(\"DB dir %s may not be on an encrypted volume\", db_dir)\n        else:\n            res = subprocess.run([\"cryptsetup\", \"status\", str(db_dir)],\n                                 capture_output=True, text=True, timeout=10)\n            if \"is active\" not in (res.stdout or \"\"):\n                logging.warning(\"DB dir %s may not be on an encrypted volume\", db_dir)\n    except Exception:\n        logging.warning(\"encrypted-volume check skipped (non-fatal)\")\n```"
       }
     }
   ],
-  "created": 1788000613,
+  "created": 1788005588,
   "model": "qwen2.5-coder-7b-instruct-q5_k_m",
   "system_fingerprint": "b10621-c1d0e7a00",
   "object": "chat.completion",
   "usage": {
-    "completion_tokens": 230,
-    "prompt_tokens": 4163,
-    "total_tokens": 4393,
+    "completion_tokens": 244,
+    "prompt_tokens": 4744,
+    "total_tokens": 4988,
     "prompt_tokens_details": {
-      "cached_tokens": 3958
+      "cached_tokens": 4699
     }
   },
-  "id": "chatcmpl-p8JvSPpTj3Mq3iDPIIi6KvZgCq7VArEq",
+  "id": "chatcmpl-joT7qHoIkGI5on1tyfFirFCHBWAOtlae",
   "timings": {
-    "cache_n": 3958,
-    "prompt_n": 205,
-    "prompt_ms": 340.175,
-    "prompt_per_token_ms": 1.659390243902439,
-    "prompt_per_second": 602.630998750643,
-    "predicted_n": 230,
-    "predicted_ms": 9393.567,
-    "predicted_per_token_ms": 41.01994323144105,
-    "predicted_per_second": 24.37838576123426
+    "cache_n": 4699,
+    "prompt_n": 45,
+    "prompt_ms": 194.408,
+    "prompt_per_token_ms": 4.3201777777777775,
+    "prompt_per_second": 231.47195588658903,
+    "predicted_n": 244,
+    "predicted_ms": 10119.63,
+    "predicted_per_token_ms": 41.644567901234566,
+    "predicted_per_second": 24.01273564349685
   }
 }

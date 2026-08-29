@@ -9,7 +9,7 @@
       }
     }
   ],
-  "created": 1788001388,
+  "created": 1788006447,
   "model": "qwen2.5-coder-7b-instruct-q5_k_m",
   "system_fingerprint": "b10621-c1d0e7a00",
   "object": "chat.completion",
@@ -21,16 +21,16 @@
       "cached_tokens": 3455
     }
   },
-  "id": "chatcmpl-AAWH7jjt4NLbyTAr7ybEoFtjlGMPjjRR",
+  "id": "chatcmpl-BpBZe4pK2k4zXqZoVQreYB7g0qHAf6SA",
   "timings": {
     "cache_n": 3455,
     "prompt_n": 136,
-    "prompt_ms": 271.413,
-    "prompt_per_token_ms": 1.9956838235294119,
-    "prompt_per_second": 501.0813778264121,
+    "prompt_ms": 337.129,
+    "prompt_per_token_ms": 2.478889705882353,
+    "prompt_per_second": 403.4064111957144,
     "predicted_n": 639,
-    "predicted_ms": 26093.562,
-    "predicted_per_token_ms": 40.899,
-    "predicted_per_second": 24.450475561749677
+    "predicted_ms": 25929.235,
+    "predicted_per_token_ms": 40.641434169278995,
+    "predicted_per_second": 24.605430896823606
   }
 }

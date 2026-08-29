@@ -5,32 +5,32 @@
       "index": 0,
       "message": {
         "role": "assistant",
-        "content": "```typescript\nexport const TRANSACTION_CATEGORIES = [\n  'Salary',\n  'Investment',\n  'Debt',\n  'Insurance',\n  'Utility',\n  'Food',\n  'Transport',\n  'Entertainment',\n  'Health',\n  'Travel',\n  'Education',\n  'Gifts',\n  'Charity',\n  'Others'\n] as const;\n\nexport const TRANSACTION_TYPES = [\n  'Credit',\n  'Debit'\n] as const;\n\nexport const ACCOUNT_TYPES = [\n  'Savings',\n  'Current',\n  'Fixed Deposit',\n  'Mutual Fund',\n  'Equity',\n  'Debt',\n  'Insurance',\n  'Loan'\n] as const;\n\nexport const HOLDING_TYPES = [\n  'Equity',\n  'Debt',\n  'Mutual Fund',\n  'Commodity',\n  'Real Estate',\n  'Art',\n  'Collectibles',\n  'Other'\n] as const;\n\nexport type TransactionCategory = typeof TRANSACTION_CATEGORIES[number];\nexport type TransactionType = typeof TRANSACTION_TYPES[number];\nexport type AccountType = typeof ACCOUNT_TYPES[number];\nexport type HoldingType = typeof HOLDING_TYPES[number];\n```"
+        "content": "```typescript\nexport const TRANSACTION_CATEGORIES = [\n  \"Salary\",\n  \"Investment\",\n  \"Debt\",\n  \"Transfer\",\n  \"Expense\",\n  \"Income\",\n  \"Miscellaneous\",\n] as const;\n\nexport const TRANSACTION_TYPES = [\n  \"Credit\",\n  \"Debit\",\n] as const;\n\nexport const ACCOUNT_TYPES = [\n  \"Savings\",\n  \"Current\",\n  \"Fixed Deposit\",\n  \"Mutual Fund\",\n  \"Equity\",\n  \"Debt\",\n  \"Insurance\",\n  \"Loan\",\n] as const;\n\nexport const HOLDING_TYPES = [\n  \"Equity\",\n  \"Bond\",\n  \"Mutual Fund\",\n  \"Commodity\",\n  \"Real Estate\",\n  \"Art\",\n  \"Collectibles\",\n] as const;\n\nexport type TransactionCategory = typeof TRANSACTION_CATEGORIES[number];\nexport type TransactionType = typeof TRANSACTION_TYPES[number];\nexport type AccountType = typeof ACCOUNT_TYPES[number];\nexport type HoldingType = typeof HOLDING_TYPES[number];\n```"
       }
     }
   ],
-  "created": 1788000583,
+  "created": 1788005557,
   "model": "qwen2.5-coder-7b-instruct-q5_k_m",
   "system_fingerprint": "b10621-c1d0e7a00",
   "object": "chat.completion",
   "usage": {
-    "completion_tokens": 236,
-    "prompt_tokens": 3806,
-    "total_tokens": 4042,
+    "completion_tokens": 201,
+    "prompt_tokens": 4547,
+    "total_tokens": 4748,
     "prompt_tokens_details": {
-      "cached_tokens": 3719
+      "cached_tokens": 4460
     }
   },
-  "id": "chatcmpl-4wK3ft4s7phe5YOMoZfBguNpmUjr4aZ8",
+  "id": "chatcmpl-lnO0AkROoO8PfoAOgT1ps37CGZRclv1T",
   "timings": {
-    "cache_n": 3719,
+    "cache_n": 4460,
     "prompt_n": 87,
-    "prompt_ms": 136.593,
-    "prompt_per_token_ms": 1.5700344827586206,
-    "prompt_per_second": 636.9286859502317,
-    "predicted_n": 236,
-    "predicted_ms": 9415.41,
-    "predicted_per_token_ms": 40.0655744680851,
-    "predicted_per_second": 24.95908303515195
+    "prompt_ms": 135.09,
+    "prompt_per_token_ms": 1.5527586206896553,
+    "prompt_per_second": 644.0151010437486,
+    "predicted_n": 201,
+    "predicted_ms": 8147.313,
+    "predicted_per_token_ms": 40.736565,
+    "predicted_per_second": 24.547970600859447
   }
 }

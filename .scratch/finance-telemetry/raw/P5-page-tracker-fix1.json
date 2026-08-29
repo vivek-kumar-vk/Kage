@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useState, useEffect } from \"react\";\nimport { useFinanceData, useSubmit } from \"@/lib/api\";\nimport TransactionForm from \"@/components/finance/TransactionForm\";\nimport Empty from \"@/components/finance/Empty\";\nimport TransactionTable from \"@/components/finance/TransactionTable\";\nimport CategoryBreakdown from \"@/components/finance/CategoryBreakdown\";\nimport MonthlyTrend from \"@/components/finance/MonthlyTrend\";\nimport RecurringList from \"@/components/finance/RecurringList\";\nimport InsightsPanel from \"@/components/finance/InsightsPanel\";\n\nconst TrackerPage = () => {\n  const [filter, setFilter] = useState({ dateRange: null, category: null, account: null });\n  const { data: transactions, isLoading, error } = useFinanceData(\"/tracker/transactions\", filter);\n  const submit = useSubmit();\n\n  if (isLoading) return <Empty />;\n  if (error) return <Empty />;\n\n  return (\n    <div>\n      <TransactionForm onSubmit={submit} />\n      <TransactionTable data={transactions} onSubmit={submit} />\n      <CategoryBreakdown data={transactions} />\n      <MonthlyTrend data={transactions} />\n      <RecurringList data={transactions} />\n      <InsightsPanel data={transactions} />\n    </div>\n  );\n};\n\nexport default TrackerPage;\n```"
+      }
+    }
+  ],
+  "created": 1788019151,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 282,
+    "prompt_tokens": 5488,
+    "total_tokens": 5770,
+    "prompt_tokens_details": {
+      "cached_tokens": 4961
+    }
+  },
+  "id": "chatcmpl-0vhKbBwukht3BX9UdPBPy1T4JfBzaIqZ",
+  "timings": {
+    "cache_n": 4961,
+    "prompt_n": 527,
+    "prompt_ms": 845.79,
+    "prompt_per_token_ms": 1.6049146110056924,
+    "prompt_per_second": 623.0861088449851,
+    "predicted_n": 282,
+    "predicted_ms": 12290.978,
+    "predicted_per_token_ms": 43.74013523131672,
+    "predicted_per_second": 22.862297857827098
+  }
+}

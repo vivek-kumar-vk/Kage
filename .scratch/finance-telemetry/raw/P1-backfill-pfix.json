@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import BackgroundTasks\nfrom services.db import connect\nfrom services.calculations.backfill import enqueue_backfill\n\ndef run_pending(background_tasks: BackgroundTasks, symbol: str, asset_type: str):\n    background_tasks.add_task(enqueue_backfill, symbol, asset_type)\n```"
+      }
+    }
+  ],
+  "created": 1788007300,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 63,
+    "prompt_tokens": 3817,
+    "total_tokens": 3880,
+    "prompt_tokens_details": {
+      "cached_tokens": 3452
+    }
+  },
+  "id": "chatcmpl-dhkmVKwCL3kETQ5OIcgUgYTbs7omZBGf",
+  "timings": {
+    "cache_n": 3452,
+    "prompt_n": 365,
+    "prompt_ms": 585.315,
+    "prompt_per_token_ms": 1.6036027397260275,
+    "prompt_per_second": 623.5958415554016,
+    "predicted_n": 63,
+    "predicted_ms": 2524.488,
+    "predicted_per_token_ms": 40.71754838709677,
+    "predicted_per_second": 24.559435418191732
+  }
+}

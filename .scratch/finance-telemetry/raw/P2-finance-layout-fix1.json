@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n'use client';\nimport Link from 'next/link';\nimport { usePathname } from 'next/navigation';\n\nconst tabs = [\n  { name: 'Overview', href: '/finance' },\n  { name: 'Investments', href: '/finance/investments' },\n  { name: 'Debt', href: '/finance/debt' },\n  { name: 'Tracker', href: '/finance/tracker' },\n  { name: 'Learning', href: '/finance/learning' },\n];\n\nconst Layout = ({ children }: { children: React.ReactNode }) => {\n  const pathname = usePathname();\n  return (\n    <div className=\"flex flex-col h-screen\">\n      <header className=\"bg-racing-red text-white shadow-neon-red p-4\">\n        <span className=\"status-dot\"></span>\n        <h1>FINANCE OS</h1>\n      </header>\n      <nav className=\"bg-carbon-light p-4\">\n        <ul className=\"flex space-x-4\">\n          {tabs.map(tab => (\n            <li key={tab.href} className={`flex items-center ${pathname === tab.href ? 'bg-racing-red text-white shadow-neon-red' : 'text-gray-400 hover:text-white hover:bg-carbon-light'}`}>\n              <Link href={tab.href}>{tab.name}</Link>\n            </li>\n          ))}\n        </ul>\n      </nav>\n      <main className=\"flex-1\">\n        <Link href=\"/finance/settings\">Settings</Link>\n        <div className=\"p-4\">\n          {children}\n        </div>\n      </main>\n    </div>\n  );\n};\n\nexport default Layout;\n```"
+      }
+    }
+  ],
+  "created": 1788014325,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 348,
+    "prompt_tokens": 3820,
+    "total_tokens": 4168,
+    "prompt_tokens_details": {
+      "cached_tokens": 3638
+    }
+  },
+  "id": "chatcmpl-A2slQwUFGSwN2JDCVWnIa8WRCl4PZip9",
+  "timings": {
+    "cache_n": 3638,
+    "prompt_n": 182,
+    "prompt_ms": 478.522,
+    "prompt_per_token_ms": 2.629241758241758,
+    "prompt_per_second": 380.33779011205337,
+    "predicted_n": 348,
+    "predicted_ms": 14765.423,
+    "predicted_per_token_ms": 42.551651296829974,
+    "predicted_per_second": 23.500850602112788
+  }
+}
