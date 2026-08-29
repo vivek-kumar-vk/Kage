@@ -1,0 +1,48 @@
+Write ONE React component file. Next.js 16, React 19, TypeScript, Tailwind v4, framer-motion 13.
+No new dependencies. No Three.js. No red colours (Rule 8).
+
+FILE: app/components/FundTiers.tsx
+
+KEEP THESE FIRST LINES EXACTLY AS SHOWN (verbatim, including the quotes):
+
+"use client";
+
+import { BLUEPRINT_SEED } from "@/app/lib/blueprintSeed";
+import { useCountUp } from "@/app/lib/useCountUp";
+import { formatINR } from "@/app/lib/formatINR";
+import { motion } from "framer-motion";
+
+/** Emergency-fund tiers (Instant / Core / Buffer) as one segmented
+    bar-gauge that fills tier by tier toward the target. Seed data (P8). */
+export function FundTiers() {
+
+THEN implement the body:
+  - const { target, tiers } = BLUEPRINT_SEED.emergencyFund;
+  - const shown = useCountUp(target);
+  - const total = tiers.reduce((s, t) => s + t.amount, 0);
+  - three amber shades for the segments, in order:
+      const SHADE = ["bg-amber", "bg-amber/70", "bg-amber/40"];
+  - return a single:
+    <section aria-label="Emergency fund tiers"
+      className="carbon-face checkered-sweep relative overflow-hidden rounded-lg border border-line p-5">
+    containing:
+      1. a header row (flex, items-baseline, justify-between):
+         <p className="num text-[10px] tracking-[0.2em] text-dim">EMERGENCY FUND</p>
+         <p className="num text-sm text-amber">{formatINR(Math.round(shown))} <span className="text-dim">/ {formatINR(target)}</span></p>
+      2. the segmented bar: a flex row, mt-4, h-3, w-full, gap-[2px], rounded, overflow-hidden, bg-void
+         then tiers.map((t, i) => (
+           <motion.div key={t.key}
+             className={`h-full ${SHADE[i]}`}
+             style={{ width: `${(t.amount / total) * 100}%`, transformOrigin: "left" }}
+             initial={{ scaleX: 0 }}
+             animate={{ scaleX: 1 }}
+             transition={{ duration: 0.7, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+           />
+         ))
+      3. a legend: tiers.map((t, i) => a row (flex, items-center, gap-2, mt-2, text-[11px]) with
+         <span className={`inline-block h-2 w-2 rounded-sm ${SHADE[i]}`} />
+         <span className="text-bone">{t.label}</span>
+         <span className="num ml-auto text-dim">{formatINR(t.amount)}</span>
+         <span className="text-dim">· {t.park}</span>
+
+Return ONLY the file contents inside one ```tsx code block. No explanation.

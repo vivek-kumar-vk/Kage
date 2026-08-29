@@ -1,0 +1,37 @@
+Write ONE React component file. Next.js 16, React 19, TypeScript, Tailwind v4.
+No new dependencies. No Three.js.
+
+FILE: app/components/TelemetryPanel.tsx
+
+KEEP THESE FIRST LINES EXACTLY (verbatim, including quotes):
+
+"use client";
+
+import { BucketSchematic } from "./BucketSchematic";
+import { CashFlowPanel } from "./CashFlowPanel";
+import { GoalsGauges } from "./GoalsGauges";
+import { InvestmentsSpark } from "./InvestmentsSpark";
+import { DebtReadout } from "./DebtReadout";
+import { PortfolioReadout } from "./PortfolioReadout";
+
+/** The TELEMETRY tab body — the pit-wall grid of blueprint blocks and
+    standard widgets. Each child is self-contained and reads the seed
+    module directly. */
+export function TelemetryPanel() {
+
+THEN implement the body EXACTLY like this:
+  return (
+    <section aria-label="Telemetry" className="flex flex-col gap-4">
+      <BucketSchematic />
+      <div className="telemetry-grid">
+        <CashFlowPanel />
+        <GoalsGauges />
+        <InvestmentsSpark />
+        <DebtReadout />
+        <PortfolioReadout />
+      </div>
+    </section>
+  );
+}
+
+Return ONLY the file contents inside one ```tsx code block. No explanation.

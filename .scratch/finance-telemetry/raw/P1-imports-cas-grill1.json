@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "PASS"
+      }
+    }
+  ],
+  "created": 1788001430,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 2,
+    "prompt_tokens": 6111,
+    "total_tokens": 6113,
+    "prompt_tokens_details": {
+      "cached_tokens": 3536
+    }
+  },
+  "id": "chatcmpl-dGawWnBsCM2nvt9lyjhJIju5bW6LJLKz",
+  "timings": {
+    "cache_n": 3536,
+    "prompt_n": 2575,
+    "prompt_ms": 2396.637,
+    "prompt_per_token_ms": 0.9307328155339807,
+    "prompt_per_second": 1074.4222007755031,
+    "predicted_n": 2,
+    "predicted_ms": 56.368,
+    "predicted_per_token_ms": 56.368,
+    "predicted_per_second": 17.740562021004823
+  }
+}

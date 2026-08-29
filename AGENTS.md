@@ -59,9 +59,15 @@ items: observability on every tab; remove `Shared_By_All_Agents/` and
 - **D2 — Seed data for the telemetry panels v1.** New Finance panels read
   `app/lib/blueprintSeed.ts` (blueprint numbers real, rest `SEED`-tagged), not
   live endpoints. Live wiring is `PLANNED_WORK.md` P8.
-- **D3 — CSS/SVG + framer-motion for the telemetry motion.** No Three.js added
-  to the Finance app (keeps the `output: "export"` bundle; framer-motion was
-  already a dep).
+- **D3 — CSS/SVG + framer-motion for the telemetry motion.** ~~No Three.js added
+  to the Finance app~~ *(superseded by D3.1)*.
+- **D3.1 — Three.js welcomed on Finance (2026-08-29, supersedes D3).** Use
+  Three.js (via `@react-three/fiber` + `@react-three/drei`) wherever it delivers
+  better animation and interaction than CSS/SVG alone. `framer-motion` stays for
+  page transitions and lightweight motion; Three.js handles 3D scenes, particle
+  effects, and rich interactive visualizations. `output: "export"` is unaffected
+  — Three.js is fully client-side. Install the same trio already in Main Menu's
+  `package.json` (`three`, `@react-three/fiber`, `@react-three/drei`).
 - **D4 — Additive placement.** Enrich the existing Overview tab (blueprint
   headline blocks) + a new TELEMETRY tab + a new left `SpeedoNav` that replaces
   the header tab-strip. Existing tabs/panels/endpoints untouched.

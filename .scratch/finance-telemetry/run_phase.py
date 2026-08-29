@@ -9,7 +9,12 @@ commits after verifying. For each task in a manifest:
   -> self-grill loop (<=grill_rounds: model reviews its file vs spec + the ask
      excerpt, outputs a corrected file or "PASS"; re-gate each revision)
   -> on unrecoverable failure: restore the snapshot, mark BLOCKED
-  -> ledger + progress line -> cooldown.
+  -> ledger + progress line
+  -> ui-gap-scout review (Hermes Bot `ui_gap_scout`, runs on the LOCAL model,
+     zero Claude cost): once per finished task, reconciles delivered vs. ask,
+     appends ledger.md + self-updates prompt-contract.md / improvement-progress.md.
+     Toggle with manifest "scout": false.
+  -> cooldown (default 50 s; was 90 s).
 After all tasks: `npx next build`, record status. Multiple manifests run in order.
 
 Task shape:
@@ -143,15 +148,61 @@ def call_model(prompt: str, max_tokens: int, task_id: str, tag: str = "") -> str
     raise RuntimeError(f"model call failed after 3 tries: {last}")
 
 
-def run_cmd(args: list[str], cwd: str) -> tuple[int, str]:
+def run_cmd(args: list[str], cwd: str, timeout: int = 900) -> tuple[int, str]:
     if os.name == "nt":
         cmd = subprocess.list2cmdline(args)
         p = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
-                           shell=True, timeout=900)
+                           shell=True, timeout=timeout)
     else:
         p = subprocess.run(args, cwd=cwd, capture_output=True, text=True,
-                           timeout=900)
+                           timeout=timeout)
     return p.returncode, (p.stdout or "") + (p.stderr or "")
+
+
+def _blk(s: str) -> str:
+    return "\n".join("  " + ln for ln in s.strip().splitlines())
+
+
+def run_scout(m: dict, t: dict, base: str, verdict: str, retries: int,
+              g_rounds: int, g_verdict: str, ask_excerpt: str,
+              progress: pathlib.Path) -> None:
+    """Fire the ui-gap-scout Hermes Bot on the LOCAL model after a finished task.
+    Zero Claude cost. The bot appends ledger.md / prompt-contract.md /
+    improvement-progress.md itself (paths + rules live in its SOUL.md)."""
+    prof = m.get("scout_profile", "ui_gap_scout")
+    raw_glob = str(HERE / "raw" / f"{t['id']}*.json")
+    req = (
+        f"task_id: {t['id']}\n"
+        f"files: {t['out']}\n"
+        f"verdict: {verdict}\n"
+        f"retries: {retries}\n"
+        f"self_grill: {g_rounds} round(s) -- {g_verdict}\n"
+        f"gates: tsc (this file) pass; eslint pass; next build deferred to phase end\n"
+        f"fix_diff: none (autonomous overnight run -- no human in the loop)\n"
+        f"raw_outputs: {raw_glob}\n"
+        f"spec_slice: |\n{_blk(t['spec'])}\n"
+        f"full_ask: |\n{_blk(ask_excerpt or '(none supplied)')}\n"
+        f"prompt_sent: |\n{_blk(base)}\n\n"
+        "Do your once-per-task review per SOUL.md: append the ledger.md entry "
+        "(tags + spec-match reconciliation + a carry-forward line), update "
+        "prompt-contract.md if a fail tag has now recurred >=2x, update "
+        "improvement-progress.md. Reply with the ledger entry and the "
+        "carry-forward line only."
+    )
+    tmp = HERE / "raw" / f"{t['id']}-scout-req.txt"
+    tmp.write_text(req, encoding="utf-8")
+    resource_gate({"min_free_ram_mb": m.get("min_free_ram_mb", 1800),
+                   "min_free_vram_mb": m.get("min_free_vram_mb", 700)}, progress)
+    ensure_llama(m.get("llama_cmd", ""), progress)
+    log(progress, f"{t['id']}: scout reviewing (local model, profile {prof})")
+    cmd = ["hermes", "-p", prof, "chat", "-Q", "--yolo", "--in", m["repo"],
+           "--max-turns", str(m.get("scout_max_turns", 10)),
+           "--run-budget", str(m.get("scout_budget_s", 1200)),
+           "--query-file", str(tmp)]
+    rc, out = run_cmd(cmd, m["repo"], timeout=m.get("scout_budget_s", 1200) + 120)
+    (HERE / "raw" / f"{t['id']}-scout-reply.txt").write_text(out, encoding="utf-8")
+    tail = "\n".join(out.strip().splitlines()[-8:]) or "(no output)"
+    log(progress, f"{t['id']}: scout rc={rc}\n{tail[:600]}")
 
 
 def gate(cwd: str, out_rel: str) -> tuple[bool, str]:
@@ -181,7 +232,7 @@ def self_grill(out_abs: pathlib.Path, cwd: str, out_rel: str, base: str,
     used = 0
     for rnd in range(1, rounds + 1):
         used = rnd
-        resource_gate({"min_free_ram_mb": 1500, "min_free_vram_mb": 600}, progress)
+        resource_gate({"min_free_ram_mb": 400, "min_free_vram_mb": 200}, progress)
         review = (
             base
             + "\n\n=== SELF-REVIEW ROUND " + str(rnd) + " ===\n"
@@ -290,6 +341,14 @@ def do_task(m: dict, t: dict, contract: str, ask_excerpt: str) -> str:
     verdict = "clean" if retries == 0 else f"fixed-by-model({retries})"
     ledger_entry(ledger, t["id"], out_rel, verdict, retries, g_rounds, g_verdict, "")
     log(progress, f"{t['id']}: DONE ({verdict}; {g_verdict}) — left in working tree, no commit")
+
+    if m.get("scout", True):
+        try:
+            run_scout(m, t, base, verdict, retries, g_rounds, g_verdict,
+                      ask_excerpt, progress)
+        except Exception as e:  # noqa: BLE001
+            log(progress, f"{t['id']}: scout EXCEPTION {e!r} (non-fatal, build continues)")
+        time.sleep(m.get("scout_cooldown_s", 30))
     return "ok"
 
 
@@ -314,7 +373,7 @@ def run_manifest(path: str) -> None:
         except Exception as e:  # noqa: BLE001
             tally["error"] += 1
             log(progress, f"{t['id']}: EXCEPTION {e!r}")
-        time.sleep(m.get("cooldown_s", 90))
+        time.sleep(m.get("cooldown_s", 50))
 
     if m.get("final_build"):
         log(progress, "running next build")
@@ -324,6 +383,16 @@ def run_manifest(path: str) -> None:
 
     log(progress, f"=== PHASE {m['phase']} DONE  ok={tally['ok']} "
                   f"blocked={tally['blocked']} error={tally['error']} ===")
+
+    if m.get("phase_summary", True):
+        try:
+            resource_gate(m, progress)
+            ensure_llama(m.get("llama_cmd", ""), progress)
+            rc, out = run_cmd(["python", str(HERE / "lm_chores.py"),
+                               "phase-summary", str(progress)], str(HERE), timeout=420)
+            log(progress, f"phase-summary (local model) rc={rc}")
+        except Exception as e:  # noqa: BLE001
+            log(progress, f"phase-summary EXCEPTION {e!r} (non-fatal)")
 
 
 def main() -> None:

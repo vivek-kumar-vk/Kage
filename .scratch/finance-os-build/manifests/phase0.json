@@ -1,0 +1,119 @@
+{
+  "phase": "0",
+  "repo": "B:/inky_code",
+  "cwd": "B:/inky_code/finance-os",
+  "lang": "py",
+  "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
+  "ask_excerpt_file": "B:/inky_code/.scratch/finance-os-build/spec/phase0.md",
+  "progress_file": "B:/inky_code/.scratch/finance-os-build/progress/phase0-progress.md",
+  "ledger_file": "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
+  "cooldown_s": 20,
+  "max_retries": 3,
+  "max_tokens": 3000,
+  "grill_rounds": 0,
+  "min_free_ram_mb": 400,
+  "min_free_vram_mb": 200,
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "final_build": false,
+  "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase0.py",
+  "setup_cmds": [
+    "python -m pip install -q fastapi \"uvicorn[standard]\" \"pydantic>=2\" python-multipart python-dateutil ruff pytest"
+  ],
+  "scout": false,
+  "scout_profile": "ui_gap_scout",
+  "scout_cooldown_s": 30,
+  "scout_budget_s": 1200,
+  "scout_max_turns": 10,
+  "tasks": [
+    {
+      "id": "P0-schema-sql",
+      "lang": "sql",
+      "out": "backend/scripts/schema.sql",
+      "spec": "Emit BLOCK A from the phase brief above, VERBATIM and COMPLETE â€” every CREATE TABLE (15), both CREATE VIEW (latest_prices, active_holdings), all 5 CREATE INDEX, and the INSERT INTO data_health(id) VALUES (1). Do NOT abbreviate any column list. Do NOT invent or drop columns. Output only the .sql text, no fence."
+    },
+    {
+      "id": "P0-db-helper",
+      "lang": "py",
+      "out": "backend/services/db.py",
+      "spec": "Emit BLOCK E from the phase brief above, VERBATIM and COMPLETE. Output only the .py text, no fence, no prose. Do not add, rename, or reorder anything."
+    },
+    {
+      "id": "P0-categories-py",
+      "lang": "py",
+      "out": "shared/constants/categories.py",
+      "spec": "TRANSACTION_CATEGORIES = tuple of: food, transport, utilities, rent, health, entertainment, shopping, education, investment, income, transfer, debt_payment, other. TRANSACTION_TYPES = tuple: income, expense, transfer, investment, debt_payment. ACCOUNT_TYPES = tuple: bank, demat, loan, credit_card, cash, other. HOLDING_TYPES = tuple: stock, mutual_fund, etf, bond, other. Plain module, no imports."
+    },
+    {
+      "id": "P0-categories-ts",
+      "lang": "raw",
+      "out": "shared/constants/categories.ts",
+      "spec": "The EXACT same four lists as shared/constants/categories.py, same order, same string values, as TypeScript: export const TRANSACTION_CATEGORIES = [...] as const; export const TRANSACTION_TYPES = [...] as const; export const ACCOUNT_TYPES = [...] as const; export const HOLDING_TYPES = [...] as const; export type TransactionCategory = typeof TRANSACTION_CATEGORIES[number];"
+    },
+    {
+      "id": "P0-startup",
+      "lang": "py",
+      "out": "backend/startup.py",
+      "spec": "Emit BLOCK F from the phase brief above, VERBATIM and COMPLETE. Output only the .py text, no fence, no prose."
+    },
+    {
+      "id": "P0-app-factory",
+      "lang": "py",
+      "out": "backend/app_factory.py",
+      "spec": "Emit BLOCK G from the phase brief above, VERBATIM and COMPLETE. Output only the .py text, no fence, no prose. Keep create_app() exactly as written -- it is a function, not a module-level app."
+    },
+    {
+      "id": "P0-main",
+      "lang": "py",
+      "out": "backend/main.py",
+      "spec": "Emit BLOCK H from the phase brief above, VERBATIM and COMPLETE. Output only the .py text, no fence, no prose."
+    },
+    {
+      "id": "P0-set-perms",
+      "lang": "py",
+      "out": "backend/scripts/set_perms.py",
+      "spec": "Idempotent. Resolve the finance.db path via services.db.DB_PATH. POSIX: os.chmod(path, 0o600). Windows (os.name=='nt'): subprocess.run(['icacls', str(path), '/inheritance:r', '/grant:r', f\"{os.environ.get('USERNAME','%USERNAME%')}:F\"]). Print what it did. Guard: if the file doesn't exist yet, print a notice and exit 0."
+    },
+    {
+      "id": "P0-requirements",
+      "lang": "raw",
+      "out": "backend/requirements.txt",
+      "spec": "One pinned-major dependency per line: fastapi, uvicorn[standard], pydantic>=2, python-multipart, python-dateutil, yfinance, mftool, tenacity, sentence-transformers, faiss-cpu, pdfplumber, pytest, ruff. NO alpha-vantage. NO comments."
+    },
+    {
+      "id": "P0-package-json",
+      "lang": "json",
+      "out": "frontend/package.json",
+      "spec": "name finance-frontend, private true. scripts: dev='next dev', build='next build', start='next start' â€” NO export script. dependencies: next ^15, react ^19, react-dom ^19, @react-three/fiber ^9, @react-three/drei ^10, three ^0.170, tailwindcss ^3.4, postcss ^8.4, autoprefixer ^10.4, lucide-react ^0.400, class-variance-authority ^0.7, clsx ^2, tailwind-merge ^2. devDependencies: typescript ^5, @types/react ^19, @types/react-dom ^19, @types/node ^20, @types/three ^0.170, eslint ^9, eslint-config-next ^15."
+    },
+    {
+      "id": "P0-next-config",
+      "lang": "raw",
+      "out": "frontend/next.config.js",
+      "spec": "Emit BLOCK D from the phase brief VERBATIM. Nothing else."
+    },
+    {
+      "id": "P0-tailwind-config",
+      "lang": "raw",
+      "out": "frontend/tailwind.config.ts",
+      "spec": "Emit BLOCK B from the phase brief VERBATIM. Nothing else."
+    },
+    {
+      "id": "P0-globals-css",
+      "lang": "css",
+      "out": "frontend/app/globals.css",
+      "spec": "Emit BLOCK C from the phase brief VERBATIM. Nothing else."
+    },
+    {
+      "id": "P0-gitignore",
+      "lang": "raw",
+      "out": ".gitignore",
+      "spec": "backend/data/ ; backend/data/finance.db ; backend/data/backups/ ; backend/data/vector_store/ ; **/.env ; .env ; frontend/out/ ; frontend/.next/ ; **/__pycache__/ ; **/node_modules/ ; *.tsbuildinfo . One per line."
+    },
+    {
+      "id": "P0-decisions",
+      "lang": "md",
+      "out": "DECISIONS.md",
+      "spec": "Record, with dates left as TBD: (1) SQLCipher REJECTED for V1 â€” reason: needs pysqlcipher3 across the whole backend from day one + key management, high risk for a 7B author, and the 'lost/stolen laptop' threat is already covered by OS disk encryption; revisit only if the DB syncs to another device/server. (2) DB protection locked in = SQLite + OS disk encryption (BitLocker/FileVault) + chmod600/icacls + .gitignore. (3) Frontend stack = Next 15 static export + React 19 + Three.js + Shadcn/ui (divergence from repo's patched-Next-16 no-3D rule, accepted for finance-os only). (4) FastAPI/Python backend â€” PLANNED_WORK.md P4 Node/Express migration superseded for this screen. (5) No external market-data API keys â€” yfinance + mftool only, cached price as final fallback."
+    }
+  ]
+}

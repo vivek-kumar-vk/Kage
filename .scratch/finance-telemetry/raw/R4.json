@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport type { ReactNode } from \"react\";\nimport { useTilt } from \"@/app/lib/useTilt\";\n\n/** A glass panel that tilts toward the pointer with a cursor-tracking\n    specular highlight and a hover scan-pulse. Wrap any telemetry block\n    in it. `aria-label` and role stay on the caller's inner content. */\nexport function TiltCard({\n  children,\n  className = \"\",\n}: {\n  children: ReactNode;\n  className?: string;\n}) {\n  const { ref, style, onPointerMove, onPointerLeave } = useTilt(6);\n\n  return (\n    <div\n      ref={ref}\n      style={{ ...style, transition: \"transform 220ms cubic-bezier(.22,1,.36,1)\" }}\n      onPointerMove={onPointerMove}\n      onPointerLeave={onPointerLeave}\n      className={`glass scan-pulse relative overflow-hidden p-5 ${className}`}\n    >\n      <div\n        aria-hidden=\"true\"\n        className=\"pointer-events-none absolute inset-0\"\n        style={{\n          background:\n            \"radial-gradient(220px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.07), transparent 60%)\",\n        }}\n      />\n      <div className=\"relative\">{children}</div>\n    </div>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787934686,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 307,
+    "prompt_tokens": 396,
+    "total_tokens": 703,
+    "prompt_tokens_details": {
+      "cached_tokens": 26
+    }
+  },
+  "id": "chatcmpl-peD3HqPdDfquyk0ioTWj9X413JwGqGT5",
+  "timings": {
+    "cache_n": 26,
+    "prompt_n": 370,
+    "prompt_ms": 1581.319,
+    "prompt_per_token_ms": 4.273835135135135,
+    "prompt_per_second": 233.98188474305314,
+    "predicted_n": 307,
+    "predicted_ms": 11202.792,
+    "predicted_per_token_ms": 36.610431372549016,
+    "predicted_per_second": 27.314619427014268
+  }
+}

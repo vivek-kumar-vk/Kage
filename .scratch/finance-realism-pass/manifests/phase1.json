@@ -5,7 +5,7 @@
   "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
   "progress_file": "B:/inky_code/.scratch/finance-realism-pass/phase1-progress.md",
   "ledger_file": "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
-  "cooldown_s": 90,
+  "cooldown_s": 50,
   "max_retries": 2,
   "max_tokens": 2600,
   "min_free_ram_mb": 1800,
@@ -33,5 +33,10 @@
     }
   ],
   "ask_excerpt_file": "B:/inky_code/.scratch/finance-realism-pass/ask_excerpt.md",
-  "grill_rounds": 3
+  "grill_rounds": 3,
+  "scout": true,
+  "scout_profile": "ui_gap_scout",
+  "scout_cooldown_s": 30,
+  "scout_budget_s": 1200,
+  "scout_max_turns": 10
 }

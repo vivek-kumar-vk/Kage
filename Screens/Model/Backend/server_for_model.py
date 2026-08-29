@@ -1,16 +1,16 @@
 """The server behind the Model screen - the place Kage shows the local
-LiteLLM gateway's own data.
+model gateway's own data.
 
 WHAT THIS FILE DOES (T2 scaffold)
     Serves the page, and answers one question for it:
 
         GET /api/model/overview   is the gateway up, and what does it say?
 
-    That endpoint is a thin, honest proxy to the local LiteLLM proxy's
-    REST API (LITELLM_BASE_URL in settings). Right now the gateway is
-    not configured yet (wayfinder tickets T3-T6), so a call that cannot
-    reach it returns {"gateway": "unreachable", ...} - a real state the
-    page renders plainly, never a fake "all good".
+    That endpoint is a thin, honest proxy to the local model gateway's
+    REST API (GATEWAY_BASE_URL in settings). Right now the gateway may
+    not be configured yet, so a call that cannot reach it returns
+    {"gateway": "unreachable", ...} - a real state the page renders
+    plainly, never a fake "all good".
 
 WHAT THIS FILE MUST NEVER DO
     Import from Shared_By_All_Screens/ or Shared_By_All_Agents/. This
@@ -68,15 +68,15 @@ def page():
 
 
 # =====================================================================
-# THE ONE ENDPOINT - a thin honest proxy to the local LiteLLM gateway
+# THE ONE ENDPOINT - a thin honest proxy to the local model gateway
 # =====================================================================
 def _get_json(url: str, timeout: float = 3.0, auth: bool = False):
     """GET a URL and parse JSON, or raise urllib's own error. No retries,
     no shared HTTP helper - this screen carries its own tiny fetch.
-    `auth` adds the gateway's admin key (needed for its list endpoints)."""
+    `auth` adds the gateway's API key (needed for its list endpoints)."""
     headers = {"accept": "application/json"}
-    if auth and cfg.LITELLM_MASTER_KEY:
-        headers["Authorization"] = f"Bearer {cfg.LITELLM_MASTER_KEY}"
+    if auth and cfg.GATEWAY_API_KEY:
+        headers["Authorization"] = f"Bearer {cfg.GATEWAY_API_KEY}"
     request = urllib.request.Request(url, headers=headers)
     with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
         import json
@@ -90,13 +90,13 @@ def overview():
 
     Honest states (never a dressed-up guess):
       gateway "ok"           -> reachable, plus its /v1/models payload
-      gateway "unreachable"  -> nothing is listening on LITELLM_BASE_URL
+      gateway "unreachable"  -> nothing is listening on GATEWAY_BASE_URL
       gateway "error"        -> it answered, but not with something usable
 
-    The gateway itself is not configured until tickets T3-T6, so
-    "unreachable" is the expected answer today and the page says so.
+    The gateway may not be configured yet, so "unreachable" is an expected
+    answer and the page says so.
     """
-    base = cfg.LITELLM_BASE_URL.rstrip("/")
+    base = cfg.GATEWAY_BASE_URL.rstrip("/")
     # Reachability first (no auth), then the model list (needs the key).
     try:
         _get_json(f"{base}/health/liveliness")
@@ -105,7 +105,7 @@ def overview():
             "gateway": "unreachable",
             "base_url": base,
             "why": f"nothing answered at {base} ({problem}). "
-            "Start it with Tools/run_litellm.bat (or Start_Everything.bat).",
+            "Start OmniRoute (or your model gateway), then try again.",
             "models": [],
         }
 
@@ -114,7 +114,7 @@ def overview():
     except urllib.error.HTTPError as problem:
         why = f"{base} answered {problem.code} for /v1/models"
         if problem.code == 401:
-            why += " - LITELLM_MASTER_KEY missing or wrong in .env"
+            why += " - GATEWAY_API_KEY missing or wrong in .env"
         return {"gateway": "error", "base_url": base, "why": why, "models": []}
     except Exception as problem:  # noqa: BLE001 - malformed answer is a real state
         return {"gateway": "error", "base_url": base, "why": str(problem), "models": []}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```ts\n/** Exact data from Screenshot 2026-08-22 090804.png \u2014 the Investments\n    tab. Placeholder values; the owner will swap real numbers in later.\n    Currency is INR; `current` and `units` are the editable fields. */\n\nexport const REPLICA_SUMMARY = {\n  invested: 134166,\n  currentValue: 160742,\n  gainLoss: 26576,\n};\n\nexport const REPLICA_GATE = {\n  code: \"G2\",\n  text: \": BUFFER GATE. Surplus routes to emergency fund.\",\n};\n\nexport type ReplicaHolding = {\n  name: string;\n  kind: string;\n  code: string | null;\n  navStatus: \"fresh2d\" | \"not_in_ledger\";\n  invested: number;\n  current: number;\n  gainAbs: number;\n  gainPct: number;\n  units: number;\n};\n\nexport const REPLICA_HOLDINGS: ReplicaHolding[] = [\n  { name: \"HDFC Mid Cap Fund Direct Growth\", kind: \"mutual_fund\", code: \"118989\", navStatus: \"fresh2d\", invested: 33355, current: 36931.55, gainAbs: 3577, gainPct: 10.72, units: 156.209 },\n  { name: \"HDFC Children's Fund Plan\", kind: \"mutual_fund\", code: null, navStatus: \"not_in_ledger\", invested: 9900, current: 30359.04, gainAbs: 20459, gainPct: 206.66, units: 103.765 },\n  { name: \"Parag Parikh Flexi Cap Fund Direct Growth\", kind: \"mutual_fund\", code: \"122639\", navStatus: \"fresh2d\", invested: 20999, current: 20539.16, gainAbs: -460, gainPct: -2.19, units: 226.345 },\n  { name: \"UTI Multi Asset Allocation Fund Direct Growth\", kind: \"mutual_fund\", code: \"120760\", navStatus: \"fresh2d\", invested: 18999, current: 19244.98, gainAbs: 246, gainPct: 1.29, units: 214.126 },\n  { name: \"SBI ELSS Tax Saver Fund Growth\", kind: \"mutual_fund\", code: \"119723\", navStatus: \"fresh2d\", invested: 13998, current: 14234.99, gainAbs: 237, gainPct: 1.69, units: 32.828 },\n  { name: \"ICICI Prudential NASDAQ 100 Index Fund Direct Growth\", kind: \"mutual_fund\", code: \"149219\", navStatus: \"fresh2d\", invested: 12499, current: 13681.38, gainAbs: 1182, gainPct: 9.46, units: 563.006 },\n  { name: \"UTI Nifty Next 50 Index Fund Direct Growth\", kind: \"mutual_fund\", code: \"143341\", navStatus: \"fresh2d\", invested: 9927, current: 11723.46, gainAbs: 1796, gainPct: 18.09, units: 425.082 },\n  { name: \"Nippon India ETF Gold BeES\", kind: \"etf\", code: \"INF204KB17I5\", navStatus: \"not_in_ledger\", invested: 11109, current: 10439.28, gainAbs: -670, gainPct: -6.03, units: 81 },\n  { name: \"Bandhan Small Cap Fund Direct Growth\", kind: \"mutual_fund\", code: \"147946\", navStatus: \"fresh2d\", invested: 2879, current: 3085.69, gainAbs: 207, gainPct: 7.18, units: 54.271 },\n];\n```"
+      }
+    }
+  ],
+  "created": 1787937452,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 1040,
+    "prompt_tokens": 1108,
+    "total_tokens": 2148,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "id": "chatcmpl-yhKf7MpnlJphSn4OFZ09iriejOYJcEDQ",
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 1108,
+    "prompt_ms": 6117.015,
+    "prompt_per_token_ms": 5.52077166064982,
+    "prompt_per_second": 181.13409890281451,
+    "predicted_n": 1040,
+    "predicted_ms": 48821.079,
+    "predicted_per_token_ms": 46.98852646775746,
+    "predicted_per_second": 21.281791006708396
+  }
+}

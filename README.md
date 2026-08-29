@@ -45,8 +45,7 @@ py -m venv .venv
 Then open <http://127.0.0.1:8000>. Ctrl+C in that window stops everything.
 
 `Start_Inky\Start_Everything.bat` does the venv + install + launch in one
-double-click; ignore the one line about `Tools\run_litellm.bat` (the LLM
-proxy is not part of this copy).
+double-click.
 
 ### Optional: the richer per-screen UI
 

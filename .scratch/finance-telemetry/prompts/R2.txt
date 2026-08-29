@@ -1,0 +1,29 @@
+Write ONE React component file. Next.js 16 app router, React 19, TypeScript.
+No dependencies. No hooks. No props.
+
+FILE: app/components/AuroraBackground.tsx
+
+KEEP THESE FIRST LINES EXACTLY (verbatim, including the quotes):
+
+/** Fixed full-viewport backdrop: three slow-drifting blurred colour
+    blobs over the void, plus a faint film grain. All motion is CSS
+    (globals.css) and freezes under prefers-reduced-motion. Purely
+    decorative — aria-hidden, pointer-events none via its classes. */
+export function AuroraBackground() {
+
+THEN the body — return this exactly:
+  return (
+    <>
+      <div className="aurora" aria-hidden="true">
+        <span className="aurora-blob a" />
+        <span className="aurora-blob b" />
+        <span className="aurora-blob c" />
+      </div>
+      <div className="grain" aria-hidden="true" />
+    </>
+  );
+}
+
+No "use client" needed (no hooks/handlers). Named export only, no default.
+
+Return ONLY the file contents inside one ```tsx code block. No explanation.

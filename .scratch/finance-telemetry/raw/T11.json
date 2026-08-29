@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";\nimport { motion, useReducedMotion } from \"framer-motion\";\n\n/** Goals progress as RPM dials \u2014 a needle sweeps to each goal's percent\n    and settles with a small wobble. Seed data (P8). */\nexport function GoalsGauges() {\n  const reduce = useReducedMotion();\n  const goals = BLUEPRINT_SEED.goals; // [{ label: string, pct: number }, ...]\n\n  // one 270-degree dial, needle up = 0deg, full range -135deg..+135deg\n  const angleFor = (pct: number) => -135 + (pct / 100) * 270;\n  const TRACK = \"M 23.13 81.87 A 38 38 0 1 1 76.87 81.87\";\n\n  return (\n    <section\n      aria-label=\"Goals progress\"\n      className=\"carbon-face checkered-sweep relative overflow-hidden rounded-lg border border-line p-5\"\n    >\n      <p className=\"num text-[10px] tracking-[0.2em] text-dim\">GOALS PROGRESS</p>\n      <div className=\"mt-3 grid grid-cols-2 gap-4\">\n        {goals.map((g) => (\n          <div key={g.label} className=\"flex flex-col items-center\">\n            <svg viewBox=\"0 0 100 100\" className=\"h-24 w-24\">\n              <path d={TRACK} fill=\"none\" stroke=\"var(--sumi-line)\" strokeWidth={6} strokeLinecap=\"round\" />\n              <motion.g\n                style={{ transformOrigin: \"50px 55px\" }}\n                initial={{ rotate: reduce ? angleFor(g.pct) : -135 }}\n                animate={{ rotate: angleFor(g.pct) }}\n                transition={reduce ? { duration: 0 } : { type: \"spring\", stiffness: 60, damping: 12 }}\n              >\n                <line x1={50} y1={55} x2={50} y2={25} stroke=\"var(--amber)\" strokeWidth={3} strokeLinecap=\"round\" />\n              </motion.g>\n              <circle cx={50} cy={55} r={4} fill=\"var(--amber)\" />\n              <text x={50} y={70} textAnchor=\"middle\" className=\"num\" fill=\"var(--bone)\" fontSize={14}>\n                {g.pct}%\n              </text>\n            </svg>\n            <p className=\"mt-1 text-center text-[11px] text-bone\">{g.label}</p>\n          </div>\n        ))}\n      </div>\n    </section>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787931663,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 630,
+    "prompt_tokens": 752,
+    "total_tokens": 1382,
+    "prompt_tokens_details": {
+      "cached_tokens": 76
+    }
+  },
+  "id": "chatcmpl-BSOsEgJ73GfK9s8ZCcJPFIk2jmlyqXE3",
+  "timings": {
+    "cache_n": 76,
+    "prompt_n": 676,
+    "prompt_ms": 4506.48,
+    "prompt_per_token_ms": 6.666390532544378,
+    "prompt_per_second": 150.0062132751061,
+    "predicted_n": 630,
+    "predicted_ms": 27954.14,
+    "predicted_per_token_ms": 44.44219395866455,
+    "predicted_per_second": 22.501139366118938
+  }
+}

@@ -1,4 +1,4 @@
-﻿"""Settings for the main menu screen.
+"""Settings for the main menu screen.
 
 Everything adjustable lives here, so you never go hunting through the
 server file to change a port or a folder name.
@@ -50,11 +50,9 @@ API_PREFIX = "/api/main_menu"
 # has no Backend/settings file and no port of its own. Keyed by the
 # Screens/ folder name (discovery still reports it in the usual place);
 # the value is the absolute URL the pill links to.
-#
-# Empty since 2026-08-28: the "Models" pill pointed at LiteLLM's own
-# admin dashboard. Replaced by a real, discovered Screens/Model/ screen
-# that reads the gateway's REST API into Kage's own UI instead
-# (wayfinder effort .scratch/model-page-litellm/, decision D-W2).
+# Empty: the "Models" pill pointed at an external admin dashboard.
+# Replaced by a real, discovered Screens/Model/ screen that reads the
+# gateway's REST API into Kage's own UI instead.
 EXTERNAL_LINKS: dict[str, str] = {}
 
 # The folders the /dev/changed-since endpoint fingerprints: this

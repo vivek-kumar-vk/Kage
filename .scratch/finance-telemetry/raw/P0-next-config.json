@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```javascript\n/** @type {import('next').NextConfig} */\nconst nextConfig = {\n  output: 'export',\n  images: { unoptimized: true },\n  async rewrites() {\n    if (process.env.NODE_ENV === 'development') {\n      return [\n        { source: '/api/finance/:path*', destination: 'http://127.0.0.1:8000/api/finance/:path*' },\n      ];\n    }\n    return [];\n  },\n};\n\nmodule.exports = nextConfig;\n```"
+      }
+    }
+  ],
+  "created": 1788000787,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 111,
+    "prompt_tokens": 3751,
+    "total_tokens": 3862,
+    "prompt_tokens_details": {
+      "cached_tokens": 3720
+    }
+  },
+  "id": "chatcmpl-x5aOE2aZY6AKFTIAWVVExgpS4nk1B7hv",
+  "timings": {
+    "cache_n": 3720,
+    "prompt_n": 31,
+    "prompt_ms": 421.621,
+    "prompt_per_token_ms": 13.600677419354838,
+    "prompt_per_second": 73.52574942898956,
+    "predicted_n": 111,
+    "predicted_ms": 4407.466,
+    "predicted_per_token_ms": 40.06787272727273,
+    "predicted_per_second": 24.95765140332336
+  }
+}

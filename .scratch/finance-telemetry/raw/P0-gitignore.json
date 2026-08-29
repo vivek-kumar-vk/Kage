@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```\nbackend/data/\nbackend/data/finance.db\nbackend/data/backups/\nbackend/data/vector_store/\n.env\nfrontend/out/\nfrontend/.next/\n**/__pycache__/\n**/node_modules/\n*.tsbuildinfo\n```"
+      }
+    }
+  ],
+  "created": 1788000879,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 48,
+    "prompt_tokens": 3793,
+    "total_tokens": 3841,
+    "prompt_tokens_details": {
+      "cached_tokens": 3719
+    }
+  },
+  "id": "chatcmpl-yVvfd2an06LJkpRI3seIDz1f6bUEFwCs",
+  "timings": {
+    "cache_n": 3719,
+    "prompt_n": 74,
+    "prompt_ms": 176.851,
+    "prompt_per_token_ms": 2.3898783783783784,
+    "prompt_per_second": 418.43133485250297,
+    "predicted_n": 48,
+    "predicted_ms": 2132.106,
+    "predicted_per_token_ms": 45.36395744680851,
+    "predicted_per_second": 22.04393214971488
+  }
+}

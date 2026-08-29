@@ -61,16 +61,15 @@ import analyse_a_fund                                                # noqa: E40
 import build_the_portfolio_review                                    # noqa: E402
 import run_the_daily_pull                                            # noqa: E402
 
-# The router (ADR-055), for the two "Ask INKY" strips (Investments ask,
+# The model gateway, for the two "Ask INKY" strips (Investments ask,
 # Portfolio ask - the Chat tab itself was removed by ADR-102). Finance is
 # Tier 0 by design (ADR-040) - every other endpoint on this screen calls
 # nothing. An ask strip is the one place a person can ask a question, and
-# it is reached over HTTP on port 8003, never by import (C8) - a screen
-# may not put another screen's folder on its import path, the router
-# included.
+# it is reached over HTTP, never by import (C8) - a screen may not put
+# another screen's folder on its import path, the gateway included.
 # The "finance" chain is empty until a provider is cleared (Rule 5), so
 # today every message comes back as an honest refusal, never a silent
-# answer, and it happens on the Models screen's own side of that call.
+# answer.
 import json
 import csv
 import re
@@ -903,20 +902,16 @@ def liabilities():
 
 # =====================================================================
 # THE ASK STRIPS
-# Retired 2026-08-28 (owner's call): the Models screen's own router
-# (server_for_models.py's /ask, ADR-055) is gone - LiteLLM is the model
-# layer now. This strip talks to LiteLLM's own OpenAI-compatible proxy
-# directly (Tools\run_litellm.bat, port 8003) instead. Real behaviour
-# change, not hidden: LiteLLM's raw chat completion does NOT run the old
+# Talks to an OpenAI-compatible model gateway (OmniRoute or similar) over
+# HTTP, never by import (C8). The raw chat completion does NOT run the old
 # double-agreement/escalation checks (working rule 7) or a per-call
-# finance_allowed lookup (working rule 5) - those lived in do_one_task.py,
-# which this no longer calls. What still holds by construction: the
-# model wired in here (qwen2.5-coder-7b-instruct) is Model A, fully
-# local via llama.cpp - the owner's own private financial figures never
-# leave this laptop, which is the strongest form working rule 5 asks for.
+# finance_allowed lookup (working rule 5) - those lived in do_one_task.py.
+# What still holds by construction: the model wired in here is fully local
+# via llama.cpp - the owner's own private financial figures never leave
+# this laptop, which is the strongest form working rule 5 asks for.
 # =====================================================================
-LITELLM_URL = "http://127.0.0.1:8003/v1/chat/completions"
-LITELLM_MODEL = "qwen2.5-coder-7b-instruct"
+GATEWAY_URL = "http://127.0.0.1:8003/v1/chat/completions"
+GATEWAY_MODEL = "qwen2.5-coder-7b-instruct"
 
 
 def _strip_thinking(text: str | None) -> str | None:
@@ -932,35 +927,33 @@ def _strip_thinking(text: str | None) -> str | None:
 
 
 def _ask_the_router(prompt: str) -> dict:
-    """One shared door to LiteLLM (2026-08-28, replaces the retired
-    Models-screen router, ADR-055). Over HTTP, never by import (C8).
-    Every Finance question - either "Ask INKY" strip (Investments,
-    Portfolio) - goes through here, straight to Model A via LiteLLM.
+    """One shared door to the model gateway. Over HTTP, never by import
+    (C8). Every Finance question - either "Ask INKY" strip (Investments,
+    Portfolio) - goes through here, straight to Model A via the gateway.
     """
     payload = json.dumps({
-        "model": LITELLM_MODEL,
+        "model": GATEWAY_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0,
     }).encode("utf-8")
 
     try:
         request = urllib.request.Request(
-            LITELLM_URL, data=payload,
+            GATEWAY_URL, data=payload,
             headers={"Content-Type": "application/json"}, method="POST",
         )
         with urllib.request.urlopen(request, timeout=60) as response:
             result = json.loads(response.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError) as e:
         return {"ok": False, "problem": (
-            f"Could not reach LiteLLM at {LITELLM_URL} ({e}). Start it "
-            f"(Tools\\run_litellm.bat) and Model A (Tools\\run_model_a.bat), "
-            f"then try again."
+            f"Could not reach the model gateway at {GATEWAY_URL} ({e}). "
+            f"Start OmniRoute (or your model gateway), then try again."
         )}
 
     choice = (result.get("choices") or [{}])[0]
     text = ((choice.get("message") or {}).get("content"))
     if text is None:
-        return {"ok": False, "problem": f"LiteLLM answered with no content: {result}"}
+        return {"ok": False, "problem": f"Gateway answered with no content: {result}"}
 
     return {
         "ok": True,

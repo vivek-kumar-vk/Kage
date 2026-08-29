@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import APIRouter, Depends, HTTPException\nfrom fastapi.responses import JSONResponse\nfrom fastapi.security import HTTPBasic, HTTPBasicCredentials\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom services.db import connect\nfrom services.imports.cas import parse_cas\nfrom services.calculations.holdings_upsert import upsert_holding\nfrom services.agents.supervisor import sanitize_for_cloud_llm\nfrom services.agents.cas_specialist import CASSpecialist\nfrom startup import PassthroughAuth\n\nrouter = APIRouter()\n\nsecurity = HTTPBasic()\nauth = PassthroughAuth()\n\nclass BasicAuthMiddleware(BaseHTTPMiddleware):\n    async def dispatch(self, request, call_next):\n        credentials = await security(request)\n        if not credentials:\n            raise HTTPException(status_code=401, detail=\"Unauthorized\")\n        user = auth(credentials.username, credentials.password)\n        if not user:\n            raise HTTPException(status_code=401, detail=\"Unauthorized\")\n        request.state.user = user\n        response = await call_next(request)\n        return response\n\nrouter.middleware(\"http\")(BasicAuthMiddleware)\n\n@router.post(\"/import/cas\")\nasync def import_cas(file_bytes: bytes, credentials: HTTPBasicCredentials = Depends(security)):\n    user = auth(credentials.username, credentials.password)\n    if not user:\n        raise HTTPException(status_code=401, detail=\"Unauthorized\")\n    \n    cas_data = parse_cas(file_bytes)\n    specialist = CASSpecialist(user.llm_client)\n    for row in cas_data:\n        sanitized_row = sanitize_for_cloud_llm(row)\n        upsert_holding(sanitized_row, mode=\"set_snapshot\")\n    \n    return JSONResponse(content={\"status\": \"success\"})\n```"
+      }
+    }
+  ],
+  "created": 1788001426,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 358,
+    "prompt_tokens": 3542,
+    "total_tokens": 3900,
+    "prompt_tokens_details": {
+      "cached_tokens": 3452
+    }
+  },
+  "id": "chatcmpl-PaPbnVgxYm8aGj96aKonJeXevp98GHKE",
+  "timings": {
+    "cache_n": 3452,
+    "prompt_n": 90,
+    "prompt_ms": 270.323,
+    "prompt_per_token_ms": 3.003588888888889,
+    "prompt_per_second": 332.93504437284287,
+    "predicted_n": 358,
+    "predicted_ms": 14599.197,
+    "predicted_per_token_ms": 40.89410924369748,
+    "predicted_per_second": 24.45339973150578
+  }
+}

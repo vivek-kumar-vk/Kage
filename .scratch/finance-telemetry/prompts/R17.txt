@@ -1,0 +1,36 @@
+Output this file EXACTLY as written. Restyle only. Change nothing.
+
+FILE: app/components/TelemetryPanel.tsx
+
+```tsx
+"use client";
+
+import { PulseCore } from "./PulseCore";
+import { BucketSchematic } from "./BucketSchematic";
+import { CashFlowPanel } from "./CashFlowPanel";
+import { GoalsGauges } from "./GoalsGauges";
+import { InvestmentsSpark } from "./InvestmentsSpark";
+import { DebtReadout } from "./DebtReadout";
+import { PortfolioReadout } from "./PortfolioReadout";
+
+/** The TELEMETRY tab body — a hero portfolio core, the 3-bucket
+    schematic, then the pit-wall grid of widgets. Each child reads the
+    seed module directly. */
+export function TelemetryPanel() {
+  return (
+    <section aria-label="Telemetry" className="flex flex-col gap-4">
+      <PulseCore />
+      <BucketSchematic />
+      <div className="telemetry-grid">
+        <CashFlowPanel />
+        <GoalsGauges />
+        <InvestmentsSpark />
+        <DebtReadout />
+        <PortfolioReadout />
+      </div>
+    </section>
+  );
+}
+```
+
+Return ONLY the file contents inside one ```tsx code block.

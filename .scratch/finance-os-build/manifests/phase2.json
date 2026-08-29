@@ -1,0 +1,121 @@
+{
+  "phase": "2",
+  "repo": "B:/inky_code",
+  "cwd": "B:/inky_code/finance-os/frontend",
+  "lang": "tsx",
+  "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
+  "ask_excerpt_file": "B:/inky_code/.scratch/finance-os-build/spec/phase2.md",
+  "progress_file": "B:/inky_code/.scratch/finance-os-build/progress/phase2-progress.md",
+  "ledger_file": "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
+  "cooldown_s": 20,
+  "max_retries": 3,
+  "max_tokens": 3000,
+  "grill_rounds": 1,
+  "min_free_ram_mb": 400,
+  "min_free_vram_mb": 200,
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "final_build": true,
+  "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase2.py",
+  "setup_cmds": [
+    "npm --prefix finance-os/frontend install --no-audit --no-fund"
+  ],
+  "scout": false,
+  "scout_profile": "ui_gap_scout",
+  "scout_cooldown_s": 30,
+  "scout_budget_s": 1200,
+  "scout_max_turns": 10,
+  "tasks": [
+    {
+      "id": "P2-api-ts",
+      "lang": "tsx",
+      "client": false,
+      "out": "lib/api.ts",
+      "spec": "Per phase brief 'frontend/lib/api.ts'. Start from master doc 8.4 (MUTATING_METHODS set + explicit method detection). ADD: module cacheVersion counter + listener set + subscribe(fn)/notify(); invalidateCache() clears the WHOLE cache and calls notify(); fetchFinanceData bumps version on any mutation; useFinanceData(endpoint) returns {data,isLoading,error,refetch} and re-fetches via useSyncExternalStore on cacheVersion change (no remount needed); useSubmit() returns a submit(endpoint,options) that POSTs then invalidateCache()."
+    },
+    {
+      "id": "P2-types",
+      "lang": "tsx",
+      "out": "lib/types.ts",
+      "spec": "Response types: NetWorthData (net_worth,assets,liabilities,trend:{date,net_worth}[]), CashflowData, PortfolioPulseData, EmergencyFundData, DebtStatusData, SurplusAllocationData, GoalsOverviewData, TopActionsData, DataHealthData. Export all."
+    },
+    {
+      "id": "P2-form-modal",
+      "lang": "tsx",
+      "client": true,
+      "out": "components/finance/FormModal.tsx",
+      "spec": "A dialog wrapper (Shadcn-style, Radix or a plain focus-trapped div if Radix absent). Props {trigger, title, children, open?, onOpenChange?}. Used by Overview '+' and 'Manage all' triggers and by Settings."
+    },
+    {
+      "id": "P2-app-layout",
+      "lang": "tsx",
+      "out": "app/layout.tsx",
+      "spec": "Root layout: html/body, import './globals.css', Inter font, metadata title 'Finance OS'. children passthrough."
+    },
+    {
+      "id": "P2-app-page",
+      "lang": "tsx",
+      "out": "app/page.tsx",
+      "spec": "Server component that redirect('/finance') from next/navigation."
+    },
+    {
+      "id": "P2-finance-layout",
+      "lang": "tsx",
+      "client": true,
+      "out": "app/finance/layout.tsx",
+      "spec": "master doc 8.5 verbatim shape: header with status-dot + 'FINANCE OS', nav tabs Overview/Investments/Debt/Tracker/Learning + a Settings link. isActive = plain pathname === tab.href (no dead /finance/overview branch)."
+    },
+    {
+      "id": "P2-finance-page",
+      "lang": "tsx",
+      "out": "app/finance/page.tsx",
+      "spec": "master doc 8.6 grid: 3+3 card grid then GoalsCard, TopActionsCard, DataHealthCard. Import the nine cards from components/finance/cards/."
+    },
+    {
+      "id": "P2-card-primitives",
+      "lang": "tsx",
+      "out": "components/finance/Card.tsx",
+      "spec": "Card({title, children, action?}) using the .card / .card-header / .card-title classes from globals.css. Plus a sibling Skeleton.tsx (shimmer block) â€” put Skeleton in components/finance/Skeleton.tsx via a second export? No: this file exports Card only."
+    },
+    {
+      "id": "P2-skeleton",
+      "lang": "tsx",
+      "out": "components/finance/Skeleton.tsx",
+      "spec": "A simple pulsing grey block component for loading states. No deps beyond React + Tailwind."
+    },
+    {
+      "id": "P2-networth-card",
+      "lang": "tsx",
+      "client": true,
+      "out": "components/finance/cards/NetWorthCard.tsx",
+      "spec": "master doc 8.7 pattern BUT the sparkline drops the forced 0: const max = Math.max(...values); const min = Math.min(...values); const range = (max - min) || 1; keep the length>1 ? ... : 50 x-handling and the hasData guard. Fetch /api/finance/overview/net-worth via useFinanceData. Explicit loading/error/empty."
+    },
+    {
+      "id": "P2-overview-cards",
+      "lang": "tsx",
+      "client": true,
+      "out": "components/finance/cards/OverviewCards.tsx",
+      "spec": "Export CashflowCard, PortfolioPulseCard, EmergencyFundCard, DebtStatusCard, SurplusAllocationCard, GoalsCard, TopActionsCard, DataHealthCard â€” each a small component fetching its own /api/finance/overview/* endpoint via useFinanceData with explicit loading/error/empty. GoalsCard header has a <Link href='/finance/settings?tab=goals'>Manage all goals â†’</Link>. Re-export from cards/index.ts is NOT needed; app/finance/page.tsx imports named from this file and NetWorthCard from its own file."
+    },
+    {
+      "id": "P2-hero-three",
+      "lang": "tsx",
+      "client": true,
+      "out": "components/finance/three/HeroScene.tsx",
+      "spec": "A lazy Three.js hero via next/dynamic(()=>import(...),{ssr:false}); an inline 2D fallback (SVG) when window.WebGLRenderingContext is absent or matchMedia('(prefers-reduced-motion: reduce)').matches. Keep the scene cheap (single rotating allocation-puck group, autoRotateSpeed 0.5, dpr [1,2])."
+    },
+    {
+      "id": "P2-router-overview",
+      "lang": "py",
+      "cwd": "B:/inky_code/finance-os/backend",
+      "out": "routers/overview.py",
+      "spec": "APIRouter, the nine Overview endpoints from master doc section 7. All calculations import from services.calculations and read the active_holdings view, never holdings directly. /overview/goals uses goal_probability(master doc section 10) with total_months derived from goals.start_date (stored baseline), NOT recomputed from created_at->target_date. /overview/data-health reads the data_health singleton."
+    },
+    {
+      "id": "P2-calc-core",
+      "lang": "py",
+      "cwd": "B:/inky_code/finance-os/backend",
+      "out": "services/calculations/core.py",
+      "spec": "net_worth(), cashflow() (income - expenses - EMIs - SIPs = surplus; current salary = salary row MAX(effective_date)<=today), emergency_fund() (target = 6 * monthly expenses, gap), goals_overview() (top 3 active goals + bounded goal_probability). Deterministic, read active_holdings + latest_prices. goal_probability exactly as master doc section 10."
+    }
+  ]
+}

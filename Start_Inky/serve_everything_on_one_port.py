@@ -80,16 +80,6 @@ def routing_table() -> dict[str, tuple[str, int]]:
         if info["port"] is not None:
             table[m.SCREEN_NAME] = (info["host"], info["port"])
 
-    # The LiteLLM gateway is not a screen (no folder, no settings file),
-    # but a phone or a tunnel that can only reach this one port still
-    # needs to call it. Give it the same prefix-stripped treatment every
-    # screen gets, under /llm/ - so /llm/v1/chat/completions and /llm/ui
-    # reach the proxy on its own port. Config, not a name.
-    table["llm"] = (
-        os.environ.get("LITELLM_HOST", "127.0.0.1"),
-        int(os.environ.get("LITELLM_PORT", "8003")),
-    )
-
     return table
 
 

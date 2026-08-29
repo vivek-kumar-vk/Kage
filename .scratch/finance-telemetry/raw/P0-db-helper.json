@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nimport os\nimport sqlite3\nimport pathlib\nimport contextlib\n\nHERE = pathlib.Path(__file__).resolve().parent\nDB_PATH = pathlib.Path(os.environ.get(\"FINANCE_DB\") or (HERE.parent / \"data\" / \"finance.db\"))\nSCHEMA_PATH = HERE.parent / \"scripts\" / \"schema.sql\"\n\n\ndef connect():\n    DB_PATH.parent.mkdir(parents=True, exist_ok=True)\n    conn = sqlite3.connect(DB_PATH)\n    conn.execute(\"PRAGMA foreign_keys=ON\")\n    conn.execute(\"PRAGMA journal_mode=WAL\")\n    conn.row_factory = sqlite3.Row\n    return conn\n\n\ndef init_db():\n    with connect() as conn:\n        has = conn.execute(\n            \"SELECT name FROM sqlite_master WHERE type='table' AND name='accounts'\"\n        ).fetchone()\n        if not has:\n            conn.executescript(SCHEMA_PATH.read_text(encoding=\"utf-8\"))\n            conn.commit()\n\n\n@contextlib.contextmanager\ndef get_db():\n    conn = connect()\n    try:\n        yield conn\n    finally:\n        conn.close()\n```"
+      }
+    }
+  ],
+  "created": 1788003747,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 224,
+    "prompt_tokens": 4754,
+    "total_tokens": 4978,
+    "prompt_tokens_details": {
+      "cached_tokens": 1070
+    }
+  },
+  "id": "chatcmpl-CUIDS77qozFHLgipoxPxpZx297yzICUz",
+  "timings": {
+    "cache_n": 1070,
+    "prompt_n": 3684,
+    "prompt_ms": 3243.834,
+    "prompt_per_token_ms": 0.8805195439739413,
+    "prompt_per_second": 1135.693133495734,
+    "predicted_n": 224,
+    "predicted_ms": 9289.603,
+    "predicted_per_token_ms": 41.657412556053806,
+    "predicted_per_second": 24.0053315518435
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```css\n@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n:root { --background: #0a0a0a; --foreground: #e5e7eb; }\nbody { background-color: var(--background); color: var(--foreground); font-family: 'Inter', sans-serif; }\n\n.card {\n  background: linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 100%);\n  border: 1px solid #2d2d2d;\n  border-radius: 8px;\n  padding: 1.5rem;\n  position: relative;\n  overflow: hidden;\n}\n.card:hover { border-color: #e10600; box-shadow: 0 0 12px rgba(225, 6, 0, 0.3); transition: all 0.3s ease; }\n.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }\n.card-title { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #c0c0c0; }\n.value-large { font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #ffffff; }\n.value-positive { color: #00ff87; }\n.value-negative { color: #e10600; }\n.status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #00ff87; box-shadow: 0 0 6px #00ff87; }\n```"
+      }
+    }
+  ],
+  "created": 1788000856,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 387,
+    "prompt_tokens": 3751,
+    "total_tokens": 4138,
+    "prompt_tokens_details": {
+      "cached_tokens": 3720
+    }
+  },
+  "id": "chatcmpl-FpwvOGmRScysVXnAzw2EPOei1Du5smMw",
+  "timings": {
+    "cache_n": 3720,
+    "prompt_n": 31,
+    "prompt_ms": 449.375,
+    "prompt_per_token_ms": 14.495967741935484,
+    "prompt_per_second": 68.9847009735744,
+    "predicted_n": 387,
+    "predicted_ms": 17026.179,
+    "predicted_per_token_ms": 44.10927202072539,
+    "predicted_per_second": 22.6709703921238
+  }
+}

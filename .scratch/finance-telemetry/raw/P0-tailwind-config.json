@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```typescript\nimport type { Config } from 'tailwindcss'\n\nconst config: Config = {\n  content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],\n  theme: {\n    extend: {\n      colors: {\n        carbon: { DEFAULT: '#1a1a1a', light: '#2d2d2d', dark: '#0f0f0f' },\n        racing: { red: '#e10600', yellow: '#f9a800', blue: '#00d2ff', green: '#00ff87', silver: '#c0c0c0' },\n      },\n      fontFamily: {\n        sans: ['Inter', 'sans-serif'],\n        mono: ['JetBrains Mono', 'monospace'],\n      },\n      boxShadow: {\n        'neon-red': '0 0 10px rgba(225, 6, 0, 0.5)',\n        'neon-blue': '0 0 10px rgba(0, 210, 255, 0.5)',\n      },\n    },\n  },\n  plugins: [],\n}\nexport default config\n```"
+      }
+    }
+  ],
+  "created": 1788000818,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 257,
+    "prompt_tokens": 3752,
+    "total_tokens": 4009,
+    "prompt_tokens_details": {
+      "cached_tokens": 3720
+    }
+  },
+  "id": "chatcmpl-EQ5xu1NdSxUBbLGmNvrCtiEFYxi75r0P",
+  "timings": {
+    "cache_n": 3720,
+    "prompt_n": 32,
+    "prompt_ms": 292.815,
+    "prompt_per_token_ms": 9.15046875,
+    "prompt_per_second": 109.28401891979577,
+    "predicted_n": 257,
+    "predicted_ms": 10363.778,
+    "predicted_per_token_ms": 40.4835078125,
+    "predicted_per_second": 24.701416799935313
+  }
+}

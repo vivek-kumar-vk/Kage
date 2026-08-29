@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";\nimport { motion } from \"framer-motion\";\nimport { usePrefersReducedMotion } from \"@/app/lib/usePrefersReducedMotion\";\nimport { TiltCard } from \"./TiltCard\";\n\n/** The 3-bucket system as three fill tanks: monthly surplus drops in,\n    Bucket 1 fills first, the rest overflows onward. Seed data (P8). */\nexport function BucketSchematic() {\n  const reduce = usePrefersReducedMotion();\n  const buckets = BLUEPRINT_SEED.buckets;\n\n  return (\n    <TiltCard>\n      <div aria-label=\"3-bucket system\">\n        <p className=\"num text-[10px] tracking-[0.24em] text-dim\">3-BUCKET SYSTEM</p>\n        <p className=\"num mt-1 text-[10px] text-dim\">\u2193 monthly surplus fills bucket 1 first</p>\n        <div className=\"mt-4 flex items-end gap-3\">\n          {buckets.map((b, i) => (\n            <div key={b.key} className=\"flex flex-1 flex-col items-center gap-2\">\n              <div className=\"relative h-28 w-full overflow-hidden rounded border border-line bg-void\">\n                <motion.div\n                  className=\"absolute inset-x-0 bottom-0\"\n                  style={{\n                    height: `${b.fillPct}%`,\n                    transformOrigin: \"bottom\",\n                    background: \"var(--grad-wealth)\",\n                    opacity: 0.85,\n                  }}\n                  initial={{ scaleY: reduce ? 1 : 0 }}\n                  animate={{ scaleY: 1 }}\n                  transition={{ duration: 0.9, delay: i * 0.18, ease: [0.16, 1, 0.3, 1] }}\n                />\n                <span className=\"num absolute inset-x-0 top-1 text-center text-[10px] text-bone\">\n                  {b.fillPct}%\n                </span>\n              </div>\n              <p className=\"num text-[9px] tracking-[0.14em] text-dim\">BUCKET {i + 1}</p>\n              <p className=\"text-center text-[12px] font-semibold text-bone\">{b.name}</p>\n              <p className=\"num text-center text-[9px] text-dim\">{b.horizon}</p>\n              <p className=\"text-center text-[9px] text-dim\">{b.note}</p>\n            </div>\n          ))}\n        </div>\n        <p className=\"num mt-3 text-[10px] text-dim\">\n          bucket 1 \u25b8 bucket 2 \u25b8 bucket 3 \u2014 surplus overflows onward\n        </p>\n      </div>\n    </TiltCard>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787935796,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 613,
+    "prompt_tokens": 681,
+    "total_tokens": 1294,
+    "prompt_tokens_details": {
+      "cached_tokens": 44
+    }
+  },
+  "id": "chatcmpl-7EEGTrkLMHD1AY2ZWcwSHGCXIsfebwQC",
+  "timings": {
+    "cache_n": 44,
+    "prompt_n": 637,
+    "prompt_ms": 2764.639,
+    "prompt_per_token_ms": 4.34009262166405,
+    "prompt_per_second": 230.4098292760827,
+    "predicted_n": 613,
+    "predicted_ms": 23813.547,
+    "predicted_per_token_ms": 38.91102450980392,
+    "predicted_per_second": 25.699657426086084
+  }
+}

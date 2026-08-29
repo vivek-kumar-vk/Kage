@@ -69,3 +69,9 @@ restart_requested.flag
 # --- Kage's project-managed Postgres cluster + gateway logs (T3/T4) ---
 Start_Inky/pgdata/
 Tools/*.log
+
+# personal / local-only (never in public Kage repo)
+personal-financial-blueprint.html
+Gemini_Generated_Image_*.png
+Screenshot *.png
+Screens/Finance/Page/next_app.7z

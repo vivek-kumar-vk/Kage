@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";\nimport { useCountUp } from \"@/app/lib/useCountUp\";\nimport { formatINR } from \"@/app/lib/formatINR\";\nimport { motion } from \"framer-motion\";\n\n/** Investments \u2014 a self-drawing line of the last 12 months, like a feed\n    plotting onto a pit-wall screen. Seed data (P8). */\nexport function InvestmentsSpark() {\n  const { current, series } = BLUEPRINT_SEED.investments; // series: number[] length 12, in \u20b9 thousands\n  const shown = useCountUp(current);\n\n  const W = 240;\n  const H = 80;\n  const PAD = 6;\n  const min = Math.min(...series);\n  const max = Math.max(...series);\n  const span = max - min || 1;\n  const pts = series.map((v, i) => {\n    const x = (i / (series.length - 1)) * (W - PAD * 2) + PAD;\n    const y = H - PAD - ((v - min) / span) * (H - PAD * 2);\n    return `${x.toFixed(1)},${y.toFixed(1)}`;\n  });\n  const d = `M ${pts.join(\" L \")}`;\n\n  return (\n    <section\n      aria-label=\"Investments\"\n      className=\"carbon-face checkered-sweep relative overflow-hidden rounded-lg border border-line p-5\"\n    >\n      <div className=\"flex items-baseline justify-between\">\n        <p className=\"num text-[10px] tracking-[0.2em] text-dim\">INVESTMENTS</p>\n        <p className=\"num text-sm text-amber\">{formatINR(Math.round(shown))}</p>\n      </div>\n      <svg viewBox={`0 0 ${W} ${H}`} className=\"mt-3 h-24 w-full\" preserveAspectRatio=\"none\">\n        <motion.path\n          d={d}\n          fill=\"none\"\n          stroke=\"var(--amber)\"\n          strokeWidth={2}\n          strokeLinecap=\"round\"\n          strokeLinejoin=\"round\"\n          initial={{ pathLength: 0 }}\n          animate={{ pathLength: 1 }}\n          transition={{ duration: 1.4, ease: \"easeInOut\" }}\n        />\n      </svg>\n      <p className=\"num mt-1 text-[10px] text-dim\">last 12 months</p>\n    </section>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787931596,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 538,
+    "prompt_tokens": 659,
+    "total_tokens": 1197,
+    "prompt_tokens_details": {
+      "cached_tokens": 75
+    }
+  },
+  "id": "chatcmpl-IJAcjF89LLcdpTiMladMI75WScK54wdV",
+  "timings": {
+    "cache_n": 75,
+    "prompt_n": 584,
+    "prompt_ms": 3691.757,
+    "prompt_per_token_ms": 6.321501712328767,
+    "prompt_per_second": 158.19026008483223,
+    "predicted_n": 538,
+    "predicted_ms": 23173.642,
+    "predicted_per_token_ms": 43.153895716945996,
+    "predicted_per_second": 23.17287891130794
+  }
+}

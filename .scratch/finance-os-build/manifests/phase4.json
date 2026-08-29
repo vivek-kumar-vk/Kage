@@ -1,0 +1,48 @@
+{
+  "phase": "4",
+  "repo": "B:/inky_code",
+  "cwd": "B:/inky_code/finance-os/backend",
+  "lang": "py",
+  "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
+  "ask_excerpt_file": "B:/inky_code/.scratch/finance-os-build/spec/phase4.md",
+  "progress_file": "B:/inky_code/.scratch/finance-os-build/progress/phase4-progress.md",
+  "ledger_file": "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
+  "cooldown_s": 20,
+  "max_retries": 3,
+  "max_tokens": 3000,
+  "grill_rounds": 1,
+  "min_free_ram_mb": 400,
+  "min_free_vram_mb": 200,
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase4.py",
+  "scout": false,
+  "scout_profile": "ui_gap_scout",
+  "scout_cooldown_s": 30,
+  "scout_budget_s": 1200,
+  "scout_max_turns": 10,
+  "tasks": [
+    {
+      "id": "P4-calc-debt",
+      "out": "services/calculations/debt.py",
+      "spec": "total_outstanding, highest_interest, next_emi. AvalancheCalculator (order by interest_rate desc), SnowballCalculator (order by outstanding asc), payoff_plan() combining EMI + any surplus by the chosen order. Simulator(extra_payment, salary_increase, bonus) -> {months_saved, interest_saved, new_payoff_date} via month-by-month amortization. Identity: extra_payment 0 and no other change -> months_saved == 0, interest_saved == 0."
+    },
+    {
+      "id": "P4-router-debt",
+      "out": "routers/debt.py",
+      "spec": "APIRouter: /debt/overview, /debt/table (+ {id} GET/PUT/DELETE, {id}/archive), /debt/payoff-plan, POST /debt/simulate (body extra_payment/salary_increase/bonus), /debt/learning/{topic}. {id}/archive sets archived_at OR status='closed' when outstanding<=0. Hard delete blocked if payment history exists (409)."
+    },
+    {
+      "id": "P4-debt-specialist",
+      "out": "services/agents/debt_specialist.py",
+      "spec": "Wraps the debt calculators; __init__(self, llm_client). Returns {action, reason, learn} where action/ranking is deterministic and only the prose is llm-rendered. High-interest debt ranked above goals/investing per master doc section 2."
+    },
+    {
+      "id": "P4-page-debt",
+      "lang": "tsx",
+      "cwd": "B:/inky_code/finance-os/frontend",
+      "client": true,
+      "out": "app/finance/debt/page.tsx",
+      "spec": "Debt table, payoff-plan view, a simulate form (extra payment / salary increase / bonus inputs -> POST /api/finance/debt/simulate via useSubmit, show months & interest saved), and a learning panel showing Action / Reason / Learn. Fetch via useFinanceData. Explicit empty state when no debts."
+    }
+  ]
+}

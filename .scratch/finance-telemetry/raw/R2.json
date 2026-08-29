@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n/** Fixed full-viewport backdrop: three slow-drifting blurred colour\n    blobs over the void, plus a faint film grain. All motion is CSS\n    (globals.css) and freezes under prefers-reduced-motion. Purely\n    decorative \u2014 aria-hidden, pointer-events none via its classes. */\nexport function AuroraBackground() {\n  return (\n    <>\n      <div className=\"aurora\" aria-hidden=\"true\">\n        <span className=\"aurora-blob a\" />\n        <span className=\"aurora-blob b\" />\n        <span className=\"aurora-blob c\" />\n      </div>\n      <div className=\"grain\" aria-hidden=\"true\" />\n    </>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787934492,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 149,
+    "prompt_tokens": 272,
+    "total_tokens": 421,
+    "prompt_tokens_details": {
+      "cached_tokens": 24
+    }
+  },
+  "id": "chatcmpl-20kLl1ou2dcTDn7BoIHMsAvDXuGYT2pV",
+  "timings": {
+    "cache_n": 24,
+    "prompt_n": 248,
+    "prompt_ms": 1093.121,
+    "prompt_per_token_ms": 4.407745967741936,
+    "prompt_per_second": 226.8733287531755,
+    "predicted_n": 149,
+    "predicted_ms": 5281.963,
+    "predicted_per_token_ms": 35.688939189189185,
+    "predicted_per_second": 28.01988578867364
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "phase": "5",
+  "repo": "B:/inky_code",
+  "cwd": "B:/inky_code/finance-os/backend",
+  "lang": "py",
+  "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
+  "ask_excerpt_file": "B:/inky_code/.scratch/finance-os-build/spec/phase5.md",
+  "progress_file": "B:/inky_code/.scratch/finance-os-build/progress/phase5-progress.md",
+  "ledger_file": "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
+  "cooldown_s": 20,
+  "max_retries": 3,
+  "max_tokens": 3000,
+  "grill_rounds": 1,
+  "min_free_ram_mb": 400,
+  "min_free_vram_mb": 200,
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 12288 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase5.py",
+  "scout": false,
+  "scout_profile": "ui_gap_scout",
+  "scout_cooldown_s": 30,
+  "scout_budget_s": 1200,
+  "scout_max_turns": 10,
+  "tasks": [
+    {
+      "id": "P5-router-tracker",
+      "out": "routers/tracker.py",
+      "spec": "APIRouter: /tracker/transactions (GET, filters date_from/date_to/category/account_id), /tracker/transactions/{id} (GET/PUT/DELETE, hard delete allowed), /tracker/categories, /tracker/recurring, /tracker/trends (monthly), /tracker/insights. PUT/POST validate category against shared/constants/categories (import it) -> 422 on a bad value. All via services.db.connect()."
+    },
+    {
+      "id": "P5-tracker-specialist",
+      "out": "services/agents/tracker_specialist.py",
+      "spec": "RecurringDetector (same payee + ~30-day cadence + amount within 10%), LeakFinder (leak-of-the-week: largest avoidable category delta vs trailing median), BudgetDrift. __init__(self, llm_client). Deterministic; llm only for the insight sentence."
+    },
+    {
+      "id": "P5-page-tracker",
+      "lang": "tsx",
+      "cwd": "B:/inky_code/finance-os/frontend",
+      "client": true,
+      "out": "app/finance/tracker/page.tsx",
+      "spec": "Filterable transaction table with inline edit + delete via useSubmit (so Overview updates with no manual refresh), a category breakdown (hand-rolled SVG bars), a monthly trend line (computed path), a recurring list, an insights panel. Fetch via useFinanceData."
+    },
+    {
+      "id": "P5-transaction-form",
+      "lang": "tsx",
+      "cwd": "B:/inky_code/finance-os/frontend",
+      "client": true,
+      "out": "components/finance/forms/TransactionForm.tsx",
+      "spec": "Controlled form: account select, date, description, amount (negative=expense), type select (from HOLDING? no - TRANSACTION_TYPES), category select populated from shared/constants/categories TRANSACTION_CATEGORIES. Submits via useSubmit to /api/finance/import/manual {entity:'transaction',...}. onSaved callback."
+    }
+  ]
+}

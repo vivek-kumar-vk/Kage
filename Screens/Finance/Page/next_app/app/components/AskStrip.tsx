@@ -5,12 +5,12 @@ import { useState } from "react";
 /** One "Ask INKY" strip. Reused by Investments and Portfolio Analysis -
     the same two strips the vanilla page carries, wired to the same real
     endpoints, never faked or stubbed. Every message travels through this
-    screen's own server (server_for_finance.py) to the Models screen's
-    router over HTTP on port 8003 (C8) - the router is Tier 0 by default
-    (ADR-040) here, so an honest refusal is the ordinary answer until a
-    provider is cleared for the message shape asked. The reply is never
-    a recommendation to buy, sell, switch or redeem (C5) - this UI shows
-    whatever text the router returns and adds no advice of its own. */
+    screen's own server (server_for_finance.py) to the model gateway
+    over HTTP (C8) - the gateway is Tier 0 by default (ADR-040) here, so
+    an honest refusal is the ordinary answer until a provider is cleared
+    for the message shape asked. The reply is never a recommendation to
+    buy, sell, switch or redeem (C5) - this UI shows whatever text the
+    gateway returns and adds no advice of its own. */
 export function AskStrip({ endpoint, placeholder }: { endpoint: string; placeholder: string }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);

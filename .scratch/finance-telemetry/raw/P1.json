@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nuse client;\n\nimport { useState, useEffect } from 'react';\nimport ThemeLabStage from './stage';\n\nconst THEMES = [\n  {\n    id: 'navy-sharp',\n    name: 'Navy Sharp',\n    vars: {\n      '--tl-bg': '#1a1a2e',\n      '--tl-bg-2': '#282842',\n      '--tl-surface': '#333350',\n      '--tl-line': '#444466',\n      '--tl-text': '#ffffff',\n      '--tl-text-dim': '#888899',\n      '--tl-accent': '#ff0000',\n      '--tl-accent-2': '#ff5500',\n      '--tl-accent-soft': '#ff8800',\n      '--tl-glow': '#ffcc00',\n      '--tl-petal': '#ff6600',\n    },\n  },\n  {\n    id: 'evening-warm',\n    name: 'Evening Warm',\n    vars: {\n      '--tl-bg': '#1a1a2e',\n      '--tl-bg-2': '#282842',\n      '--tl-surface': '#333350',\n      '--tl-line': '#444466',\n      '--tl-text': '#ffffff',\n      '--tl-text-dim': '#888899',\n      '--tl-accent': '#ff6600',\n      '--tl-accent-2': '#ff8800',\n      '--tl-accent-soft': '#ffcc00',\n      '--tl-glow': '#ffcc00',\n      '--tl-petal': '#ff6600',\n    },\n  },\n  {\n    id: 'pitwall',\n    name: 'Pitwall',\n    vars: {\n      '--tl-bg': '#000000',\n      '--tl-bg-2': '#1a1a2e',\n      '--tl-surface': '#333350',\n      '--tl-line': '#444466',\n      '--tl-text': '#ffffff',\n      '--tl-text-dim': '#888899',\n      '--tl-accent': '#ff0000',\n      '--tl-accent-2': '#ff5500',\n      '--tl-accent-soft': '#ff8800',\n      '--tl-glow': '#ffcc00',\n      '--tl-petal': '#ff6600',\n    },\n  },\n  {\n    id: 'dusk-calm',\n    name: 'Dusk Calm',\n    vars: {\n      '--tl-bg': '#1a1a2e',\n      '--tl-bg-2': '#282842',\n      '--tl-surface': '#333350',\n      '--tl-line': '#444466',\n      '--tl-text': '#ffffff',\n      '--tl-text-dim': '#888899',\n      '--tl-accent': '#ff6600',\n      '--tl-accent-2': '#ff8800',\n      '--tl-accent-soft': '#ffcc00',\n      '--tl-glow': '#ffcc00',\n      '--tl-petal': '#ff6600',\n    },\n  },\n];\n\nconst ThemeLab = () => {\n  const [idx, setIdx] = useState(0);\n\n  useEffect(() => {\n    const hash = location.hash.slice(1);\n    const themeIndex = THEMES.findIndex((theme) => theme.id === hash);\n    if (themeIndex !== -1) {\n      setIdx(themeIndex);\n    }\n  }, []);\n\n  useEffect(() => {\n    location.hash = THEMES[idx].id;\n  }, [idx]);\n\n  return (\n    <div\n      style={{\n        ...THEMES[idx].vars,\n        background: 'var(--tl-bg)',\n        color: 'var(--tl-text)',\n        minHeight: '100dvh',\n      }}\n    >\n      <ThemeLabStage />\n      <div\n        style={{\n          position: 'fixed',\n          bottom: '0',\n          left: '50%',\n          transform: 'translateX(-50%)',\n          display: 'flex',\n          gap: '10px',\n          padding: '10px',\n          background: 'var(--tl-surface)',\n          border: '1px solid var(--tl-line)',\n        }}\n      >\n        {THEMES.map((theme, i) => (\n          <button\n            key={theme.id}\n            onClick={() => setIdx(i)}\n            style={{\n              background: idx === i ? 'var(--tl-accent)' : 'transparent',\n              color: idx === i ? 'var(--tl-glow)' : 'var(--tl-text)',\n              border: 'none',\n              padding: '5px 10px',\n              cursor: 'pointer',\n            }}\n          >\n            {theme.name}\n          </button>\n        ))}\n      </div>\n    </div>\n  );\n};\n\nexport default ThemeLab;\n```"
+      }
+    }
+  ],
+  "created": 1787942006,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 1081,
+    "prompt_tokens": 802,
+    "total_tokens": 1883,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "id": "chatcmpl-bLd7prgQuAN6rkLnVyxbkVp5GhKu4R7f",
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 802,
+    "prompt_ms": 2263.012,
+    "prompt_per_token_ms": 2.82171072319202,
+    "prompt_per_second": 354.3949391342158,
+    "predicted_n": 1081,
+    "predicted_ms": 78110.675,
+    "predicted_per_token_ms": 72.32469907407408,
+    "predicted_per_second": 13.826535233500413
+  }
+}

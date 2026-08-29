@@ -1,0 +1,4 @@
+[serve_dev 16:17:22] watching B:\inky_code\finance-os  — open http://127.0.0.1:8000/  (status page now, real app after Phase 2)
+[serve_dev 16:17:22] placeholder not started ([WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted)
+[serve_dev 16:17:22] placeholder not started ([WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted)
+[serve_dev 16:17:42] placeholder not started ([WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted)

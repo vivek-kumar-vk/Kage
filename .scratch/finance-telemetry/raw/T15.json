@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { BucketSchematic } from \"./BucketSchematic\";\nimport { CashFlowPanel } from \"./CashFlowPanel\";\nimport { GoalsGauges } from \"./GoalsGauges\";\nimport { InvestmentsSpark } from \"./InvestmentsSpark\";\nimport { DebtReadout } from \"./DebtReadout\";\nimport { PortfolioReadout } from \"./PortfolioReadout\";\n\n/** The TELEMETRY tab body \u2014 the pit-wall grid of blueprint blocks and\n    standard widgets. Each child is self-contained and reads the seed\n    module directly. */\nexport function TelemetryPanel() {\n  return (\n    <section aria-label=\"Telemetry\" className=\"flex flex-col gap-4\">\n      <BucketSchematic />\n      <div className=\"telemetry-grid\">\n        <CashFlowPanel />\n        <GoalsGauges />\n        <InvestmentsSpark />\n        <DebtReadout />\n        <PortfolioReadout />\n      </div>\n    </section>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787931788,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 204,
+    "prompt_tokens": 310,
+    "total_tokens": 514,
+    "prompt_tokens_details": {
+      "cached_tokens": 47
+    }
+  },
+  "id": "chatcmpl-cQZ7v9wRTWIvAJz0Ze7H2cGLakWGkimv",
+  "timings": {
+    "cache_n": 47,
+    "prompt_n": 263,
+    "prompt_ms": 1882.008,
+    "prompt_per_token_ms": 7.155923954372624,
+    "prompt_per_second": 139.74435815363165,
+    "predicted_n": 204,
+    "predicted_ms": 7782.753,
+    "predicted_per_token_ms": 38.338684729064035,
+    "predicted_per_second": 26.08331524847313
+  }
+}

@@ -26,8 +26,8 @@ SCREEN_LABEL = "Model"
 # ---------------------------------------------------------------------
 # SERVING
 # ---------------------------------------------------------------------
-# Own port, so this screen can be worked on alone. 8003 is the LiteLLM
-# gateway itself; 8004 is Enhancement; this screen takes 8005.
+# Own port, so this screen can be worked on alone. 8004 is Enhancement;
+# this screen takes 8005.
 PORT = 8005
 HOST = "127.0.0.1"          # local means local
 
@@ -38,29 +38,30 @@ PAGE = SCREEN / "Page" / "page_for_model.html"
 # ---------------------------------------------------------------------
 # THE GATEWAY IT REPORTS ON
 # ---------------------------------------------------------------------
-# The local LiteLLM proxy. Base URL only - the server file owns which
-# endpoints it reads. Overridable by env for the phone host later.
+# The model gateway (OmniRoute or similar OpenAI-compatible endpoint).
+# Base URL only - the server file owns which endpoints it reads.
+# Overridable by env for the phone host later.
 import os
 
-LITELLM_BASE_URL = os.environ.get("LITELLM_BASE_URL", "http://127.0.0.1:8003")
+GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://127.0.0.1:8003")
 
-# LiteLLM's list/spend endpoints need the admin key. It lives in the
-# repo-root .env (gitignored). This screen stays independent - it does
-# not import Tools/ or any shared loader, just reads the one line it
-# needs itself. Env wins so a host can override without touching .env.
-def _master_key() -> str:
-    if os.environ.get("LITELLM_MASTER_KEY"):
-        return os.environ["LITELLM_MASTER_KEY"]
+# The gateway's admin/list endpoints may need an API key. It lives in
+# the repo-root .env (gitignored). This screen stays independent - it
+# does not import Tools/ or any shared loader, just reads the one line
+# it needs itself. Env wins so a host can override without touching .env.
+def _gateway_key() -> str:
+    if os.environ.get("GATEWAY_API_KEY"):
+        return os.environ["GATEWAY_API_KEY"]
     env_file = PROJECT_ROOT / ".env"
     if env_file.exists():
         for line in env_file.read_text(encoding="utf-8").splitlines():
             line = line.strip()
-            if line.startswith("LITELLM_MASTER_KEY=") and "=" in line:
+            if line.startswith("GATEWAY_API_KEY=") and "=" in line:
                 return line.split("=", 1)[1].strip().strip("\"'")
     return ""
 
 
-LITELLM_MASTER_KEY = _master_key()
+GATEWAY_API_KEY = _gateway_key()
 
 # ---------------------------------------------------------------------
 # API

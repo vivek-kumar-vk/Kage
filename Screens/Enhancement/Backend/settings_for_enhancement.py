@@ -1,4 +1,4 @@
-﻿"""Settings for the Enhancement screen.
+"""Settings for the Enhancement screen.
 
 Everything adjustable lives here, so you never go hunting through the
 server file to change a port or a folder name.
@@ -25,7 +25,7 @@ SCREEN_LABEL = "Enhancement"
 # ---------------------------------------------------------------------
 # Each screen gets its own port, so you can start one on its own while
 # working on it without the others running. Finance is 8001, Learning is
-# 8002, Models is 8003 - this is the next one.
+# 8002, Models is 8005 - this is the next one.
 PORT = 8004
 HOST = "127.0.0.1"      # 127.0.0.1, not 0.0.0.0 - nothing else on the
                         # network can reach this. Local means local.

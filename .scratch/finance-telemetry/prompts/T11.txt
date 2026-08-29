@@ -1,0 +1,57 @@
+Write ONE React component file. Next.js 16, React 19, TypeScript, Tailwind v4, framer-motion 13.
+No new dependencies. No Three.js. No red colours (Rule 8).
+
+FILE: app/components/GoalsGauges.tsx
+
+KEEP THESE FIRST LINES EXACTLY (verbatim, including quotes):
+
+"use client";
+
+import { BLUEPRINT_SEED } from "@/app/lib/blueprintSeed";
+import { motion, useReducedMotion } from "framer-motion";
+
+/** Goals progress as RPM dials — a needle sweeps to each goal's percent
+    and settles with a small wobble. Seed data (P8). */
+export function GoalsGauges() {
+
+THEN implement the body EXACTLY like this:
+  const reduce = useReducedMotion();
+  const goals = BLUEPRINT_SEED.goals; // [{ label: string, pct: number }, ...]
+
+  // one 270-degree dial, needle up = 0deg, full range -135deg..+135deg
+  const angleFor = (pct: number) => -135 + (pct / 100) * 270;
+  const TRACK = "M 23.13 81.87 A 38 38 0 1 1 76.87 81.87";
+
+  return (
+    <section
+      aria-label="Goals progress"
+      className="carbon-face checkered-sweep relative overflow-hidden rounded-lg border border-line p-5"
+    >
+      <p className="num text-[10px] tracking-[0.2em] text-dim">GOALS PROGRESS</p>
+      <div className="mt-3 grid grid-cols-2 gap-4">
+        {goals.map((g) => (
+          <div key={g.label} className="flex flex-col items-center">
+            <svg viewBox="0 0 100 100" className="h-24 w-24">
+              <path d={TRACK} fill="none" stroke="var(--sumi-line)" strokeWidth={6} strokeLinecap="round" />
+              <motion.g
+                style={{ transformOrigin: "50px 55px" }}
+                initial={{ rotate: reduce ? angleFor(g.pct) : -135 }}
+                animate={{ rotate: angleFor(g.pct) }}
+                transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 60, damping: 12 }}
+              >
+                <line x1={50} y1={55} x2={50} y2={25} stroke="var(--amber)" strokeWidth={3} strokeLinecap="round" />
+              </motion.g>
+              <circle cx={50} cy={55} r={4} fill="var(--amber)" />
+              <text x={50} y={70} textAnchor="middle" className="num" fill="var(--bone)" fontSize={14}>
+                {g.pct}%
+              </text>
+            </svg>
+            <p className="mt-1 text-center text-[11px] text-bone">{g.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+Return ONLY the file contents inside one ```tsx code block. No explanation.

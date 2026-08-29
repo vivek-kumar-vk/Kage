@@ -30,5 +30,37 @@
 - Output **one file**, complete, no prose, no markdown fence around it beyond a
   single optional ```tsx wrapper.
 
+## Python / FastAPI (Finance OS V1 build — .scratch/finance-os-build)
+
+- **Meta-fix.** For every fix, also implement the thing one step downstream that
+  consumes it. A UNIQUE constraint needs its upsert. A new table needs its
+  backfill. A patched edge case needs its sibling edge case in the SAME function.
+  A new VIEW needs every caller switched to it. A locked-in decision needs its
+  deployment check. Do not stop at the reported symptom.
+- Every DB open goes through `backend/services/db.py:connect()` — it sets
+  `PRAGMA foreign_keys=ON` first, every connection. Never `import sqlite3` +
+  `sqlite3.connect(` anywhere else.
+- Read the `active_holdings` view, never the `holdings` table, in any calculation
+  (it already excludes archived holdings + archived accounts).
+- No module-level `import openai` / `ollama` / `litellm` in a specialist. The LLM
+  client is passed into `__init__`. Cloud payloads go through
+  `supervisor.sanitize_for_cloud_llm()` first (no PAN, account/holding/lender
+  names, descriptions, or ticker symbols — aggregates only).
+- Any network loop in a request path (price backfill, batch refresh) runs as a
+  FastAPI `BackgroundTasks` / queue job — the request returns immediately.
+- One `dedupe_transaction()` shared by UPI-CSV and SMS import — same txn from two
+  paths must not double-count.
+- `upsert_holding` takes `mode`: `add_lot` (Groww/SMS — units ADD, weighted-avg
+  cost) vs `set_snapshot` (CAS — units are the total, SET). `cost_per_unit=None`
+  → keep existing `avg_cost`, skip the recompute.
+- Unpriceable assets (bond/other → price `None`): exclude from portfolio-value
+  math and flag them; never render as ₹0.
+- Time-series endpoints return an explicit `{"state": "ok"|"partial"|"pending"}`
+  discriminator, not a bare empty array.
+- `data_health` writes are `UPDATE ... WHERE id=1`, never `INSERT`.
+- Frontend: no `next export` script; `output:'export'` makes `next build` export.
+  Sparkline scaling uses real data min/max with `(max-min)||1` — no forced `0`.
+- Output ONE complete file, no prose, no fence.
+
 ## Retired
 <!-- lines whose tag stopped recurring; kept for history -->

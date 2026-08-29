@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport type { SparklineProps } from \"./types\";\n\nexport function Sparkline({ series, height = 60, stroke = \"var(--liv-accent)\", fill }: SparklineProps) {\n  const min = Math.min(...series);\n  const max = Math.max(...series);\n  const span = (max - min) || 1;\n  const points = series.map((value, index) => {\n    const x = (index * 240) / (series.length - 1);\n    const y = (height - 6) - ((value - min) / span) * (height - 12);\n    return `M ${x},${y} L ${x},${y}`;\n  }).join('');\n\n  const line = points;\n  const area = `${line} L240,${height} L0,${height} Z`;\n\n  return (\n    <svg viewBox={`0 0 240 ${height}`} style={{ width: \"100%\", height, display: \"block\" }}>\n      <path d={area} fill={fill || stroke} fillOpacity={0.15} stroke=\"none\" />\n      <path d={line} fill=\"none\" stroke={stroke} strokeWidth={2} strokeLinejoin=\"round\" />\n    </svg>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787945283,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 277,
+    "prompt_tokens": 873,
+    "total_tokens": 1150,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "id": "chatcmpl-BtNntFOfM9K29HNvDrmLdj1YWNMa28kt",
+  "timings": {
+    "cache_n": 0,
+    "prompt_n": 873,
+    "prompt_ms": 1173.994,
+    "prompt_per_token_ms": 1.3447812142038946,
+    "prompt_per_second": 743.6153847464298,
+    "predicted_n": 277,
+    "predicted_ms": 18797.34,
+    "predicted_per_token_ms": 68.10630434782608,
+    "predicted_per_second": 14.682928542017116
+  }
+}

@@ -4,7 +4,20 @@
 
 `python run_phase.py phase1.json phase2.json phase3.json` in the background,
 authored entirely by the local model (Qwen2.5-Coder-7B-Q4_K_M on
-llama-server :8080). 15 tasks, one commit each, 90 s cooldown between.
+llama-server :8080). 15 tasks, one commit each, **50 s** cooldown between.
+
+**2026-08-29 update:** cooldown 90 s → 50 s. The `ui_gap_scout` Hermes Bot now
+runs **automatically after every task** on the local model (zero Claude cost) —
+`run_phase.run_scout()` shells `hermes -p ui_gap_scout chat -Q --yolo`; it
+appends `ledger.md` and self-updates `prompt-contract.md` /
+`improvement-progress.md`. Non-fatal on failure. Disable per-manifest with
+`"scout": false`.
+
+Also offloaded to the local model (`.scratch/finance-telemetry/lm_chores.py`,
+zero Claude cost, no git): **phase-summary** — auto-appended to each
+`phaseN-progress.md` at phase end (toggle `"phase_summary": false`);
+**commit-msg `<label>`** — run by hand before each commit;
+**ledger-digest** — run at session end for the carry-forward tally.
 
 | Phase | tasks | out |
 |---|---|---|

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { PulseCore } from \"./PulseCore\";\nimport { BucketSchematic } from \"./BucketSchematic\";\nimport { CashFlowPanel } from \"./CashFlowPanel\";\nimport { GoalsGauges } from \"./GoalsGauges\";\nimport { InvestmentsSpark } from \"./InvestmentsSpark\";\nimport { DebtReadout } from \"./DebtReadout\";\nimport { PortfolioReadout } from \"./PortfolioReadout\";\n\n/** The TELEMETRY tab body \u2014 a hero portfolio core, the 3-bucket\n    schematic, then the pit-wall grid of widgets. Each child reads the\n    seed module directly. */\nexport function TelemetryPanel() {\n  return (\n    <section aria-label=\"Telemetry\" className=\"flex flex-col gap-4\">\n      <PulseCore />\n      <BucketSchematic />\n      <div className=\"telemetry-grid\">\n        <CashFlowPanel />\n        <GoalsGauges />\n        <InvestmentsSpark />\n        <DebtReadout />\n        <PortfolioReadout />\n      </div>\n    </section>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787936303,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 226,
+    "prompt_tokens": 294,
+    "total_tokens": 520,
+    "prompt_tokens_details": {
+      "cached_tokens": 45
+    }
+  },
+  "id": "chatcmpl-hweC2PbjyC2DwpW7Dr00KG1dxiIyAvtV",
+  "timings": {
+    "cache_n": 45,
+    "prompt_n": 249,
+    "prompt_ms": 1163.803,
+    "prompt_per_token_ms": 4.673907630522089,
+    "prompt_per_second": 213.95373615637698,
+    "predicted_n": 226,
+    "predicted_ms": 8073.208,
+    "predicted_per_token_ms": 35.880924444444446,
+    "predicted_per_second": 27.869961977939873
+  }
+}

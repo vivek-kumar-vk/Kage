@@ -12,7 +12,7 @@
 fastapi>=0.110
 uvicorn[standard]>=0.27
 
-# Nothing else. The overview endpoint talks to the local LiteLLM gateway
+# Nothing else. The overview endpoint talks to the model gateway
 # over plain HTTP with the standard library - no client library, no
-# database of its own. The gateway itself (LiteLLM + Postgres) is
-# installed by Tools/run_litellm.* (wayfinder tickets T3-T6), not here.
+# database of its own. The gateway itself (OmniRoute or similar) is
+# installed and managed separately, not here.

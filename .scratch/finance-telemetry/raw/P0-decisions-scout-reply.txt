@@ -1,0 +1,5 @@
+[1;31mFailed to initialize agent: Model qwen2.5-coder-7b-instruct-q5_k_m has a context[0m
+[1;31mwindow of 8,192 tokens, which is below the minimum 64,000 required by Hermes [0m
+[1;31mAgent.  Choose a model with at least 64K context.  If your server reports a [0m
+[1;31mwindow smaller than the model's true window, set model.context_length in [0m
+[1;31mconfig.yaml to the real value (this must be at least 64K).[0m

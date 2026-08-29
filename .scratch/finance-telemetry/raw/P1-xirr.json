@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom decimal import Decimal, getcontext\nfrom typing import List, Tuple\nfrom services.db import connect\nfrom services.agents.supervisor import sanitize_for_cloud_llm\n\ndef xirr(cashflows: List[Tuple[Decimal, Decimal]]) -> Decimal:\n    getcontext().prec = 10\n\n    def net_present_value(rate: Decimal) -> Decimal:\n        return sum(amount / (1 + rate) ** (i / 365) for i, amount in cashflows)\n\n    def xirr_newton(cashflows: List[Tuple[Decimal, Decimal]], guess: Decimal) -> Decimal:\n        npv = net_present_value(guess)\n        if npv == 0:\n            return guess\n        derivative = sum(i * amount / (1 + guess) ** ((i + 1) / 365) for i, amount in cashflows)\n        return guess - npv / derivative\n\n    def xirr_bisection(cashflows: List[Tuple[Decimal, Decimal]], low: Decimal, high: Decimal) -> Decimal:\n        while high - low > Decimal('0.00001'):\n            mid = (low + high) / Decimal('2')\n            if net_present_value(mid) * net_present_value(low) < 0:\n                high = mid\n            else:\n                low = mid\n        return low\n\n    low = Decimal('0.0001')\n    high = Decimal('0.5')\n    guess = Decimal('0.1')\n\n    for _ in range(100):\n        guess = xirr_newton(cashflows, guess)\n        if abs(net_present_value(guess)) < Decimal('0.00001'):\n            return guess\n        low, high = xirr_bisection(cashflows, low, high)\n\n    return guess\n```"
+      }
+    }
+  ],
+  "created": 1788001053,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 391,
+    "prompt_tokens": 3515,
+    "total_tokens": 3906,
+    "prompt_tokens_details": {
+      "cached_tokens": 3452
+    }
+  },
+  "id": "chatcmpl-LoK5ESlhpERTah3FunTbiaDOFLHPQr3P",
+  "timings": {
+    "cache_n": 3452,
+    "prompt_n": 63,
+    "prompt_ms": 416.762,
+    "prompt_per_token_ms": 6.615269841269841,
+    "prompt_per_second": 151.16541335342475,
+    "predicted_n": 391,
+    "predicted_ms": 15539.241,
+    "predicted_per_token_ms": 39.84420769230769,
+    "predicted_per_second": 25.09775091331681
+  }
+}

@@ -70,7 +70,7 @@ const isExternal = (href: string) => /^https?:\/\//.test(href);
 const MODEL_FALLBACK: Entry = {
   key: "model",
   label: "Model",
-  blurb: "LiteLLM gateway - models, usage, logs",
+  blurb: "Model gateway - models, usage, logs",
   href: "/model/",
   external: false,
 };

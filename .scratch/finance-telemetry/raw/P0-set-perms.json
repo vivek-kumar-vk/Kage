@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nimport os\nimport subprocess\n\nDB_PATH = os.getenv('FINANCE_DB', 'backend/data/finance.db')\n\ndef set_perms():\n    if not os.path.exists(DB_PATH):\n        print(f\"Notice: {DB_PATH} does not exist yet.\")\n        return 0\n\n    if os.name == 'nt':\n        subprocess.run(['icacls', str(DB_PATH), '/inheritance:r', '/grant:r', f\"{os.environ.get('USERNAME','%USERNAME%')}:F\"])\n        print(f\"Set permissions for {DB_PATH} on Windows.\")\n    else:\n        os.chmod(DB_PATH, 0o600)\n        print(f\"Set permissions for {DB_PATH} on POSIX.\")\n\nif __name__ == \"__main__\":\n    set_perms()\n```"
+      }
+    }
+  ],
+  "created": 1788000703,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 160,
+    "prompt_tokens": 4066,
+    "total_tokens": 4226,
+    "prompt_tokens_details": {
+      "cached_tokens": 3959
+    }
+  },
+  "id": "chatcmpl-qPO9rEL2xiDWqQ0MtzkP82uuVw4TxBL4",
+  "timings": {
+    "cache_n": 3959,
+    "prompt_n": 107,
+    "prompt_ms": 358.364,
+    "prompt_per_token_ms": 3.3491962616822426,
+    "prompt_per_second": 298.5790983469322,
+    "predicted_n": 160,
+    "predicted_ms": 7584.272,
+    "predicted_per_token_ms": 47.69982389937107,
+    "predicted_per_second": 20.964437984291706
+  }
+}
