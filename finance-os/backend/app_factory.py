@@ -41,6 +41,11 @@ def create_app() -> FastAPI:
     def _spa(full_path: str):
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404)
+        # 1) an exact static asset (_next/*, fonts, favicon, *.txt, ...)
+        exact = (static / full_path).resolve()
+        if static in exact.parents and exact.is_file():
+            return FileResponse(exact)
+        # 2) a route -> its exported .html, then index.html (SPA deep-link fallback)
         for cand in (static / f"{full_path}.html", static / full_path / "index.html",
                      static / "index.html"):
             if cand.is_file():
