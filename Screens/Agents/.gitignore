@@ -1,0 +1,13 @@
+agents.db
+agents.db-*
+*.db-wal
+*.db-shm
+.env
+Backend/seed_local.json
+seed_local.json
+AI_Agents/*/Memory/
+Page/next_app/node_modules/
+Page/next_app/.next/
+Page/next_app/out/
+__pycache__/
+*.pyc

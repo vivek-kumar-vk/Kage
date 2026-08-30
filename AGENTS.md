@@ -115,3 +115,26 @@ Read this first, every session. Standing rules for this repo; the plan list is
   finance-scoped RAG over public finance primers only; it does not duplicate the
   standalone screen and neither absorbs the other. The old
   `learning-tab-plan.md` (Model-screen theme, full Drive+FAISS) is dropped.
+- **D9 — The AGENTS screen is the agent workspace (2026-08-30).**
+  `Screens/Enhancement/` → `Screens/Agents/` (`MENU_LABEL="AGENT DECK"`, port 8004).
+  A local 3-pane agent workspace ("Deck" theme — Main-Menu DNA, not Slack). The
+  kanban "ideas" board is **one room** inside it, owned by `Agent_Head`;
+  board card keys stay `ENH-n`. Agent profiles live in
+  `Screens/Agents/AI_Agents/` (the screen owns its own agents — Rule 4; V1 seeds
+  21 role-stub profiles, `Agent_Head` first). V1 ships the shell + working board +
+  profiles + honest stubs, **no LLM**. Agent
+  execution (OmniRoute wiring, per-agent model sets, routing) is **V2**. Repo-root
+  `Agents/` (20 stubs) and `Shared_By_All_Agents/` are a **V2 reuse pool — left
+  untouched by V1**, not moved or imported. Plan: `.scratch/agents-workspace/`.
+  Supersedes P3's old "rebuild the kanban" scope.
+- **D10 — Model screen embeds OmniRoute's own dashboard (2026-08-30).** The
+  Model screen at `:8005` **iframes OmniRoute's built-in dashboard** at
+  `127.0.0.1:8003` instead of building custom data-proxy panels. The page
+  keeps its RUBRIC header (title + status dot + "open in new tab" link) and
+  the back-to-menu link; the iframe fills the remaining viewport. The
+  existing `/api/model/overview` health probe gates whether the iframe is
+  shown or a "gateway unreachable" fallback panel is displayed — honest
+  states, no fake data. Auto-retry every 30 s when down. This supersedes
+  the T7 "custom data blocks" plan from `screen_definition_for_model.py`'s
+  original docstring; OmniRoute's dashboard already has models, usage, cost,
+  logs, and latency views built in — duplicating them is waste.

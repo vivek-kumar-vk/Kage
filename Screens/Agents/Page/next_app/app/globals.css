@@ -1,0 +1,158 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-deck-bg: var(--deck-bg);
+  --color-deck-panel: var(--deck-panel);
+  --color-deck-raised: var(--deck-raised);
+  --color-deck-line: var(--deck-line);
+  --color-deck-text: var(--deck-text);
+  --color-deck-dim: var(--deck-dim);
+  --color-deck-copper: var(--deck-copper);
+  --color-deck-slate: var(--deck-slate);
+  --color-stat-idle: var(--stat-idle);
+  --color-stat-run: var(--stat-run);
+  --color-stat-block: var(--stat-block);
+  --color-stat-done: var(--stat-done);
+  --color-deck-alert: var(--deck-alert);
+
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-chakra-petch), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --deck-bg: #0E0E0E;
+  --deck-panel: #141212;
+  --deck-raised: #1A1818;
+  --deck-line: #333333;
+  --deck-text: #F4F2EE;
+  --deck-dim: #8B9099;
+  --deck-copper: #FF7A00;
+  --deck-slate: #6E8BA0;
+
+  --stat-idle: #8B9099;
+  --stat-run: #FF7A00;
+  --stat-block: #F2A93B;
+  --stat-done: #3FD9A4;
+
+  --deck-alert: #E33B2E;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--deck-bg);
+  color: var(--deck-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--deck-copper);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(255, 122, 0, 0.28);
+}
+
+.deck-panel {
+  background: var(--deck-panel);
+  border: 1px solid var(--deck-line);
+  border-radius: 4px;
+  box-shadow: inset 0 0 32px rgba(255, 255, 255, 0.015);
+}
+
+.deck-wordmark {
+  font-family: var(--font-display);
+  letter-spacing: 0.14em;
+  color: var(--deck-copper);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--deck-dim);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-align: left;
+  color: var(--deck-text);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.nav-row:hover {
+  border-color: var(--deck-line);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nav-row-active {
+  border-color: rgba(255, 122, 0, 0.65);
+  background: rgba(255, 122, 0, 0.06);
+  box-shadow:
+    inset 0 -1px 0 var(--deck-copper),
+    inset 0 0 0 1px rgba(255, 122, 0, 0.12);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.status-dot-idle {
+  background: var(--stat-idle);
+}
+
+.status-dot-running {
+  background: var(--stat-run);
+  animation: deck-pulse 2s ease-in-out infinite;
+}
+
+@keyframes deck-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+}

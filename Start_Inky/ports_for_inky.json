@@ -10,11 +10,18 @@
       "settings_file": "Main_Menu\\Backend\\settings_for_main_menu.py"
     },
     {
-      "name": "Enhancement",
-      "label": "Enhancement",
+      "name": "Agents",
+      "label": "AGENT DECK",
       "host": "127.0.0.1",
       "port": 8004,
-      "settings_file": "Screens\\Enhancement\\Backend\\settings_for_enhancement.py"
+      "settings_file": "Screens\\Agents\\Backend\\settings_for_agents.py"
+    },
+    {
+      "name": "Anime",
+      "label": "Anime",
+      "host": "127.0.0.1",
+      "port": 8006,
+      "settings_file": "Screens\\Anime\\Backend\\settings_for_anime.py"
     },
     {
       "name": "Finance",
@@ -29,6 +36,13 @@
       "host": "127.0.0.1",
       "port": 8002,
       "settings_file": "Screens\\Learning\\Backend\\settings_for_learning.py"
+    },
+    {
+      "name": "Model",
+      "label": "Model",
+      "host": "127.0.0.1",
+      "port": 8005,
+      "settings_file": "Screens\\Model\\Backend\\settings_for_model.py"
     }
   ],
   "reserved_not_running": {

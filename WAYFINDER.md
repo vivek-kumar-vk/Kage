@@ -1,7 +1,8 @@
 # WAYFINDER
 
-The single ordered map of live workstreams. **One item at a time.** Status detail lives
-in [`PLANNED_WORK.md`](PLANNED_WORK.md); design rules in [`AGENTS.md`](AGENTS.md).
+The single ordered map of live workstreams, **ranked by importance + dependency**. **One
+item at a time.** Status detail lives in [`PLANNED_WORK.md`](PLANNED_WORK.md); design
+rules in [`AGENTS.md`](AGENTS.md).
 
 `» ACTIVE` marks what's in flight. Items 1 and 2 run in parallel (different hands).
 
@@ -32,10 +33,14 @@ disk.
 `PLANNED_WORK.md` P11. Small adapters over `/v1/chat/completions` on `127.0.0.1:8003`.
 Blocked on Q10 / Q12 from item 1.
 
-## 4 — Enhancement tab UI
+## 4 — The AGENTS screen (agent workspace)
 
-`PLANNED_WORK.md` P3. React 19 / Tailwind / Next.js; replace the FastAPI ideas board;
-show `PLANNED_WORK.md` items + follow-up flags as cards.
+`PLANNED_WORK.md` P3 · plan `.scratch/agents-workspace/`. Rename `Screens/Enhancement/`
+→ `Screens/Agents/` (`MENU_LABEL="AGENT DECK"`); rebuild as a 3-pane agent workspace
+("Deck" theme). The kanban becomes one room, owned by `Agent_Head`. V1 = shell +
+working board + 21 profile stubs + honest stubs, no LLM. V2 = real agents wired through
+OmniRoute. Built by Qwen 3-Max one unit per turn (backend/frontend alternating, each
+gated). **V1 done 2026-08-30** (all 12 turns applied + verify gate passed).
 
 ## 5 — Replace the example Learning seeds
 

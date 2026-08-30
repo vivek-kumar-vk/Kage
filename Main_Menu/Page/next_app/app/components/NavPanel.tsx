@@ -51,8 +51,15 @@ const GLYPHS: Record<string, React.ReactNode> = {
       <path d="M9.5 12h5M9.5 16h5" stroke="currentColor" strokeWidth="1.3" />
     </>
   ),
-  enhancement: (
-    <path d="M13 2 5 14h5l-1 8 8-13h-5l1-7z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+  agents: (
+    <>
+      <path d="M4 8h16v11H4z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M8 8V4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M16 8V4" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M9 13h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M15 13h.01" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M9 16h6" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </>
   ),
   dot: <circle cx="12" cy="12" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.4" />,
 };

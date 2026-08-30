@@ -80,3 +80,9 @@ current.png
 
 # --- Claude Code session plans (ephemeral; outcomes land in PLANNED_WORK.md) ---
 .zcode/
+
+# --- Anime screen: local-only, never on GitHub (restored from the old checkout) ---
+Screens/Anime/
+
+# --- AGENT DECK build scaffolding (Qwen turn scripts + apply state) ---
+Stage_agents/

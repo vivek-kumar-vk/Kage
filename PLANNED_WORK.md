@@ -26,14 +26,26 @@ bottom. Status: `queued` | `in progress` | `done`.
   `add_and_search_the_knowledge_base.py`, `trace_every_action.py`,
   `the_lease_board.py`, `read_screen_settings.py`.
 
-## P3 — Design the Enhancement tab
-- **Status:** queued
-- Build the Enhancement tab UI + structure (React 19 / Tailwind / Next.js per
-  Rule 3) to show: this file's tracked plans as cards, and any data items flagged
-  for follow-up. Card = title, area, status, priority, detail.
-- Existing Enhancement screen is a Python/FastAPI ideas board
-  (`Screens/Enhancement/`, SQLite `enhancement_board.db`); this replaces its
-  frontend and, per Rule 3, its backend.
+## P3 — The AGENT DECK screen (agent workspace; rebuild + rename of Enhancement)
+- **Status:** V1 DONE 2026-08-30 (all 12 Qwen turns applied + verify gate passed).
+  Full plan: `.scratch/agents-workspace/map.md`
+  + `.scratch/agents-workspace/QWEN_BUILD_PROMPT.md`. V2 remains queued.
+- Upgrade + reframe of the old "rebuild the kanban" P3. `Screens/Enhancement/` →
+  `Screens/Agents/` (`MENU_LABEL="AGENT DECK"`, port 8004 kept). The screen is a
+  local **agent workspace** (3-pane, "Deck" theme — Main-Menu DNA, not Slack's
+  look). The kanban is one room inside it, owned by `Agent_Head`.
+- **V1 (done):** rename + greenfield rebuild on the Learning template (Next 16 /
+  React 19 / Tailwind v4 static export; FastAPI + stdlib sqlite3; self-contained).
+  Board room fully working; `Screens/Agents/AI_Agents/` seeds 21 role-stub
+  profiles (`Agent_Head` first); RUNS = honest stub; `rooms`/`messages` schema in
+  place; `POST /agents/{name}/ask` ships as `{"state":"pending"}`. Main Menu label
+  + nav glyph updated. No LLM.
+- **V2:** real AI agents in `AI_Agents/`, DM rooms, OmniRoute wiring (`complete` /
+  `summarize` over `127.0.0.1:8003`), per-agent model sets, routing, live RUNS.
+  Ties to P11 / P2. Mines repo-root `Agents/` + `Shared_By_All_Agents/` (left
+  untouched by V1) for reuse.
+- **V3:** board × agents ("pick an ENH-n → ask an agent"). Optional.
+- Build: Qwen 3-Max, one unit per turn, backend/frontend alternating, each gated.
 
 ## P4 — Stack migration: Python/FastAPI → Node.js + Express
 - **Status:** queued
@@ -43,7 +55,12 @@ bottom. Status: `queued` | `in progress` | `done`.
 ## P5 — Finish the Anime removal in the optional framework UIs
 - **Status:** queued
 - The plain HTML/JS Main Menu is clean. Give the Next.js and Svelte Main Menu
-  variants a full pass for any layout gaps left by removing the Anime card.
+  variants a full pass for any layout gaps left by removing the Anime *card*.
+- Note (2026-08-30): the Anime *screen* (`Screens/Anime/`, Node/Express + Vite
+  React client, port 8006) was **restored locally** from the old checkout at the
+  user's request — it is **gitignored** (`Screens/Anime/` in `.gitignore`), never
+  on GitHub. It reappears in the Main Menu via normal screen discovery. This P5
+  is only about the removed dashboard *card*, not the screen.
 
 ## P6 — Replace the example Learning seeds
 - **Status:** queued
