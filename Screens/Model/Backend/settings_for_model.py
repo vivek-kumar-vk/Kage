@@ -31,8 +31,8 @@ SCREEN_LABEL = "Model"
 PORT = 8005
 HOST = "127.0.0.1"          # local means local
 
-# The page this screen serves. Until the Next.js rebuild lands (T7) this
-# is a hand-written, self-contained themed placeholder.
+# The page this screen serves. D10: a RUBRIC-themed shell that iframes
+# OmniRoute's own dashboard.
 PAGE = SCREEN / "Page" / "page_for_model.html"
 
 # ---------------------------------------------------------------------

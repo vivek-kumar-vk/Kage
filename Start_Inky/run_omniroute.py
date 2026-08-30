@@ -114,11 +114,90 @@ def gateway_command() -> list[str]:
     return [found]
 
 
+def _disable_dashboard_login(env_vars: dict[str, str]) -> None:
+    """After OmniRoute boots, log in and disable the requireLogin setting
+    so the Model screen's iframe (D10) loads the dashboard directly without
+    prompting for a password. Self-contained - no shared module (Rule 4).
+    """
+    import json
+    import time
+    import urllib.request
+    import urllib.error
+
+    base = f"http://{GATEWAY_HOST}:{GATEWAY_PORT}"
+    password = env_vars.get("INITIAL_PASSWORD", "")
+    if not password:
+        print("  [login-bypass] no INITIAL_PASSWORD — skipping")
+        return
+
+    # Wait for the gateway to be ready (health endpoint)
+    for attempt in range(30):
+        try:
+            req = urllib.request.Request(
+                f"{base}/api/monitoring/health",
+                headers={"accept": "application/json"},
+            )
+            with urllib.request.urlopen(req, timeout=10) as r:
+                if r.status == 200:
+                    break
+        except Exception:
+            pass
+        time.sleep(2)
+    else:
+        print("  [login-bypass] gateway didn't become healthy — skipping")
+        return
+
+    # Log in to get a session cookie
+    try:
+        login_data = json.dumps({"password": password}).encode()
+        req = urllib.request.Request(
+            f"{base}/api/auth/login",
+            data=login_data,
+            headers={"Content-Type": "application/json", "accept": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            cookie = r.getheader("Set-Cookie") or ""
+    except Exception as exc:
+        print(f"  [login-bypass] login failed: {exc}")
+        return
+
+    if not cookie:
+        print("  [login-bypass] no session cookie returned — skipping")
+        return
+
+    session = cookie.split(";")[0]
+
+    # Disable requireLogin
+    try:
+        payload = json.dumps({"requireLogin": False}).encode()
+        req = urllib.request.Request(
+            f"{base}/api/settings/require-login",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "accept": "application/json",
+                "Cookie": session,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            if r.status == 200:
+                print("  [login-bypass] dashboard login disabled (D10)")
+            else:
+                print(f"  [login-bypass] unexpected status {r.status}")
+    except Exception as exc:
+        print(f"  [login-bypass] disable failed: {exc}")
+
+
 def main() -> None:
     if port_in_use(GATEWAY_PORT):
         print(f"  gateway already running at http://{GATEWAY_HOST}:{GATEWAY_PORT}"
               " - leaving it alone")
         return
+
+    file_env = read_env_file()
+    gateway_secrets = ensure_secrets(file_env)
 
     env = dict(os.environ)
     env.update({
@@ -126,7 +205,7 @@ def main() -> None:
         "OMNIROUTE_SERVER_HOST": GATEWAY_HOST,   # local means local
         "API_HOST": GATEWAY_HOST,
         "REQUIRE_API_KEY": "true",
-        **ensure_secrets(read_env_file()),
+        **gateway_secrets,
     })
 
     print(f"  OmniRoute -> http://{GATEWAY_HOST}:{GATEWAY_PORT}"
@@ -134,6 +213,16 @@ def main() -> None:
     print("  first start after an install can take a minute; the Model")
     print("  screen (http://127.0.0.1:8005) reports this gateway's state.")
     proc = subprocess.Popen(gateway_command(), cwd=str(PROJECT_ROOT), env=env)
+
+    # After the gateway boots, disable the dashboard login so the Model
+    # screen's iframe (D10) loads without prompting for a password.
+    import threading
+    threading.Thread(
+        target=_disable_dashboard_login,
+        args=(gateway_secrets,),
+        daemon=True,
+    ).start()
+
     try:
         proc.wait()
     except KeyboardInterrupt:
@@ -146,3 +235,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

@@ -138,3 +138,8 @@ Read this first, every session. Standing rules for this repo; the plan list is
   the T7 "custom data blocks" plan from `screen_definition_for_model.py`'s
   original docstring; OmniRoute's dashboard already has models, usage, cost,
   logs, and latency views built in — duplicating them is waste.
+  - **D10.1 — Model screen direct redirect to OmniRoute (2026-08-30, supersedes D10 iframe wrap).**
+    `GET http://127.0.0.1:8005/` redirects directly (`307`) to OmniRoute's
+    dashboard at `http://127.0.0.1:8003/`. Dashboard login requirement is
+    auto-disabled on gateway startup by `Start_Inky/run_omniroute.py`.
+

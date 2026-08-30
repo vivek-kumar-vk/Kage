@@ -26,21 +26,24 @@ html, body {
   color: var(--bone);
   font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Fill the viewport so the iframe can stretch */
+  height: 100%;
 }
 
 .wrap {
-  max-width: 860px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 24px 20px 64px;
+  padding: 16px 20px 12px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
+  height: 100vh;
 }
 
-.head { display: flex; flex-direction: column; gap: 6px; }
+.head { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
 .title {
   display: flex; align-items: center; gap: 8px;
-  font-size: 20px; font-weight: 600; letter-spacing: 0.14em; margin: 0;
+  font-size: 18px; font-weight: 600; letter-spacing: 0.14em; margin: 0;
 }
 .title .accent { color: var(--amber); font-weight: 400; }
 .sub {
@@ -48,6 +51,60 @@ html, body {
   color: var(--dim); margin: 0;
 }
 
+/* ----- Status bar ----- */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.state {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  border: 1px solid var(--line); border-radius: 3px; padding: 3px 8px; color: var(--dim);
+}
+.state .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+.state[data-s="ok"] { color: #3fd9a4; border-color: #3fd9a4; }
+.state[data-s="ok"] .dot { background: #3fd9a4; }
+.state[data-s="unreachable"], .state[data-s="error"] { color: var(--amber); border-color: var(--amber); }
+.state[data-s="unreachable"] .dot, .state[data-s="error"] .dot { background: var(--amber); }
+.state[data-s="loading"] { color: var(--dim); border-color: var(--line); }
+.state[data-s="loading"] .dot {
+  background: var(--dim);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.dash-link {
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--dim); text-decoration: none;
+  transition: color 120ms;
+}
+.dash-link:hover { color: var(--amber); }
+
+/* ----- Iframe wrapper — fills remaining height ----- */
+.gateway-frame-wrap {
+  flex: 1 1 0;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.gateway-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: var(--panel);
+}
+
+/* ----- Fallback panel ----- */
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -60,28 +117,46 @@ html, body {
   text-transform: uppercase; color: var(--bone); margin: 0 0 8px;
 }
 .panel p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--dim); }
-
-.rows { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.rows li { display: flex; flex-direction: column; gap: 2px; }
-.rows .k { font-size: 13px; color: var(--bone); font-variant-numeric: tabular-nums; }
-.rows .v { font-size: 11px; color: var(--dim); }
-
-.state {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-  border: 1px solid var(--line); border-radius: 3px; padding: 3px 8px; color: var(--dim);
+.panel code {
+  background: rgba(255, 122, 0, 0.08);
+  color: var(--amber);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-size: 12px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
 }
-.state .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
-.state[data-s="ok"] { color: #3fd9a4; border-color: #3fd9a4; }
-.state[data-s="ok"] .dot { background: #3fd9a4; }
-.state[data-s="unreachable"], .state[data-s="error"] { color: var(--amber); border-color: var(--amber); }
-.state[data-s="unreachable"] .dot, .state[data-s="error"] .dot { background: var(--amber); }
 
+.retry-btn {
+  margin-top: 12px;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 5px 14px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dim);
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms;
+}
+.retry-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* ----- Back link ----- */
 .back {
   align-self: flex-start;
+  flex-shrink: 0;
   border: 1px solid var(--line); border-radius: 3px; padding: 4px 10px;
   font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--dim); text-decoration: none;
   transition: border-color 120ms, color 120ms;
 }
 .back:hover { border-color: var(--amber); color: var(--amber); }
+
+/* ----- Responsive ----- */
+@media (max-width: 600px) {
+  .wrap { padding: 12px 12px 8px; gap: 8px; }
+  .title { font-size: 15px; }
+}

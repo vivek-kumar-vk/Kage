@@ -58,6 +58,12 @@ Config detail (providers, model list, aliases, API key, features):
   replaces the LiteLLM/Postgres design. Health path `/api/monitoring/health` (the old
   `/health/liveliness` 404'd → false "unreachable"). Model screen shows GATEWAY UP +
   model list against it. Detail in `GATEWAY_CONFIG.md`.
+- **T7 / D10 — Model screen iframes OmniRoute's dashboard (2026-08-30).**
+  Instead of building custom proxy endpoints + hand-rolled data panels, the
+  Model page embeds OmniRoute's built-in dashboard (`127.0.0.1:8003`) in an
+  iframe within the RUBRIC-themed shell. The backend's `/api/model/overview`
+  health probe gates whether the iframe shows or a fallback panel appears.
+  "Open in new tab" link provided for full-screen dashboard access.
 - ~~T3 Postgres lifecycle · T4 LiteLLM orchestration · T5 config.yaml · T6 secrets~~
   → **archived** (`.scratch/_archive/model-page-litellm-litellm-tickets/`).
 

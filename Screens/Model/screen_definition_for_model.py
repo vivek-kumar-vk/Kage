@@ -7,14 +7,13 @@ WHAT THIS FILE IS
     Main_Menu or Start_Inky changed to make this appear.
 
 WHAT IS BEHIND IT
-    A local model gateway (OmniRoute or similar, its own process) that
-    does auto-routing and fallback across model providers, and this
-    screen - the place Kage shows that gateway's own data (models,
-    usage, cost, latency, request logs, health), read from its REST API,
-    never a third-party web UI.
+    A local model gateway (OmniRoute, its own process) that does
+    auto-routing and fallback across model providers, and this screen -
+    the place Kage shows that gateway's own dashboard, embedded in an
+    iframe within a RUBRIC-themed shell (D10). The backend's
+    /api/model/overview health probe gates whether the iframe loads or
+    a "gateway unreachable" fallback is shown.
 
-    Scaffold only for now (ticket T2): the page is an honest placeholder
-    until the gateway is wired and the data blocks are designed (T7).
     This screen is a complete independent component - it imports nothing
     from Shared_By_All_Screens/ or Shared_By_All_Agents/.
 
