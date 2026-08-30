@@ -6,8 +6,11 @@ server file to change a port or a folder name.
 This screen is a complete independent component (AGENTS.md rule 4 / D-W6):
 it does NOT read Shared_By_All_Screens/read_screen_settings.py or any
 other shared module. The few values the launcher needs by convention -
-SCREEN_NAME, PORT, HOST, PAGE - are plain module attributes it can read
+SCREEN_NAME, PORT, HOST - are plain module attributes it can read
 without importing anything of ours.
+
+D10.1: this screen serves no page of its own - GET / 307-redirects to
+OmniRoute's dashboard (see server_for_model.py). No PAGE / Next export.
 """
 
 from pathlib import Path
@@ -30,10 +33,6 @@ SCREEN_LABEL = "Model"
 # this screen takes 8005.
 PORT = 8005
 HOST = "127.0.0.1"          # local means local
-
-# The page this screen serves. D10: a RUBRIC-themed shell that iframes
-# OmniRoute's own dashboard.
-PAGE = SCREEN / "Page" / "page_for_model.html"
 
 # ---------------------------------------------------------------------
 # THE GATEWAY IT REPORTS ON
@@ -67,11 +66,3 @@ GATEWAY_API_KEY = _gateway_key()
 # API
 # ---------------------------------------------------------------------
 API_PREFIX = "/api/model"
-
-# ---------------------------------------------------------------------
-# NEXT.JS REBUILD FLAG (parity with the other screens; wired in T7)
-# ---------------------------------------------------------------------
-# False + no build present -> the hand-written page is served. True with
-# a real export under Page/next_app/out swaps it in; honest beats broken.
-USE_NEXT_UI = False
-NEXT_DIST = SCREEN / "Page" / "next_app" / "out"

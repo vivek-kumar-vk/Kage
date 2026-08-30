@@ -36,8 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_for_model as cfg  # noqa: E402
 
 from fastapi import FastAPI  # noqa: E402
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse  # noqa: E402
-from fastapi.staticfiles import StaticFiles  # noqa: E402
+from fastapi.responses import RedirectResponse  # noqa: E402
 
 app = FastAPI(title=cfg.SCREEN_LABEL)
 
@@ -112,12 +111,6 @@ def overview():
             if isinstance(row, dict) and row.get("id"):
                 models.append({"id": row["id"]})
     return {"gateway": "ok", "base_url": base, "http_status": status, "models": models}
-
-
-# =====================================================================
-# STATIC FILES - this screen's own page assets (its own theme CSS)
-# =====================================================================
-app.mount("/page", StaticFiles(directory=cfg.PAGE.parent), name="page")
 
 
 # =====================================================================
