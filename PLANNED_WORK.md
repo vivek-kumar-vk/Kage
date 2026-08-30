@@ -52,56 +52,15 @@ bottom. Status: `queued` | `in progress` | `done`.
   the private (Google Drive) layer once P-drive lands.
 
 ## P7 — Google Drive private storage layer
-- **Status:** queued
-- See [`immediate_plan.md`](immediate_plan.md) Phase 5: one storage seam → adopted
-  Node.js Google Drive MCP server (app is the MCP client) → RAG/smart-retrieval
-  extending `add_and_search_the_knowledge_base.py`. Goal: nothing personal on
-  local disk.
-
-## P8 — Wire the Finance telemetry panels to live endpoints
-- **Status:** queued
-- The TELEMETRY tab and the two blueprint blocks on Overview
-  (`TotalBalanceReadout`, `FundTiers`) currently read
-  `Screens/Finance/Page/next_app/app/lib/blueprintSeed.ts`. Real numbers there
-  (total balance, the three emergency-fund tiers, the target) come from the
-  blueprint; everything tagged `SEED` is a demo placeholder.
-- Swap each `SEED` field for its source and delete it from the seed file:
-  - `totalBalance` ← `/api/finance/liabilities` `total_assets`
-  - `cashFlow` ← `/api/finance/money` (income / fixed-bills lines)
-  - `totalDebt` ← `/api/finance/debt`
-  - `investments` / `portfolioValue` ← `/api/finance/portfolio-analysis`
-  - `goals` ← no endpoint yet; add one or drop the RPM gauges
-  - `buckets` fill % ← derive from buffer tiers + surplus allocation, or keep illustrative
-- The 3-tier emergency-fund view (`FundTiers`) is richer than the backend's
-  2-tier `g2_buffer` gate (`buffer_tier_1` / `buffer_tier_2` in
-  `check_investment_gates.py`) — reconcile when wiring.
-- Built 2026-08-28 as an F1/telemetry skin, additive, local-model-authored;
-  orchestration notes in `.scratch/finance-telemetry/`.
-
-## P9 — Finance realism pass (F1-feel Overview + Investments)
-- **Status:** in progress — building (Phase 1 of 6)
-- Replace the AI-generated F1 costume with a **researched F1 broadcast/team-tool
-  feel**: **Ferrari livery on Overview** (red `#DC0000` anchor, evening
-  charcoal-navy, yellow sparing), **Red Bull livery on Investments** (blue
-  `#1E5BC6` dominant, midnight navy, red/yellow trim), a **shared F1 interaction
-  language** (timing-tower rows, sector-colour deltas, tabular nums, wipe-in
-  entrances, ▲▼ trend glyphs, one livery edge per panel), drifting sakura +
-  evening tone. Overview: per-block viz on seed data, remove `ActivityRail` +
-  chrome, `224041.png`-style goals timing-row list (4 placeholder rows).
-  Investments: `090804.png` holdings-table replica, RB livery, replacing the
-  panel. Shared "paddock" shell with a per-tab team-accent indicator; Debt +
-  Portfolio inherit it, internals a follow-up.
-- **Overrides D1** (amber-only) → log **D1.1** + the D-a two-livery revision in
-  `AGENTS.md` at Phase 5.
-- Map: `.scratch/finance-realism-pass/map.md` → "Phased build" (Phases 0–5,
-  replaces decision tickets 01–07). F1-UX research:
-  `.scratch/finance-realism-pass/research/f1-feel.md`.
-- Local-model-authored via the caged loop; **one commit per finished task**;
-  `ui-gap-scout` (runs on the local model) reviews each finished task + does an
-  end-of-effort reconcile vs. the ask (`.scratch/lm-ui-gaps/`).
-- **Out of scope here:** live endpoint wiring (P8), Portfolio Analysis tab
-  rebuild (needs its own research-first plan), real goal/holding values.
-- Session plan: `~/.claude/plans/yes-please-procced-and-zazzy-dawn.md`.
+- **Status:** queued — this is the status entry; **full spec is
+  [`immediate_plan.md`](immediate_plan.md) Phase 5** (storage seam API, MCP
+  transport, RAG, AI-trader seam).
+- In short: one storage seam (`read_doc`/`write_doc`/`list_docs`/`delete_doc`/
+  `search`) → adopted Node.js **Google Drive MCP server** (app is the MCP client)
+  → RAG extending `add_and_search_the_knowledge_base.py` → AI-trader seam stub.
+  Goal: nothing personal on local disk.
+- Build track: Qwen 3-Max writes the code from a house-style brief (see
+  [`WAYFINDER.md`](WAYFINDER.md) item 2 / Track A); Claude validates + wires in.
 
 ## P10 — Configure the OmniRoute gateway
 - **Status:** done (2026-08-30)
@@ -115,14 +74,48 @@ bottom. Status: `queued` | `in progress` | `done`.
   OmniRoute's real route `/api/monitoring/health` (the old
   `/health/liveliness` was LiteLLM's and 404'd → false "unreachable").
   Decisions: **D6 / D6.1 / D6.2** in `AGENTS.md`.
-- Free provider `opencode` (OpenCode Free, no auth) connected: 676 models
-  via `/v1/models`, chat smoke test routed through `auto/best-fast`.
-  Real provider keys (OpenAI/Anthropic/…) get added in the gateway
-  dashboard at `http://127.0.0.1:8003` → Providers.
-- **Follow-up (queued):** wire the finance-os agents' LLM clients through
-  the gateway — Supervisor needs `complete(question, context) -> str`, the
-  specialists need `summarize(payload) -> str`; both are small adapters
-  over `/v1/chat/completions` (the open question in
-  `finance-os/finance-datamigration.md` Q10/12). Model choice stays a
-  gateway routing decision, not code. Card in the Enhancement tab when P3
-  builds that UI (the board's DB is empty today).
+- Free provider `opencode` (OpenCode Free, no auth) connected: 63 models
+  via `/v1/models` (Claude, Gemini, GPT, Grok, `glm-5.x`, DeepSeek, Qwen,
+  Kimi …), chat smoke test routed through `auto/best-fast`. Real provider
+  keys get added in the dashboard at `http://127.0.0.1:8003` → Providers.
+- Secret-free config record: `Screens/Model/GATEWAY_CONFIG.md`.
+- Wayfinder: `.scratch/model-page-gateway/map.md` (renamed from
+  `model-page-litellm/`; LiteLLM tickets archived).
+
+## P11 — Route the finance-os agents' LLM clients through OmniRoute
+- **Status:** queued (was P10's follow-up)
+- Supervisor needs `complete(question, context) -> str`; specialists need
+  `summarize(payload) -> str`. Both are small adapters over
+  `/v1/chat/completions` on `127.0.0.1:8003` with `GATEWAY_API_KEY`.
+- Model choice stays a gateway routing decision, not code.
+- Open questions to settle first: `finance-os/finance-datamigration.md`
+  Q10 (finance AI agent + cloud LLM routing), Q12 (OmniRoute before/after
+  the data migration).
+
+---
+
+## Active order
+
+One item at a time. Full map with links: [`WAYFINDER.md`](WAYFINDER.md).
+
+1. Finance data migration / backfill — *(user-led, ACTIVE)*
+2. Google Drive private storage layer (P7) — *(Qwen-led, ACTIVE — parallel)*
+3. Wire finance-os agents through OmniRoute (P11)
+4. Enhancement tab UI (P3)
+5. Replace Learning seeds (P6)
+6. Observability on every tab (P1)
+7. Remove `Shared_By_All_*` (P2)
+8. Python → Node stack migration (P4)
+9. Anime-removal cleanup (P5)
+10. dsh local-model observability (`.scratch/dsh-local-model/PLAN.md`, parked)
+
+---
+
+## Dropped
+
+- **P8 — Wire Finance telemetry panels to live endpoints.** Retired: targeted
+  `Screens/Finance/Page/next_app/`, which `finance-os/` V1 replaced. finance-os
+  owns Finance data wiring now.
+- **P9 — Finance realism pass (F1 two-livery).** Built (`5b72750`) then superseded
+  by the finance-os V1 cutover (`657774d`). Archived at
+  `.scratch/_archive/finance-realism-pass/`. See `AGENTS.md` D7.

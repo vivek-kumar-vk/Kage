@@ -34,11 +34,16 @@ Read this first, every session. Standing rules for this repo; the plan list is
 
 ## Plans
 
-[`PLANNED_WORK.md`](PLANNED_WORK.md) holds the list with status and detail. Top
-items: observability on every tab; remove `Shared_By_All_Agents/` and
-`Shared_By_All_Screens/` entirely; build the Enhancement tab UI.
+[`WAYFINDER.md`](WAYFINDER.md) is the ordered map — one workstream at a time.
+[`PLANNED_WORK.md`](PLANNED_WORK.md) holds the numbered list with status and detail
+(and a `## Active order` + `## Dropped` section). Active now: Finance data migration
+(user-led) ∥ Google Drive storage layer (P7, Qwen-led).
 
 ## Design decisions (Rule 8)
+
+> **D1, D1.1, D3, D3.1, D4, D5 are HISTORIC.** They governed the pre-finance-os
+> Finance frontend at `Screens/Finance/Page/next_app/`, which `finance-os/` V1
+> replaced (`657774d`). Kept as history per Rule 7 — **not to be actioned**. See D7.
 
 - **D1 — Finance telemetry skin: amber, not crimson.** The F1/"evening race"
   pass on the Finance screen (2026-08-28) uses warm amber/gold on carbon-black.
@@ -93,3 +98,20 @@ items: observability on every tab; remove `Shared_By_All_Agents/` and
     `/api/monitoring/health`. The LiteLLM-era `/health/liveliness` 404s, and
     since a 404 counts as unreachable on the Model screen, the probe was
     switched (`Screens/Model/Backend/server_for_model.py`).
+- **D7 — finance-os V1 is the Finance screen of record (2026-08-30).** The
+  greenfield `finance-os/` app (React 19 + FastAPI + SQLite, built via the
+  autonomous phase-gate loop, cut over in `657774d`) replaces
+  `Screens/Finance/Page/next_app/` wholesale. finance-os carries its own
+  "carbon/racing" theme (`racing.red #e10600`); **this supersedes D1.1's
+  two-livery scheme**. All earlier Finance-UI decisions (D1–D5) are historic.
+  finance-os keeps its decisions in `finance-os/DECISIONS.md`, its cutover note
+  in `finance-os/CUTOVER.md`, and its data-backfill plan in
+  `finance-os/finance-datamigration.md` (gitignored — contains PII).
+- **D8 — Two Learning surfaces, deliberately (2026-08-30).** The standalone
+  **`Screens/Learning/`** screen (terminal/CLI theme; tabs Today/Plan/Recall;
+  SQLite + seed file; `/ask` stubbed) is the canonical personal-learning surface
+  — spec `Screens/Learning/QWEN_BUILD_PROMPT.md`, shipped `ed833dd`. The
+  **finance-os "Learning tab"** (`finance-os/frontend/.../learning/`) is
+  finance-scoped RAG over public finance primers only; it does not duplicate the
+  standalone screen and neither absorbs the other. The old
+  `learning-tab-plan.md` (Model-screen theme, full Drive+FAISS) is dropped.

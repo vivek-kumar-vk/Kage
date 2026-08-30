@@ -1,3 +1,9 @@
+> **STATUS: SUPERSEDED (archived 2026-08-30).** Built (`5b72750`) then orphaned by the
+> finance-os V1 cutover (`657774d`) — the target tree `Screens/Finance/Page/next_app/`
+> no longer serves the Finance screen. `finance-os/` owns Finance; its theme
+> (`racing.red #e10600`) replaces D1.1's two-livery scheme. Kept for history only —
+> do not action. See `AGENTS.md` D7.
+
 # Map: Finance realism pass
 
 Label: wayfinder:map · Tracker: local markdown (`.scratch/finance-realism-pass/`)

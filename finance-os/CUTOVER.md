@@ -1,5 +1,12 @@
 # Finance OS cutover — the one manual step
 
+> **Done (`657774d`, 2026-08-30).** The cutover actually shipped via the per-port
+> `Start_Everything.bat` path (each screen on its own port, no shared one-port proxy) —
+> a thin `server_for_finance.py` wrapper pointing the Finance route at `finance-os/`,
+> `screen_definition_for_finance.py` tabs updated, `Screens/Finance/` unmounted (Python
+> tree still on disk). The one-port `serve_everything_on_one_port.py` steps below (§1)
+> describe the alternative that was *not* used; kept for reference.
+
 The autonomous build produced `finance-os/` as a parallel tree. It does **not**
 touch `Start_Inky/` or the other screens. Cutover — pointing Kage's Finance route
 at `finance-os/` and retiring `Screens/Finance/` — is done by a human, because a

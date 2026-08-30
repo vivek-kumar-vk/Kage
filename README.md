@@ -10,21 +10,27 @@ private notes, no agent memory. Screens that normally show saved data start
 empty; you supply your own. Real data is meant to live outside this repo
 (Google Drive) — see [`immediate_plan.md`](immediate_plan.md) for the roadmap.
 
-## Tech stack
+Target stack (`AGENTS.md` Rule 3): **frontend** React 19 + Tailwind + Next.js
+(+ Three.js where it earns it); **backend** Node.js + Express. New and rewritten
+code uses only these. The screens land there one at a time — see
+[`PLANNED_WORK.md`](PLANNED_WORK.md) P4.
 
-- **Python 3.11+** — every screen's backend
-- **FastAPI + Uvicorn** — one server process per screen (Main Menu 8000,
-  Finance 8001, Learning 8002, Enhancement 8004)
-- **Frontend: plain HTML / CSS / JS**, served directly by each backend —
-  this is the default and needs no build step. Each of Main Menu, Finance,
-  Learning and Enhancement also ships the *source* of an optional richer UI
-  (**Next.js 15 / React 19**, and for some a **Svelte 5** pilot); the
-  backend serves the prebuilt version automatically if you build it, and
-  falls back to the plain pages if you don't. Charts: **Apache ECharts**
-  (vendored, no install).
-- **Launcher**: plain Python scripts in `Start_Inky/`.
-- **Storage**: local flat files + **SQLite** today; moving to a Google
-  Drive–backed layer (see roadmap). Nothing personal is committed here.
+- **Frontend.** Finance (`finance-os/`), Learning and the Model screen are
+  React 19 / Next.js (`output: "export"`, static). Main Menu and Enhancement
+  still serve plain HTML / CSS / JS with an optional prebuilt Next.js UI
+  (`Page/next_app/out`) picked up automatically if you build it. Charts:
+  hand-rolled SVG / **Apache ECharts** (vendored).
+- **Backend.** Node.js + Express is the target. Today it's mixed: Finance
+  (`finance-os/backend`) and the other screens run **FastAPI + Uvicorn** on
+  their own ports (Main Menu 8000, Finance 8001, Learning 8002, Enhancement
+  8004, Model 8005), pending the P4 migration.
+- **Model gateway.** An **OmniRoute** instance on `127.0.0.1:8003` (started by
+  `Start_Inky/run_omniroute.py`); the Model screen reports on it. Config note:
+  `Screens/Model/GATEWAY_CONFIG.md`.
+- **Launcher.** Plain Python scripts in `Start_Inky/`.
+- **Storage.** Local flat files + **SQLite** today; moving to a Google
+  Drive–backed layer ([`PLANNED_WORK.md`](PLANNED_WORK.md) P7). Nothing personal
+  is committed here.
 - Agents are described only (`Agents/<name>/description.txt`); their code,
   memory and the optional local-LLM path are not included.
 

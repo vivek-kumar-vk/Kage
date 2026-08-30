@@ -24,6 +24,8 @@ entirely and store it in Google Drive as the private storage layer instead.
 
 ### Phase 5 — the Drive-backed "smart storage" (next, not built yet)
 
+> Tracked as `PLANNED_WORK.md` **P7** (status lives there; this section is the spec).
+
 Goal: **nothing personal on local disk**. Reads and writes both go through
 to Google Drive, into the right folder.
 

@@ -1,3 +1,9 @@
+> **STATUS: SUPERSEDED (archived 2026-08-30).** The 19-task telemetry skin + the
+> unbuilt X1–X9 replica are both orphaned by the finance-os V1 cutover (`657774d`).
+> Target tree `Screens/Finance/Page/next_app/` no longer serves Finance. History only.
+> The shared build harness (`run_phase.py`, `run_task.py`, `bump.py`, `lm_chores.py`)
+> stays live at `.scratch/finance-telemetry/` — see `HARNESS.md` there.
+
 # Finance Telemetry — build progress
 
 **Orchestrator:** Claude (Sonnet) · **Code author:** Model A `qwen2.5-coder-7b-instruct-q5_k_m` @ `http://127.0.0.1:8080`
