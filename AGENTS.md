@@ -78,3 +78,18 @@ items: observability on every tab; remove `Shared_By_All_Agents/` and
   `PulseCore` radar hero, and a spring page-transition. Rule 8 still holds — red
   is not in the decorative set. All motion freezes under reduced-motion.
   Authored entirely by the local model; Claude orchestrated + validated.
+- **D6 — OmniRoute is the model gateway (2026-08-30).** The gateway slot on
+  `127.0.0.1:8003` (vacated by the removed LiteLLM tooling) is OmniRoute
+  (npm `omniroute`), bound to 127.0.0.1 only, `REQUIRE_API_KEY=true`. The
+  Model screen reads it live: health `/api/monitoring/health` + `/v1/models`
+  with `GATEWAY_API_KEY` from `.env` (env var wins). Gateway secrets are
+  generated into `.env` by the launcher and never committed. Detail:
+  PLANNED_WORK P10.
+  - **D6.1 — Gateway process ownership.** `Start_Inky/run_omniroute.py` owns
+    starting/stopping the gateway (idempotent: an already-running one is left
+    alone); `Start_Everything.bat` starts it in its own window before the
+    screens. Self-contained — no shared-module imports (Rule 4).
+  - **D6.2 — Health path.** OmniRoute's health route is
+    `/api/monitoring/health`. The LiteLLM-era `/health/liveliness` 404s, and
+    since a 404 counts as unreachable on the Model screen, the probe was
+    switched (`Screens/Model/Backend/server_for_model.py`).

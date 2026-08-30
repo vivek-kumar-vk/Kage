@@ -102,3 +102,27 @@ bottom. Status: `queued` | `in progress` | `done`.
 - **Out of scope here:** live endpoint wiring (P8), Portfolio Analysis tab
   rebuild (needs its own research-first plan), real goal/holding values.
 - Session plan: `~/.claude/plans/yes-please-procced-and-zazzy-dawn.md`.
+
+## P10 — Configure the OmniRoute gateway
+- **Status:** done (2026-08-30)
+- OmniRoute (npm `omniroute`) runs at `http://127.0.0.1:8003` — the port the
+  Model screen always expected (the slot vacated by the removed LiteLLM).
+  Started by `Start_Inky/run_omniroute.py`, chained into
+  `Start_Everything.bat`; the launcher generates the gateway's secrets into
+  `.env` on first run and leaves an already-running gateway alone.
+- `GATEWAY_API_KEY` (dashboard key `kage-model-screen`) lives in `.env`;
+  the Model screen sends it as a Bearer key. Health probe fixed to
+  OmniRoute's real route `/api/monitoring/health` (the old
+  `/health/liveliness` was LiteLLM's and 404'd → false "unreachable").
+  Decisions: **D6 / D6.1 / D6.2** in `AGENTS.md`.
+- Free provider `opencode` (OpenCode Free, no auth) connected: 676 models
+  via `/v1/models`, chat smoke test routed through `auto/best-fast`.
+  Real provider keys (OpenAI/Anthropic/…) get added in the gateway
+  dashboard at `http://127.0.0.1:8003` → Providers.
+- **Follow-up (queued):** wire the finance-os agents' LLM clients through
+  the gateway — Supervisor needs `complete(question, context) -> str`, the
+  specialists need `summarize(payload) -> str`; both are small adapters
+  over `/v1/chat/completions` (the open question in
+  `finance-os/finance-datamigration.md` Q10/12). Model choice stays a
+  gateway routing decision, not code. Card in the Enhancement tab when P3
+  builds that UI (the board's DB is empty today).

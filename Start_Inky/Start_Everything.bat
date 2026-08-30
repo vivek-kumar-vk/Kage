@@ -77,6 +77,11 @@ for %%R in ("%PROJECT%\Main_Menu\Setup\requirements_*.txt") do (
 
 :run
 echo.
+REM --- the model gateway, in its own window --------------------------
+REM The Model screen reports on it. Safe when already running - the
+REM launcher just says so and leaves the gateway alone.
+start "OmniRoute gateway" "%VPY%" "%PROJECT%\Start_Inky\run_omniroute.py"
+timeout /t 2 /nobreak >nul
 "%VPY%" "%PROJECT%\Start_Inky\start_every_screen.py"
 if errorlevel 1 goto :fail
 goto :done

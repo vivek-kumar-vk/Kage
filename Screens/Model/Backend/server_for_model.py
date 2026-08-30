@@ -98,8 +98,11 @@ def overview():
     """
     base = cfg.GATEWAY_BASE_URL.rstrip("/")
     # Reachability first (no auth), then the model list (needs the key).
+    # OmniRoute's own health route is /api/monitoring/health; the old
+    # /health/liveliness path belonged to the LiteLLM proxy this gateway
+    # replaced, and 404s here would read as "unreachable".
     try:
-        _get_json(f"{base}/health/liveliness")
+        _get_json(f"{base}/api/monitoring/health")
     except (urllib.error.URLError, TimeoutError, ConnectionError) as problem:
         return {
             "gateway": "unreachable",
