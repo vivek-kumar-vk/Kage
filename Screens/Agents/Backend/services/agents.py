@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -7,29 +9,56 @@ from pydantic import BaseModel
 
 import settings_for_agents as cfg
 from db import connect
+from services import office
 
 router = APIRouter()
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 
 class AskBody(BaseModel):
     message: Optional[str] = None
 
 
-def _read_role(description_path):
+def _now():
+    return datetime.now(IST).replace(microsecond=0).isoformat()
+
+
+def _read_description(description_path):
     try:
-        lines = description_path.read_text(encoding="utf-8").splitlines()
+        return description_path.read_text(encoding="utf-8").strip()
     except Exception:
         return ""
 
-    for line in lines:
-        line = line.strip()
-        if line:
-            return line
 
-    return ""
+def _ensure_agent_room(conn, name, position):
+    row = conn.execute(
+        "SELECT id FROM rooms WHERE kind = 'agent' AND agent_name = ?",
+        (name,),
+    ).fetchone()
+
+    if row:
+        return row["id"]
+
+    room_id = "room-" + uuid.uuid4().hex[:10]
+    conn.execute(
+        """
+        INSERT INTO rooms (id, kind, name, agent_name, position, created_at)
+        VALUES (?, 'agent', ?, ?, ?, ?)
+        """,
+        (room_id, f"DM · {name}", name, position, _now()),
+    )
+    conn.commit()
+    return room_id
 
 
-def _get_agents():
+def _dept_position(department, index):
+    dept_order = {dept["id"]: i for i, dept in enumerate(office.DEPARTMENTS)}
+    return float(dept_order.get(department, 99) * 1000 + index)
+
+
+def _agent_entries(conn):
+    """Roster from AI_Agents/ + office.json, each with its own DM room (D12)."""
     agents = []
     root = cfg.AI_AGENTS_DIR
 
@@ -42,15 +71,40 @@ def _get_agents():
             if not description_path.exists():
                 continue
 
+            meta = office.read_office(path)
+            description = _read_description(description_path)
             agents.append(
                 {
                     "name": path.name,
-                    "role": _read_role(description_path),
+                    "role": description.splitlines()[0] if description else "",
+                    "department": meta["department"],
+                    "tier": meta["tier"],
+                    "parent": meta.get("parent"),
                 }
             )
 
-    agents.sort(key=lambda agent: (agent["name"] != "Agent_Head", agent["name"].casefold()))
+    agents.sort(
+        key=lambda agent: (
+            agent["tier"] != "head",
+            agent["tier"] != "main",
+            agent["name"].casefold(),
+        )
+    )
+
+    for index, agent in enumerate(agents):
+        agent["room_id"] = _ensure_agent_room(
+            conn, agent["name"], _dept_position(agent["department"], index)
+        )
+
     return agents
+
+
+def _get_agents():
+    conn = connect()
+    try:
+        return _agent_entries(conn)
+    finally:
+        conn.close()
 
 
 @router.get(cfg.API_PREFIX + "/workspace")
@@ -82,8 +136,9 @@ async def get_workspace():
 
         return {
             "state": "ok",
+            "departments": office.DEPARTMENTS,
             "rooms": rooms,
-            "agents": _get_agents(),
+            "agents": _agent_entries(conn),
             "counts": {"ideas": counts},
         }
     finally:
@@ -116,14 +171,58 @@ async def list_rooms():
 
 @router.get(cfg.API_PREFIX + "/rooms/{room_id}/messages")
 async def list_room_messages(room_id: str):
-    # V1 leaves messages empty. room_id will be used in V2.
-    _ = room_id
-    return {"state": "ok", "messages": []}
+    conn = connect()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, room_id, author, agent_name, body, created_at
+            FROM messages
+            WHERE room_id = ?
+            ORDER BY COALESCE(created_at, ''), rowid
+            LIMIT 300
+            """,
+            (room_id,),
+        ).fetchall()
+        return {"state": "ok", "messages": [dict(row) for row in rows]}
+    finally:
+        conn.close()
+
+
+@router.get(cfg.API_PREFIX + "/agents/{name}/messages")
+async def list_agent_messages(name: str):
+    conn = connect()
+    try:
+        agents = {agent["name"]: agent for agent in _agent_entries(conn)}
+        if name not in agents:
+            return JSONResponse(
+                status_code=404,
+                content={"state": "error", "problem": "unknown agent"},
+            )
+
+        room_id = agents[name]["room_id"]
+        rows = conn.execute(
+            """
+            SELECT id, room_id, author, agent_name, body, created_at
+            FROM messages
+            WHERE room_id = ?
+            ORDER BY COALESCE(created_at, ''), rowid
+            LIMIT 300
+            """,
+            (room_id,),
+        ).fetchall()
+        return {
+            "state": "ok",
+            "room_id": room_id,
+            "messages": [dict(row) for row in rows],
+        }
+    finally:
+        conn.close()
 
 
 @router.post(cfg.API_PREFIX + "/agents/{name}/ask")
 async def ask_agent(name: str, payload: Optional[AskBody] = Body(default=None)):
-    # payload will be used in V2.
+    # Live OmniRoute wiring is deferred to WAYFINDER item 3 (LLM last). Until
+    # then this stays a stub — the Pixel Office shell + SSE run without it.
     _ = payload
 
     known_names = {agent["name"] for agent in _get_agents()}
@@ -137,7 +236,7 @@ async def ask_agent(name: str, payload: Optional[AskBody] = Body(default=None)):
     return {
         "state": "pending",
         "reply": None,
-        "note": "agent wiring lands in V2",
+        "note": "agent wiring lands in WAYFINDER item 3",
     }
 
 

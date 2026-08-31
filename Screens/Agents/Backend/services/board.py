@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 import settings_for_agents as cfg
 from db import connect
+from services import events
 
 router = APIRouter()
 
@@ -281,6 +282,14 @@ async def create_idea(payload: IdeaCreate):
             row = _get_idea_row(conn, idea_id)
             response = {"ok": True, "item": _idea_api(conn, row)}
 
+            events.emit(
+                source="board",
+                type_="note",
+                agent_name="Agent_Head",
+                department="lobby",
+                text=f"{enh_key} captured: {title}",
+            )
+
             if duplicate_warning:
                 response["duplicate_warning"] = duplicate_warning
 
@@ -367,6 +376,15 @@ async def move_idea(idea_id: str, payload: StatusMove):
             conn.commit()
 
             row = _get_idea_row(conn, idea_id)
+
+            events.emit(
+                source="board",
+                type_="note",
+                agent_name="Agent_Head",
+                department="lobby",
+                text=f"{row['enh_key']} moved to {status}",
+            )
+
             return {"ok": True, "item": _idea_api(conn, row)}
         finally:
             conn.close()

@@ -43,3 +43,17 @@ CREATE TABLE IF NOT EXISTS messages (
     idea_id    TEXT REFERENCES ideas(id),
     created_at TEXT
 );
+
+-- Pixel Office event stream (D12). Append-only; SSE replays the tail then goes live.
+-- sim = 1 marks generated ambient activity (demo), never presented as real.
+CREATE TABLE IF NOT EXISTS events (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts         TEXT,
+    source     TEXT,               -- run | demo | board | ui
+    sim        INTEGER DEFAULT 0,
+    agent_name TEXT,
+    department TEXT,
+    type       TEXT,               -- started | thinking | output | done | error | note
+    text       TEXT DEFAULT '',
+    artifact   TEXT
+);

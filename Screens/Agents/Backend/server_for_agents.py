@@ -1,4 +1,5 @@
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -11,15 +12,24 @@ sys.path.insert(0, str(BACKEND_DIR))
 import settings_for_agents as cfg
 from db import init_db
 import seed
-from services import agents, board
+from services import agents, board, events
 
-app = FastAPI(title=cfg.SCREEN_LABEL)
+
+@asynccontextmanager
+async def lifespan(_app):
+    events.start_demo()
+    yield
+    events.stop_demo()
+
+
+app = FastAPI(title=cfg.SCREEN_LABEL, lifespan=lifespan)
 
 init_db()
 seed.run()
 
 app.include_router(board.router)
 app.include_router(agents.router)
+app.include_router(events.router)
 
 
 @app.get("/")
