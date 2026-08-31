@@ -27,6 +27,7 @@ disk.
 
 - **Track A:** Claude produces a house-style build brief (modeled on
   `Screens/Learning/QWEN_BUILD_PROMPT.md`); you paste into Qwen 3-Max; Claude validates + wires in.
+  **Brief done 2026-08-31:** `.scratch/drive-storage/QWEN_BUILD_PROMPT.md` (+ `map.md`; decisions D11–D11.4).
 
 ## 3 — Wire finance-os agents through OmniRoute
 
@@ -41,6 +42,10 @@ Blocked on Q10 / Q12 from item 1.
 working board + 21 profile stubs + honest stubs, no LLM. V2 = real agents wired through
 OmniRoute. Built by Qwen 3-Max one unit per turn (backend/frontend alternating, each
 gated). **V1 done 2026-08-30** (all 12 turns applied + verify gate passed).
+**Chambers pass (pixel V1.5, frontend-only):** brief written 2026-09-01 —
+`.scratch/agents-chambers/QWEN_BUILD_PROMPT.md` (+ `map.md`); 6 furnished 3D rooms
+on one pan/zoom plan, one type per main agent, + a `TaskBrief` panel; SSE-only,
+no backend change. Not yet built.
 
 ## 5 — Replace the example Learning seeds
 

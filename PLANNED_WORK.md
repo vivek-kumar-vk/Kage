@@ -45,6 +45,14 @@ bottom. Status: `queued` | `in progress` | `done`.
   Ties to P11 / P2. Mines repo-root `Agents/` + `Shared_By_All_Agents/` (left
   untouched by V1) for reuse.
 - **V3:** board × agents ("pick an ENH-n → ask an agent"). Optional.
+- **Chambers (pixel V1.5, frontend-only):** turn the flat D12 `ZoneFrame`
+  zones into 6 distinct furnished 3D rooms on one connected pan/zoom/click-focus
+  plan — one room *type* per main agent (server room / trading floor / library /
+  war room / lounge) + a lobby reception for `Agent_Head`. Adds a bottom-left
+  `TaskBrief` panel. Spawn/brief stay SSE-only (no backend change, keeps D12.1).
+  Brief: `.scratch/agents-chambers/QWEN_BUILD_PROMPT.md` (+ `map.md`, 7 turns +
+  gate). Decisions C1–C6 in that map. Status: brief written 2026-09-01, not yet
+  built.
 - Build: Qwen 3-Max, one unit per turn, backend/frontend alternating, each gated.
 
 ## P4 — Stack migration: Python/FastAPI → Node.js + Express
@@ -69,15 +77,20 @@ bottom. Status: `queued` | `in progress` | `done`.
   the private (Google Drive) layer once P-drive lands.
 
 ## P7 — Google Drive private storage layer
-- **Status:** queued — this is the status entry; **full spec is
-  [`immediate_plan.md`](immediate_plan.md) Phase 5** (storage seam API, MCP
-  transport, RAG, AI-trader seam).
+- **Status:** in progress (2026-08-31) — full spec is
+  [`immediate_plan.md`](immediate_plan.md) Phase 5 (storage seam API, MCP
+  transport, RAG, AI-trader seam). House brief written:
+  [`.scratch/drive-storage/QWEN_BUILD_PROMPT.md`](.scratch/drive-storage/QWEN_BUILD_PROMPT.md)
+  (map + turn plan: `.scratch/drive-storage/map.md`); decisions **D11–D11.4** in
+  `AGENTS.md`. Next: paste the brief into Qwen 3-Max, turn by turn; the
+  needs-Drive half of the gate waits on the user's Google setup (README_SETUP).
 - In short: one storage seam (`read_doc`/`write_doc`/`list_docs`/`delete_doc`/
   `search`) → adopted Node.js **Google Drive MCP server** (app is the MCP client)
   → RAG extending `add_and_search_the_knowledge_base.py` → AI-trader seam stub.
   Goal: nothing personal on local disk.
-- Build track: Qwen 3-Max writes the code from a house-style brief (see
-  [`WAYFINDER.md`](WAYFINDER.md) item 2 / Track A); Claude validates + wires in.
+- Build track: Qwen 3-Max writes the code from a house-style brief; Claude
+  validates + wires in (gateway runner, `Start_Everything.bat`, ports snapshot,
+  menu glyph rebuild).
 
 ## P10 — Configure the OmniRoute gateway
 - **Status:** done (2026-08-30)
