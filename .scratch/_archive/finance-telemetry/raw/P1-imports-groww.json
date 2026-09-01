@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nimport csv\nfrom io import BytesIO\nfrom typing import List, Dict\n\ndef parse_groww_csv(file_bytes: bytes) -> List[Dict]:\n    rows = []\n    csv_file = BytesIO(file_bytes)\n    reader = csv.DictReader(csv_file)\n    for row in reader:\n        symbol = row.get('Symbol')\n        name = row.get('Name')\n        units = float(row.get('Units', 0))\n        cost_per_unit = float(row.get('Cost per Unit', 0))\n        purchase_date = row.get('Purchase Date')\n        rows.append({\n            'symbol': symbol,\n            'name': name,\n            'units': units,\n            'cost_per_unit': cost_per_unit,\n            'purchase_date': purchase_date,\n            'source': 'groww'\n        })\n    return rows\n```"
+      }
+    }
+  ],
+  "created": 1788006510,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 173,
+    "prompt_tokens": 3514,
+    "total_tokens": 3687,
+    "prompt_tokens_details": {
+      "cached_tokens": 3454
+    }
+  },
+  "id": "chatcmpl-33RP0cyFj1qfpUO2343WRlTECi8gXoBo",
+  "timings": {
+    "cache_n": 3454,
+    "prompt_n": 60,
+    "prompt_ms": 365.585,
+    "prompt_per_token_ms": 6.093083333333333,
+    "prompt_per_second": 164.12051916790898,
+    "predicted_n": 173,
+    "predicted_ms": 6921.914,
+    "predicted_per_token_ms": 40.24368604651163,
+    "predicted_per_second": 24.84861846015423
+  }
+}

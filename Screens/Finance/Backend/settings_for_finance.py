@@ -54,20 +54,13 @@ API_PREFIX = "/api/finance"
 WATCHED_FOLDERS = [SCREEN, PROJECT_ROOT / "Shared_By_All_Screens"]
 
 # ---------------------------------------------------------------------
-# NEXT.JS REBUILD FLAG (Phase 12.4)
+# NEXT.JS REBUILD FLAG (Phase 12.4) - RETIRED 2026-08-30
 # ---------------------------------------------------------------------
-# Same on/off pattern as Main_Menu's (Phase 12.3), Enhancement's,
-# Models' and Learning's (Phase 12.4) USE_NEXT_UI flags: False by
-# default means every existing page behaves exactly as it always did.
-# True (and the static export present) swaps the page served at / for
-# the Next.js rebuild under Page/next_app/out - every /api route keeps
-# working either way. Rollback is flipping this to False, or
-# git checkout of the commit before pre-finance-next.
-USE_NEXT_UI = True
-
-# Where the rebuilt UI's static export must sit for the flag to have an
-# effect (`npm run build` writes it there). A flag turned on with no
-# build present falls back rather than serving a blank screen - honest
-# beats broken, same rule as above.
+# The Finance screen no longer serves anything under Screens/Finance/.
+# server_for_finance.py mounts finance-os/backend's create_app()
+# instead, which serves its own Next static export. These two settings
+# are dead; server_for_finance.py does not read them. Kept only so an
+# older tool that imports this module does not KeyError.
+USE_NEXT_UI = False
 NEXT_DIST = SCREEN / "Page" / "next_app" / "out"
 

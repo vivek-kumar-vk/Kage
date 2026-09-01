@@ -1,0 +1,1 @@
+Refreshes the home page's metric blocks by reading the noticeboard - zero model calls, nothing leaves this laptop.

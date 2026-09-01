@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport { motion } from 'framer-motion';\n\nconst Skeleton: React.FC = () => {\n  return (\n    <motion.div\n      className=\"bg-gray-200 rounded-lg animate-pulse\"\n      style={{ width: '100%', height: '100%' }}\n    />\n  );\n};\n\nexport default Skeleton;\n```"
+      }
+    }
+  ],
+  "created": 1788014452,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 74,
+    "prompt_tokens": 3595,
+    "total_tokens": 3669,
+    "prompt_tokens_details": {
+      "cached_tokens": 3372
+    }
+  },
+  "id": "chatcmpl-DizxUwVqhI75NlKQ3LDHlDXTty83KI7G",
+  "timings": {
+    "cache_n": 3372,
+    "prompt_n": 223,
+    "prompt_ms": 505.088,
+    "prompt_per_token_ms": 2.264968609865471,
+    "prompt_per_second": 441.5072225038013,
+    "predicted_n": 74,
+    "predicted_ms": 2984.731,
+    "predicted_per_token_ms": 40.886726027397266,
+    "predicted_per_second": 24.45781546142684
+  }
+}

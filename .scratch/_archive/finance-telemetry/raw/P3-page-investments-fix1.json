@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useState, useEffect } from \"react\";\nimport { useSubmit } from \"@/components/finance/FormModal\";\nimport { Empty } from \"@/components/finance/Skeleton\";\nimport { useFinanceData } from \"@/lib/api\";\nimport { Holdings, Quality, Research } from \"@/lib/types\";\n\nconst InvestmentsPage = () => {\n  const [data, setData] = useState<Holdings | null>(null);\n  const [error, setError] = useState<Error | null>(null);\n  const submit = useSubmit();\n\n  useEffect(() => {\n    const fetchData = async () => {\n      try {\n        const response = await useFinanceData(\"/finance/investments\");\n        setData(response.data);\n      } catch (err) {\n        setError(err as Error);\n      }\n    };\n\n    fetchData();\n  }, []);\n\n  if (!data) return <Empty />;\n\n  return (\n    <div>\n      <h1>Investments</h1>\n      <table>\n        <thead>\n          <tr>\n            <th>Asset</th>\n            <th>Units</th>\n            <th>Price</th>\n            <th>Edit</th>\n            <th>Archive</th>\n            <th>Delete</th>\n          </tr>\n        </thead>\n        <tbody>\n          {data.holdings.map((holding) => (\n            <tr key={holding.id}>\n              <td>{holding.asset}</td>\n              <td>{holding.units}</td>\n              <td>{holding.price}</td>\n              <td>\n                <button onClick={() => submit(`/finance/investments/${holding.id}`, { method: \"PUT\" })}>Edit</button>\n              </td>\n              <td>\n                <button onClick={() => submit(`/finance/investments/${holding.id}/archive`, { method: \"PUT\" })}>Archive</button>\n              </td>\n              <td>\n                {holding.lots_count === 0 && (\n                  <button onClick={() => submit(`/finance/investments/${holding.id}`, { method: \"DELETE\" })}>Delete</button>\n                )}\n              </td>\n            </tr>\n          ))}\n        </tbody>\n      </table>\n      <Quality data={data.quality} />\n      <Research data={data.research} />\n      {/* Visuals components go here */}\n    </div>\n  );\n};\n\nexport default InvestmentsPage;\n```"
+      }
+    }
+  ],
+  "created": 1788016412,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 493,
+    "prompt_tokens": 4513,
+    "total_tokens": 5006,
+    "prompt_tokens_details": {
+      "cached_tokens": 3895
+    }
+  },
+  "id": "chatcmpl-IfGsyOLqC0AE3xgfClIci5SwOcpmTODn",
+  "timings": {
+    "cache_n": 3895,
+    "prompt_n": 618,
+    "prompt_ms": 831.369,
+    "prompt_per_token_ms": 1.345257281553398,
+    "prompt_per_second": 743.3522298762642,
+    "predicted_n": 493,
+    "predicted_ms": 21909.59,
+    "predicted_per_token_ms": 44.53168699186992,
+    "predicted_per_second": 22.45591998754883
+  }
+}

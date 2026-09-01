@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";\nimport { formatINR } from \"@/app/lib/formatINR\";\nimport { TelemetryCard, SegmentMeter } from \"../f1\";\n\nexport function EmergencyFundBlock() {\n  const ef = BLUEPRINT_SEED.emergencyFund;\n  const held = ef.tiers.reduce((a, t) => a + t.amount, 0);\n  const segments = ef.tiers.map((t) => ({ label: t.label, pct: Math.round((t.amount / ef.target) * 100) }));\n  return <TelemetryCard label=\"Emergency Fund\" value={formatINR(held)} sub={`target ${formatINR(ef.target)}`}><SegmentMeter segments={segments} /></TelemetryCard>;\n}\n```"
+      }
+    }
+  ],
+  "created": 1787948415,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 169,
+    "prompt_tokens": 823,
+    "total_tokens": 992,
+    "prompt_tokens_details": {
+      "cached_tokens": 628
+    }
+  },
+  "id": "chatcmpl-JopaOLLEhCRYA8TTeRFZk3R9MipdbEFw",
+  "timings": {
+    "cache_n": 628,
+    "prompt_n": 195,
+    "prompt_ms": 477.218,
+    "prompt_per_token_ms": 2.447271794871795,
+    "prompt_per_second": 408.6182834679328,
+    "predicted_n": 169,
+    "predicted_ms": 10315.068,
+    "predicted_per_token_ms": 61.39921428571428,
+    "predicted_per_second": 16.28685336829578
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```json\n{\n  \"name\": \"finance-frontend\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"next dev\",\n    \"build\": \"next build\",\n    \"start\": \"next start\"\n  },\n  \"dependencies\": {\n    \"next\": \"^15\",\n    \"react\": \"^19\",\n    \"react-dom\": \"^19\",\n    \"@react-three/fiber\": \"^9\",\n    \"@react-three/drei\": \"^10\",\n    \"three\": \"^0.170\",\n    \"tailwindcss\": \"^3.4\",\n    \"postcss\": \"^8.4\",\n    \"autoprefixer\": \"^10.4\",\n    \"lucide-react\": \"^0.400\",\n    \"class-variance-authority\": \"^0.7\",\n    \"clsx\": \"^2\",\n    \"tailwind-merge\": \"^2\"\n  },\n  \"devDependencies\": {\n    \"typescript\": \"^5\",\n    \"@types/react\": \"^19\",\n    \"@types/react-dom\": \"^19\",\n    \"@types/node\": \"^20\",\n    \"@types/three\": \"^0.170\",\n    \"eslint\": \"^9\",\n    \"eslint-config-next\": \"^15\"\n  }\n}\n```"
+      }
+    }
+  ],
+  "created": 1788005733,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 267,
+    "prompt_tokens": 4655,
+    "total_tokens": 4922,
+    "prompt_tokens_details": {
+      "cached_tokens": 4460
+    }
+  },
+  "id": "chatcmpl-4iBFPAaBLanDCe6qtMl21gbkBcUXLYg1",
+  "timings": {
+    "cache_n": 4460,
+    "prompt_n": 195,
+    "prompt_ms": 476.724,
+    "prompt_per_token_ms": 2.4447384615384613,
+    "prompt_per_second": 409.04170966848744,
+    "predicted_n": 267,
+    "predicted_ms": 10881.069,
+    "predicted_per_token_ms": 40.90627443609022,
+    "predicted_per_second": 24.44612748986336
+  }
+}

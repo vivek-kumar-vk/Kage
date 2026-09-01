@@ -1,0 +1,45 @@
+Write ONE React component file. Next.js 16, React 19, TypeScript, Tailwind v4, framer-motion 13.
+No new dependencies. No Three.js. No red colours (Rule 8).
+
+FILE: app/components/BucketSchematic.tsx
+
+KEEP THESE FIRST LINES EXACTLY (verbatim, including quotes):
+
+"use client";
+
+import { BLUEPRINT_SEED } from "@/app/lib/blueprintSeed";
+import { motion } from "framer-motion";
+
+/** The 3-bucket system as three fill tanks: monthly surplus drops in,
+    Bucket 1 fills first, the rest overflows onward. Fill % is
+    illustrative (matches the blueprint). Seed data (P8). */
+export function BucketSchematic() {
+
+THEN implement the body:
+  - const buckets = BLUEPRINT_SEED.buckets;   // [{key,name,horizon,fillPct,note}, ...] length 3
+  - return a single:
+    <section aria-label="3-bucket system"
+      className="carbon-face checkered-sweep relative overflow-hidden rounded-lg border border-line p-5">
+    containing, in order:
+      1. <p className="num text-[10px] tracking-[0.2em] text-dim">3-BUCKET SYSTEM</p>
+      2. <p className="num mt-1 text-[10px] text-dim">↓ monthly surplus fills bucket 1 first</p>
+      3. a flex row (mt-4, gap-3, items-end) of the three tanks. For each bucket b, index i:
+         <div key={b.key} className="flex flex-1 flex-col items-center gap-2">
+           <div className="relative h-28 w-full overflow-hidden rounded border border-line bg-void">
+             <motion.div
+               className="absolute inset-x-0 bottom-0 bg-amber/60"
+               style={{ height: `${b.fillPct}%`, transformOrigin: "bottom" }}
+               initial={{ scaleY: 0 }}
+               animate={{ scaleY: 1 }}
+               transition={{ duration: 0.9, delay: i * 0.18, ease: [0.16, 1, 0.3, 1] }}
+             />
+             <span className="num absolute inset-x-0 top-1 text-center text-[10px] text-bone">{b.fillPct}%</span>
+           </div>
+           <p className="num text-[9px] tracking-[0.14em] text-dim">BUCKET {i + 1}</p>
+           <p className="text-center text-[12px] font-semibold text-bone">{b.name}</p>
+           <p className="num text-center text-[9px] text-dim">{b.horizon}</p>
+           <p className="text-center text-[9px] text-dim">{b.note}</p>
+         </div>
+      4. after the row: <p className="num mt-3 text-[10px] text-dim">bucket 1 ▸ bucket 2 ▸ bucket 3 — surplus overflows onward</p>
+
+Return ONLY the file contents inside one ```tsx code block. No explanation.

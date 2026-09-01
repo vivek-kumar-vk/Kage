@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import FastAPI, HTTPException\nfrom fastapi.responses import FileResponse\nfrom fastapi.staticfiles import StaticFiles\nfrom pathlib import Path\nimport importlib\nfrom .startup import PassthroughAuth, check_encrypted_volume\nfrom .services import db\n\napp = FastAPI(title='Finance OS')\napp.add_middleware(PassthroughAuth)\n\n@app.on_event('startup')\nasync def startup_event():\n    db.init_db()\n    check_encrypted_volume(db.DB_PATH.parent)\n\nfor name in ['overview', 'investments', 'debt', 'tracker', 'learning', 'health', 'accounts', 'goals', 'insurance', 'salary', 'imports', 'entities', 'settings']:\n    try:\n        mod = importlib.import_module(f'routers.{name}')\n        app.include_router(mod.router, prefix='/api/finance')\n    except ImportError:\n        pass\n\n@app.get('/api/finance/health')\nasync def health_check():\n    return {'status': 'ok'}\n\nHERE = Path(__file__).parent\nSTATIC = HERE / 'static'\n\nif STATIC.is_dir():\n    app.mount('/assets', StaticFiles(directory=STATIC), name='assets')\n\n    @app.get('/{full_path:path}')\n    async def catch_all(full_path: str):\n        file_path = STATIC / f'{full_path}.html'\n        if file_path.exists():\n            return FileResponse(file_path)\n        file_path = STATIC / full_path / 'index.html'\n        if file_path.exists():\n            return FileResponse(file_path)\n        file_path = STATIC / 'index.html'\n        if file_path.exists():\n            return FileResponse(file_path)\n        raise HTTPException(404)\n```"
+      }
+    }
+  ],
+  "created": 1788000049,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 346,
+    "prompt_tokens": 4432,
+    "total_tokens": 4778,
+    "prompt_tokens_details": {
+      "cached_tokens": 4170
+    }
+  },
+  "id": "chatcmpl-D2g0qUsY6GkeIKI0Wq4i9R8nQEemsC2Z",
+  "timings": {
+    "cache_n": 4170,
+    "prompt_n": 262,
+    "prompt_ms": 301.907,
+    "prompt_per_token_ms": 1.1523167938931298,
+    "prompt_per_second": 867.8169105055531,
+    "predicted_n": 346,
+    "predicted_ms": 15261.537,
+    "predicted_per_token_ms": 44.236339130434786,
+    "predicted_per_second": 22.605848939068196
+  }
+}

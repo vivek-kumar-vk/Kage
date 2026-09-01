@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useSubmit, useFinanceData } from \"@/lib/api\";\nimport { useState } from \"react\";\nimport { Card, Skeleton, FormModal } from \"@/components/finance\";\nimport { ACCOUNT_CATEGORIES, ACCOUNT_TYPES } from \"@/components/finance/constants\";\nimport { AccountForm, GoalForm, InsuranceForm, SalaryForm } from \"@/components/finance/forms\";\n\nconst SettingsPage = ({ tab = \"accounts\" }) => {\n  const [isModalOpen, setIsModalOpen] = useState(false);\n  const [modalType, setModalType] = useState<\"account\" | \"goal\" | \"insurance\" | \"salary\">(\"account\");\n\n  const submit = useSubmit();\n  const { data: accounts, isLoading: accountsLoading, error: accountsError } = useFinanceData(\"/accounts\");\n  const { data: goals, isLoading: goalsLoading, error: goalsError } = useFinanceData(\"/goals\");\n  const { data: insurances, isLoading: insurancesLoading, error: insurancesError } = useFinanceData(\"/insurance\");\n  const { data: salaries, isLoading: salariesLoading, error: salariesError } = useFinanceData(\"/salary\");\n\n  const handleModalOpen = (type: \"account\" | \"goal\" | \"insurance\" | \"salary\") => {\n    setModalType(type);\n    setIsModalOpen(true);\n  };\n\n  const handleModalClose = () => {\n    setIsModalOpen(false);\n  };\n\n  return (\n    <div className=\"flex flex-col gap-4\">\n      <Card title=\"Accounts\" loading={accountsLoading} error={accountsError}>\n        <div className=\"flex flex-col gap-2\">\n          {accounts?.map((account) => (\n            <div key={account.id} className=\"flex justify-between items-center\">\n              <div>{account.name}</div>\n              <button onClick={() => handleModalOpen(\"account\")}>Manage</button>\n            </div>\n          ))}\n          <button onClick={() => handleModalOpen(\"account\")}>+ Add Account</button>\n        </div>\n      </Card>\n      <Card title=\"Goals\" loading={goalsLoading} error={goalsError}>\n        <div className=\"flex flex-col gap-2\">\n          {goals?.map((goal) => (\n            <div key={goal.id} className=\"flex justify-between items-center\">\n              <div>{goal.name}</div>\n              <button onClick={() => handleModalOpen(\"goal\")}>Manage</button>\n            </div>\n          ))}\n          <button onClick={() => handleModalOpen(\"goal\")}>+ Add Goal</button>\n        </div>\n      </Card>\n      <Card title=\"Insurance\" loading={insurancesLoading} error={insurancesError}>\n        <div className=\"flex flex-col gap-2\">\n          {insurances?.map((insurance) => (\n            <div key={insurance.id} className=\"flex justify-between items-center\">\n              <div>{insurance.name}</div>\n              <button onClick={() => handleModalOpen(\"insurance\")}>Manage</button>\n            </div>\n          ))}\n          <button onClick={() => handleModalOpen(\"insurance\")}>+ Add Insurance</button>\n        </div>\n      </Card>\n      <Card title=\"Salary\" loading={salariesLoading} error={salariesError}>\n        <div className=\"flex flex-col gap-2\">\n          {salaries?.map((salary) => (\n            <div key={salary.id} className=\"flex justify-between items-center\">\n              <div>{salary.name}</div>\n              <button onClick={() => handleModalOpen(\"salary\")}>Manage</button>\n            </div>\n          ))}\n          <button onClick={() => handleModalOpen(\"salary\")}>+ Add Salary</button>\n        </div>\n      </Card>\n      {isModalOpen && (\n        <FormModal onClose={handleModalClose}>\n          {modalType === \"account\" && <AccountForm onSubmit={submit} />}\n          {modalType === \"goal\" && <GoalForm onSubmit={submit} />}\n          {modalType === \"insurance\" && <InsuranceForm onSubmit={submit} />}\n          {modalType === \"salary\" && <SalaryForm onSubmit={submit} />}\n        </FormModal>\n      )}\n    </div>\n  );\n};\n\nexport default SettingsPage;\n```"
+      }
+    }
+  ],
+  "created": 1788021662,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 884,
+    "prompt_tokens": 5598,
+    "total_tokens": 6482,
+    "prompt_tokens_details": {
+      "cached_tokens": 3779
+    }
+  },
+  "id": "chatcmpl-AKbaZYZ8Kk04k7Fy7qUT34G252VCbhd6",
+  "timings": {
+    "cache_n": 3779,
+    "prompt_n": 1819,
+    "prompt_ms": 1808.434,
+    "prompt_per_token_ms": 0.994191313908741,
+    "prompt_per_second": 1005.842624060375,
+    "predicted_n": 884,
+    "predicted_ms": 37897.184,
+    "predicted_per_token_ms": 42.918668176670444,
+    "predicted_per_second": 23.299884234142567
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";\nimport { TelemetryCard, SegmentMeter } from \"../f1\";\n\nexport function BucketBlock() {\n  const segments = BLUEPRINT_SEED.buckets.map((b) => ({ label: b.name, pct: b.fillPct }));\n  return <TelemetryCard label=\"3-Bucket System\"><SegmentMeter segments={segments} /></TelemetryCard>;\n}\n```"
+      }
+    }
+  ],
+  "created": 1787948519,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 93,
+    "prompt_tokens": 745,
+    "total_tokens": 838,
+    "prompt_tokens_details": {
+      "cached_tokens": 628
+    }
+  },
+  "id": "chatcmpl-T8trRAm7LMi1IKiNCUMuYtaEPHLwQn5o",
+  "timings": {
+    "cache_n": 628,
+    "prompt_n": 117,
+    "prompt_ms": 399.523,
+    "prompt_per_token_ms": 3.414726495726496,
+    "prompt_per_second": 292.8492226980674,
+    "predicted_n": 93,
+    "predicted_ms": 5636.031,
+    "predicted_per_token_ms": 61.26120652173913,
+    "predicted_per_second": 16.323543997540114
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport { useEffect, useState } from 'react';\nimport { useRouter } from 'next/router';\nimport { useReducedMotion } from 'framer-motion';\n\nconst Home = () => {\n  const router = useRouter();\n  const [loading, setLoading] = useState(true);\n  const prefersReducedMotion = useReducedMotion();\n\n  useEffect(() => {\n    if (!prefersReducedMotion) {\n      // Simulate loading delay\n      setTimeout(() => {\n        setLoading(false);\n      }, 1000);\n    } else {\n      setLoading(false);\n    }\n  }, [prefersReducedMotion]);\n\n  if (loading) {\n    return (\n      <div className=\"card\">\n        <div className=\"card-header\">\n          <div className=\"card-title\">Loading...</div>\n        </div>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"card\">\n      <div className=\"card-header\">\n        <div className=\"card-title\">Welcome to Finance OS</div>\n      </div>\n      <div className=\"card-body\">\n        <p>Explore your financial data and manage your goals.</p>\n      </div>\n    </div>\n  );\n};\n\nexport default Home;\n```"
+      }
+    }
+  ],
+  "created": 1788005880,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 253,
+    "prompt_tokens": 4684,
+    "total_tokens": 4937,
+    "prompt_tokens_details": {
+      "cached_tokens": 4460
+    }
+  },
+  "id": "chatcmpl-Pv8MLu0I6KCib7lSR3uZQSHcRVdxvCrf",
+  "timings": {
+    "cache_n": 4460,
+    "prompt_n": 224,
+    "prompt_ms": 403.045,
+    "prompt_per_token_ms": 1.7993080357142859,
+    "prompt_per_second": 555.7692069123794,
+    "predicted_n": 253,
+    "predicted_ms": 10493.823,
+    "predicted_per_token_ms": 41.64215476190476,
+    "predicted_per_second": 24.014127167953948
+  }
+}

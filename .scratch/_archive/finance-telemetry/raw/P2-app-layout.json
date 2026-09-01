@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport './globals.css';\nimport { Inter } from 'next/font/google';\nimport Link from 'next/link';\n\nconst inter = Inter({ subsets: ['latin'] });\n\nexport default function RootLayout({ children }) {\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n        <title>Finance OS</title>\n        <link rel=\"icon\" href=\"/favicon.ico\" />\n      </head>\n      <body className={inter.className}>\n        <nav className=\"bg-carbon-light p-4\">\n          <span className=\"status-dot\"></span>\n          <h1 className=\"text-white\">FINANCE OS</h1>\n          <ul className=\"flex space-x-4\">\n            {tabs.map(tab => (\n              <li key={tab.name}>\n                <Link href={tab.href} className={`text-gray-400 hover:text-white hover:bg-carbon-light ${usePathname() === tab.href ? 'bg-racing-red text-white shadow-neon-red' : ''}`}>\n                  {tab.name}\n                </Link>\n              </li>\n            ))}\n          </ul>\n          <Link href=\"/finance/settings\" className=\"text-gray-400 hover:text-white hover:bg-carbon-light\">Settings</Link>\n        </nav>\n        {children}\n      </body>\n    </html>\n  );\n}\n\nconst tabs = [\n  { name: 'Overview', href: '/finance' },\n  { name: 'Investments', href: '/finance/investments' },\n  { name: 'Debt', href: '/finance/debt' },\n  { name: 'Tracker', href: '/finance/tracker' },\n  { name: 'Learning', href: '/finance/learning' },\n];\n```"
+      }
+    }
+  ],
+  "created": 1788012633,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 377,
+    "prompt_tokens": 3102,
+    "total_tokens": 3479,
+    "prompt_tokens_details": {
+      "cached_tokens": 3062
+    }
+  },
+  "id": "chatcmpl-I3ElfafzAkiEQGDzKNHFi0dY7ki86B81",
+  "timings": {
+    "cache_n": 3062,
+    "prompt_n": 40,
+    "prompt_ms": 126.273,
+    "prompt_per_token_ms": 3.156825,
+    "prompt_per_second": 316.7739738503085,
+    "predicted_n": 377,
+    "predicted_ms": 14841.426,
+    "predicted_per_token_ms": 39.47187765957447,
+    "predicted_per_second": 25.33449279065233
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n'use client';\nimport { useFinanceData } from '@/lib/api';\nimport { useEffect, useState } from 'react';\nimport Link from 'next/link';\n\nconst CashflowCard = () => {\n  const { data, isLoading, error } = useFinanceData('/api/finance/overview/cashflow');\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n  if (!data) return <div>No data available</div>;\n  return (\n    <div>\n      <h2>Cashflow</h2>\n      <p>{data.cashflow}</p>\n    </div>\n  );\n};\n\nconst PortfolioPulseCard = () => {\n  const { data, isLoading, error } = useFinanceData('/api/finance/overview/portfolio');\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n  if (!data) return <div>No data available</div>;\n  return (\n    <div>\n      <h2>Portfolio Pulse</h2>\n      <p>{data.pulse}</p>\n    </div>\n  );\n};\n\nconst EmergencyFundCard = () => {\n  const { data, isLoading, error } = useFinanceData('/api/finance/overview/emergency');\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n  if (!data) return <div>No data available</div>;\n  return (\n    <div>\n      <h2>Emergency Fund</h2>\n      <p>{data.fund}</p>\n    </div>\n  );\n};\n\nconst DebtStatusCard = () => {\n  const { data, isLoading, error } = useFinanceData('/api/finance/overview/debt');\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n  if (!data) return <div>No data available</div>;\n  return (\n    <div>\n      <h2>Debt Status</h2>\n      <p>{data.status}</p>\n    </div>\n  );\n};\n\nconst SurplusAllocationCard = () => {\n  const { data, isLoading, error } = useFinanceData('/api/finance/overview/surplus');\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n  if (!data) return <div>No data available</div>;\n  return (\n    <div>\n      <h2>Surplus Allocation</h2>\n      <p>{data.allocation}</p>\n    </div>\n  );\n};\n\nconst GoalsCard = () => {\n  const { data, isLoading, error } = useFinanceData('/api/finance/overview/goals');\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n  if (!data) return <div>No data available</div>;\n  return (\n    <div>\n      <h2>Goals</h2>\n      <p>{data.goals}</p>\n      <Link href='/finance/settings?tab=goals'>Manage all goals</Link>\n    </div>\n  );\n};\n\nconst TopActionsCard = () => {\n  const { data, isLoading, error } = useFinanceData('/api/finance/overview/actions');\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n  if (!data) return <div>No data available</div>;\n  return (\n    <div>\n      <h2>Top Actions</h2>\n      <p>{data.actions}</p>\n    </div>\n  );\n};\n\nconst DataHealthCard = () => {\n  const { data, isLoading, error } = useFinanceData('/api/finance/overview/health');\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n  if (!data) return <div>No data available</div>;\n  return (\n    <div>\n      <h2>Data Health</h2>\n      <p>{data.health}</p>\n    </div>\n  );\n};\n\nexport { CashflowCard, PortfolioPulseCard, EmergencyFundCard, DebtStatusCard, SurplusAllocationCard, GoalsCard, TopActionsCard, DataHealthCard };\n```"
+      }
+    }
+  ],
+  "created": 1788014625,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 944,
+    "prompt_tokens": 5052,
+    "total_tokens": 5996,
+    "prompt_tokens_details": {
+      "cached_tokens": 4589
+    }
+  },
+  "id": "chatcmpl-fXoCr7r2Xgmjg55Hxxf5gRlvwxZM6cno",
+  "timings": {
+    "cache_n": 4589,
+    "prompt_n": 463,
+    "prompt_ms": 681.288,
+    "prompt_per_token_ms": 1.471464362850972,
+    "prompt_per_second": 679.5951198318479,
+    "predicted_n": 944,
+    "predicted_ms": 40372.989,
+    "predicted_per_token_ms": 42.81334994697773,
+    "predicted_per_second": 23.357200528303714
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom services.db import connect\nfrom datetime import datetime\nfrom typing import List\n\ndef net_worth() -> float:\n    conn = connect()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT SUM(units * avg_cost) FROM active_holdings\")\n    net_worth = cursor.fetchone()[0] or 0\n    cursor.close()\n    conn.close()\n    return net_worth\n\ndef cashflow() -> float:\n    conn = connect()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT SUM(units * avg_cost) FROM active_holdings\")\n    total_value = cursor.fetchone()[0] or 0\n    cursor.execute(\"SELECT SUM(units * avg_cost) FROM transactions WHERE type = 'expense'\")\n    expenses = cursor.fetchone()[0] or 0\n    cursor.execute(\"SELECT SUM(units * avg_cost) FROM transactions WHERE type = 'emi'\")\n    emis = cursor.fetchone()[0] or 0\n    cursor.execute(\"SELECT SUM(units * avg_cost) FROM transactions WHERE type = 'sip'\")\n    sips = cursor.fetchone()[0] or 0\n    cursor.close()\n    conn.close()\n    return total_value - expenses - emis - sips\n\ndef emergency_fund() -> float:\n    conn = connect()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT SUM(units * avg_cost) FROM active_holdings\")\n    total_value = cursor.fetchone()[0] or 0\n    cursor.execute(\"SELECT SUM(units * avg_cost) FROM transactions WHERE type = 'expense'\")\n    expenses = cursor.fetchone()[0] or 0\n    cursor.close()\n    monthly_expenses = expenses / 12\n    target = 6 * monthly_expenses\n    gap = target - total_value\n    return target, gap\n\ndef goals_overview() -> List[dict]:\n    conn = connect()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM goals WHERE status = 'active'\")\n    goals = cursor.fetchall()\n    goal_probabilities = []\n    for goal in goals:\n        current = sum(t.units * t.avg_cost for t in transactions if t.ticker == goal.ticker)\n        months_left = (datetime.now() - datetime.strptime(goal.created_at, '%Y-%m-%d')).days / 30\n        total_months = (datetime.strptime(goal.start_date, '%Y-%m-%d') - datetime.strptime(goal.created_at, '%Y-%m-%d')).days / 30\n        goal_probability = goal_probability(current, goal.target, months_left, total_months)\n        goal_probabilities.append({\n            'goal_id': goal.id,\n            'goal_name': goal.name,\n            'goal_probability': goal_probability\n        })\n    cursor.close()\n    conn.close()\n    return sorted(goal_probabilities, key=lambda x: x['goal_probability'], reverse=True)[:3]\n\ndef goal_probability(current, target, months_left, total_months):\n    if target <= 0: return 0.0\n    if months_left <= 0: return 100.0 if current >= target else 0.0\n    time_factor = min(months_left / total_months, 1.0)\n    progress = min(current / target, 1.0)\n    return min(100.0, max(0.0, (progress * 0.7 + time_factor * 0.3) * 100))\n```"
+      }
+    }
+  ],
+  "created": 1788014740,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 704,
+    "prompt_tokens": 4422,
+    "total_tokens": 5126,
+    "prompt_tokens_details": {
+      "cached_tokens": 1070
+    }
+  },
+  "id": "chatcmpl-uoevF1JLt0K2tx8ZiQRxKqfphTb8IsnB",
+  "timings": {
+    "cache_n": 1070,
+    "prompt_n": 3352,
+    "prompt_ms": 2885.843,
+    "prompt_per_token_ms": 0.8609316825775656,
+    "prompt_per_second": 1161.532349472927,
+    "predicted_n": 704,
+    "predicted_ms": 29306.539,
+    "predicted_per_token_ms": 41.68782219061166,
+    "predicted_per_second": 23.987820602084742
+  }
+}

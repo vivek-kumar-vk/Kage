@@ -1,0 +1,53 @@
+Write ONE React component file. Next.js 16, React 19, TypeScript, Tailwind v4, framer-motion 13.
+No new dependencies. No Three.js. No red colours (Rule 8).
+
+FILE: app/components/CashFlowPanel.tsx
+
+KEEP THESE FIRST LINES EXACTLY (verbatim, including quotes):
+
+"use client";
+
+import { BLUEPRINT_SEED } from "@/app/lib/blueprintSeed";
+import { useCountUp } from "@/app/lib/useCountUp";
+import { formatINR } from "@/app/lib/formatINR";
+import { motion } from "framer-motion";
+
+/** Cash flow — income vs expenses, two bars drawing in, net surplus
+    counting up. Seed data (P8). */
+export function CashFlowPanel() {
+
+THEN implement the body:
+  - const { income, expenses } = BLUEPRINT_SEED.cashFlow;
+  - const net = income - expenses;
+  - const shownNet = useCountUp(net);
+  - const rows = [
+      { label: "INCOME", value: income, shade: "bg-amber" },
+      { label: "EXPENSES", value: expenses, shade: "bg-dim/60" },
+    ];
+  - const max = Math.max(income, expenses);
+  - return a single:
+    <section aria-label="Cash flow"
+      className="carbon-face checkered-sweep relative overflow-hidden rounded-lg border border-line p-5">
+    containing, in order:
+      1. header row (flex, items-baseline, justify-between):
+         <p className="num text-[10px] tracking-[0.2em] text-dim">CASH FLOW</p>
+         <p className="num text-sm text-amber">net {formatINR(Math.round(shownNet))}</p>
+      2. rows.map((r, i) => (
+           <div key={r.label} className="mt-3">
+             <div className="flex justify-between text-[11px]">
+               <span className="text-dim">{r.label}</span>
+               <span className="num text-bone">{formatINR(r.value)}</span>
+             </div>
+             <div className="mt-1 h-2 w-full overflow-hidden rounded bg-void">
+               <motion.div
+                 className={`h-full ${r.shade}`}
+                 style={{ width: `${(r.value / max) * 100}%`, transformOrigin: "left" }}
+                 initial={{ scaleX: 0 }}
+                 animate={{ scaleX: 1 }}
+                 transition={{ duration: 0.9, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+               />
+             </div>
+           </div>
+         ))
+
+Return ONLY the file contents inside one ```tsx code block. No explanation.

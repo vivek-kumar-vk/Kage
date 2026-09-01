@@ -1,0 +1,35 @@
+Write ONE React component file. Next.js 16 app router, React 19, TypeScript,
+Tailwind v4 utility classes, framer-motion 13. No new dependencies. No Three.js.
+
+FILE: app/components/DebtReadout.tsx
+
+CONTEXT — these already exist, import them exactly:
+  import { BLUEPRINT_SEED } from "@/app/lib/blueprintSeed";
+  import { useCountUp } from "@/app/lib/useCountUp";
+  import { formatINR } from "@/app/lib/formatINR";
+  import { motion } from "framer-motion";
+
+TAILWIND CLASSES AVAILABLE: bg-void bg-panel border-line text-bone text-dim text-amber
+  class "num" = monospace tabular figures (put it on every number)
+  class "carbon-face" = carbon texture background
+  class "checkered-sweep" = amber checker hover sweep
+
+RULE: never use red — this is a plain figure, not an "act now" state.
+
+Write a proper React function component named DebtReadout (named export, no default).
+It must:
+  - be a client component: first line "use client";
+  - open with a one-sentence /** ... */ doc comment
+  - call:  const shown = useCountUp(BLUEPRINT_SEED.totalDebt);
+  - return a single <section aria-label="Total debt"
+      className="carbon-face checkered-sweep relative overflow-hidden rounded-lg border border-line p-5">
+    containing, in order:
+      1. <p className="num text-[10px] tracking-[0.2em] text-dim">TOTAL DEBT</p>
+      2. <p className="num mt-1 text-3xl font-bold text-bone">{formatINR(Math.round(shown))}</p>
+      3. <p className="num mt-1 text-[10px] text-dim">principal outstanding</p>
+      4. a <motion.div className="mt-4 h-[3px] rounded bg-dim/50"
+           initial={{ scaleX: 0 }} animate={{ scaleX: 1 }}
+           style={{ transformOrigin: "left" }}
+           transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }} />
+
+Return ONLY the file contents inside one ```tsx code block. No explanation.

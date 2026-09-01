@@ -1,0 +1,103 @@
+- 2026-08-29 17:48:21  === PHASE 1 START (12 tasks) === (no git)
+- 2026-08-29 17:48:21  setup: python -m pip install -q yfinance mftool tenacity pdfplumber
+- 2026-08-29 17:48:22  setup rc=0 [notice] A new release of pip is available: 26.1.2 -> 26.2.1
+[notice] To update, run: C:\Users\vkjha\AppData\Local\Python\pythoncore-3.14-64\python.exe -m pip install --upgrade pip
+- 2026-08-29 17:48:22  --- task 1/12: P1-market-data ---
+- 2026-08-29 17:48:22  P1-market-data: generating (py)
+- 2026-08-29 17:48:40  P1-market-data: self-grill PASS at round 1
+- 2026-08-29 17:48:40  P1-market-data: DONE (clean; self-grill PASS)
+- 2026-08-29 17:49:00  --- task 2/12: P1-xirr ---
+- 2026-08-29 17:49:01  P1-xirr: generating (py)
+- 2026-08-29 17:49:19  P1-xirr: self-grill PASS at round 1
+- 2026-08-29 17:49:19  P1-xirr: DONE (clean; self-grill PASS)
+- 2026-08-29 17:49:39  --- task 3/12: P1-backfill ---
+- 2026-08-29 17:49:40  P1-backfill: generating (py)
+- 2026-08-29 17:49:47  P1-backfill: gate failed, retry 1
+- 2026-08-29 17:49:50  P1-backfill: gate failed, retry 2
+- 2026-08-29 17:49:54  P1-backfill: gate failed, retry 3
+- 2026-08-29 17:49:56  P1-backfill: BLOCKED after 3 retries — snapshot restored
+- 2026-08-29 17:50:16  --- task 4/12: P1-holdings-upsert ---
+- 2026-08-29 17:50:17  P1-holdings-upsert: generating (py)
+- 2026-08-29 17:50:46  P1-holdings-upsert: self-grill PASS at round 1
+- 2026-08-29 17:50:46  P1-holdings-upsert: DONE (clean; self-grill PASS)
+- 2026-08-29 17:51:06  --- task 5/12: P1-imports-cas ---
+- 2026-08-29 17:51:06  P1-imports-cas: generating (py)
+- 2026-08-29 17:51:24  P1-imports-cas: self-grill PASS at round 1
+- 2026-08-29 17:51:24  P1-imports-cas: DONE (clean; self-grill PASS)
+- 2026-08-29 17:51:44  --- task 6/12: P1-imports-groww ---
+- 2026-08-29 17:51:44  P1-imports-groww: generating (py)
+- 2026-08-29 17:51:54  P1-imports-groww: self-grill PASS at round 1
+- 2026-08-29 17:51:54  P1-imports-groww: DONE (clean; self-grill PASS)
+- 2026-08-29 17:52:14  --- task 7/12: P1-imports-transactions ---
+- 2026-08-29 17:52:14  P1-imports-transactions: generating (py)
+- 2026-08-29 17:52:25  P1-imports-transactions: self-grill PASS at round 1
+- 2026-08-29 17:52:25  P1-imports-transactions: DONE (clean; self-grill PASS)
+- 2026-08-29 17:52:45  --- task 8/12: P1-router-accounts ---
+- 2026-08-29 17:52:45  P1-router-accounts: generating (py)
+- 2026-08-29 17:53:18  P1-router-accounts: self-grill PASS at round 1
+- 2026-08-29 17:53:18  P1-router-accounts: DONE (clean; self-grill PASS)
+- 2026-08-29 17:53:38  --- task 9/12: P1-router-entities ---
+- 2026-08-29 17:53:38  P1-router-entities: generating (py)
+- 2026-08-29 17:55:10  === PHASE 1 START (12 tasks) === (no git)
+- 2026-08-29 17:55:10  setup: python -m pip install -q yfinance mftool tenacity pdfplumber
+- 2026-08-29 17:55:11  setup rc=0 [notice] A new release of pip is available: 26.1.2 -> 26.2.1
+[notice] To update, run: C:\Users\vkjha\AppData\Local\Python\pythoncore-3.14-64\python.exe -m pip install --upgrade pip
+- 2026-08-29 17:55:11  --- task 1/12: P1-market-data ---
+- 2026-08-29 17:55:12  P1-market-data: generating (py)
+- 2026-08-29 17:55:33  P1-market-data: clean
+- 2026-08-29 17:55:53  --- task 2/12: P1-xirr ---
+- 2026-08-29 17:55:54  P1-xirr: generating (py)
+- 2026-08-29 17:56:10  P1-xirr: clean
+- 2026-08-29 17:56:30  --- task 3/12: P1-backfill ---
+- 2026-08-29 17:56:30  P1-backfill: generating (py)
+- 2026-08-29 17:56:37  P1-backfill: gate failed, retry 1
+- 2026-08-29 17:56:40  P1-backfill: DIRTY -> phase-fix
+- 2026-08-29 17:57:00  --- task 4/12: P1-holdings-upsert ---
+- 2026-08-29 17:57:01  P1-holdings-upsert: generating (py)
+- 2026-08-29 17:57:27  P1-holdings-upsert: clean
+- 2026-08-29 17:57:47  --- task 5/12: P1-imports-cas ---
+- 2026-08-29 17:57:48  P1-imports-cas: generating (py)
+- 2026-08-29 17:58:02  P1-imports-cas: clean
+- 2026-08-29 17:58:22  --- task 6/12: P1-imports-groww ---
+- 2026-08-29 17:58:23  P1-imports-groww: generating (py)
+- 2026-08-29 17:58:30  P1-imports-groww: clean
+- 2026-08-29 17:58:50  --- task 7/12: P1-imports-transactions ---
+- 2026-08-29 17:58:51  P1-imports-transactions: generating (py)
+- 2026-08-29 17:58:59  P1-imports-transactions: clean
+- 2026-08-29 17:59:19  --- task 8/12: P1-router-accounts ---
+- 2026-08-29 17:59:19  P1-router-accounts: generating (py)
+- 2026-08-29 17:59:49  P1-router-accounts: clean
+- 2026-08-29 18:00:09  --- task 9/12: P1-router-entities ---
+- 2026-08-29 18:00:09  P1-router-entities: generating (py)
+- 2026-08-29 18:01:49  P1-router-entities: gate failed, retry 1
+- 2026-08-29 18:03:27  P1-router-entities: clean
+- 2026-08-29 18:03:47  --- task 10/12: P1-router-imports ---
+- 2026-08-29 18:03:48  P1-router-imports: generating (py)
+- 2026-08-29 18:05:55  P1-router-imports: gate failed, retry 1
+- 2026-08-29 18:06:30  P1-router-imports: clean
+- 2026-08-29 18:06:50  --- task 11/12: P1-supervisor ---
+- 2026-08-29 18:06:50  P1-supervisor: generating (py)
+- 2026-08-29 18:07:46  P1-supervisor: gate failed, retry 1
+- 2026-08-29 18:08:15  P1-supervisor: clean
+- 2026-08-29 18:08:35  --- task 12/12: P1-specialist-stubs ---
+- 2026-08-29 18:08:35  P1-specialist-stubs: generating (py)
+- 2026-08-29 18:11:06  P1-specialist-stubs: gate failed, retry 1
+- 2026-08-29 18:11:17  P1-specialist-stubs: clean
+- 2026-08-29 18:11:37  === PHASE 1 FIX ROUND 1/3 (1 file(s): P1-backfill) ===
+- 2026-08-29 18:11:37  P1-backfill: generating (py)
+- 2026-08-29 18:11:40  P1-backfill: clean
+- 2026-08-29 18:12:00  running gate_cmd: python .scratch/finance-os-build/gates/gate_phase1.py
+- 2026-08-29 18:12:02  gate_cmd rc=1
+ok: no module-level LLM import in specialists  [I]: 
+  ok: holdings_upsert.py exists
+  ok: upsert_holding has add_lot vs set_snapshot mode  [C]
+GATE FAIL: create account -> 405
+- 2026-08-29 18:12:02  === PHASE 1 DONE ok=12 dirty=0 blocked=0 error=0 gate_rc=1 ===
+- 2026-08-29 18:20:45  === PHASE 1 SKIP (gate already green on resume) ===
+- 2026-08-29 19:37:14  === PHASE 1 SKIP (gate already green on resume) ===
+- 2026-08-29 20:20:15  === PHASE 1 SKIP (gate already green on resume) ===
+- 2026-08-29 20:55:21  === PHASE 1 SKIP (gate already green on resume) ===
+- 2026-08-29 21:11:18  === PHASE 1 SKIP (gate already green on resume) ===
+- 2026-08-29 21:52:54  === PHASE 1 SKIP (gate already green on resume) ===
+- 2026-08-29 22:07:53  === PHASE 1 SKIP (gate already green on resume) ===
+- 2026-08-29 22:40:01  === PHASE 1 SKIP (gate already green on resume) ===

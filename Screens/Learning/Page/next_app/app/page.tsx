@@ -1,76 +1,153 @@
 "use client";
 
-import { useState } from "react";
-import { ActivityRail } from "./components/ActivityRail";
-import { TodayPanel } from "./components/TodayPanel";
-import { PlanBoard } from "./components/PlanBoard";
-import { RecallQueues } from "./components/RecallQueues";
+import TopNav from "@/components/TopNav";
+import StatsBar from "@/components/StatsBar";
+import { useResource } from "@/lib/api";
 
-type Tab = "today" | "plan" | "recall";
+interface TodayResponse {
+  streak: {
+    days: number;
+    last_studied: string | null;
+  };
+  week: {
+    minutes: number;
+    target_minutes: number;
+  };
+  today_plan: {
+    track_a: string;
+    track_b: string;
+    capture: string;
+  };
+  recent_activity: Array<{
+    date: string;
+    minutes: number;
+    topic: string;
+    notes: string | null;
+  }>;
+  due_cards: number;
+}
 
-const TABS: Array<{ id: Tab; label: string }> = [
-  { id: "today", label: "TODAY" },
-  { id: "plan", label: "PLAN" },
-  { id: "recall", label: "RECALL" },
-];
+export default function TodayPage() {
+  const { data, error, loading } = useResource<TodayResponse>("/api/learning/today");
 
-/** The Learning rebuild - a workflow, not a brochure. Where Models'
-    design pass is a control room and Enhancement's is a quiet
-    corkboard, this screen is where a session actually happens: the
-    Today/Plan/Recall structure (ADR-100 merged Study into Plan)
-    stays the spine, so a click gets you into a module's task list or
-    a due card fast, not through a dashboard first. Every figure comes
-    from this screen's own existing endpoints - no second source of
-    truth, nothing invented. */
-export default function Home() {
-  const [tab, setTab] = useState<Tab>("today");
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <TopNav />
+        <main className="p-6 max-w-5xl mx-auto">
+          <div className="text-term-dim animate-pulse motion-reduce:animate-none">
+            Loading today...
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <TopNav />
+        <main className="p-6 max-w-5xl mx-auto">
+          <div className="text-term-red border border-term-red rounded p-4">
+            Error: {error}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="min-h-screen">
+        <TopNav />
+        <main className="p-6 max-w-5xl mx-auto">
+          <div className="text-term-dim border border-term-border rounded p-4">
+            No data available.
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="page-header border-b border-line bg-panel">
-        <div className="header-pad mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-4">
-          <h1 className="page-title font-mono text-2xl font-black tracking-tight text-jade">
-            LEARNING <span className="font-light text-bone">// TODAY · PLAN · RECALL</span>
-          </h1>
-          <nav className="tab-strip flex gap-2">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                className={`num rounded border px-3 py-1.5 text-xs tracking-widest transition-colors ${
-                  tab === t.id
-                    ? "border-jade text-jade"
-                    : "border-line text-dim hover:border-cyan hover:text-cyan"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </header>
+    <div className="min-h-screen">
+      <TopNav />
 
-      <main className="page-main mx-auto w-full max-w-6xl flex-1 px-6 py-6">
-        <div className="grid-main grid grid-cols-[1fr_300px] gap-6">
-          <div className="flex flex-col gap-6">
-            {tab === "today" && <TodayPanel />}
-            {tab === "plan" && <PlanBoard />}
-            {tab === "recall" && <RecallQueues />}
+      <main className="p-6 max-w-5xl mx-auto space-y-6">
+        <h1 className="text-term-green text-2xl">&gt; TODAY</h1>
+
+        <section className="grid md:grid-cols-3 gap-4">
+          <div className="border border-term-border rounded p-4">
+            <div className="text-term-dim text-sm mb-2">Streak</div>
+            <div className="text-3xl text-term-green">{data.streak.days}</div>
+            <div className="text-term-dim text-xs mt-2">
+              Last studied: {data.streak.last_studied ?? "Never"}
+            </div>
           </div>
-          <div className="rail flex flex-col gap-6">
-            <ActivityRail />
+
+          <div className="border border-term-border rounded p-4">
+            <div className="text-term-dim text-sm mb-3">Week minutes</div>
+            <StatsBar
+              label="minutes"
+              value={data.week.minutes}
+              target={data.week.target_minutes}
+            />
           </div>
-        </div>
+
+          <div className="border border-term-border rounded p-4">
+            <div className="text-term-dim text-sm mb-2">Due cards</div>
+            <div className="text-3xl text-term-cyan">{data.due_cards}</div>
+          </div>
+        </section>
+
+        <section className="border border-term-border rounded p-4">
+          <h2 className="text-term-cyan mb-3">&gt; TODAY&apos;S PLAN</h2>
+
+          <div className="grid md:grid-cols-3 gap-3 text-sm">
+            <div className="border border-term-border rounded p-3">
+              <div className="text-term-dim text-xs mb-1">Track A</div>
+              <div className="text-term-fg">{data.today_plan.track_a || "No plan set"}</div>
+            </div>
+
+            <div className="border border-term-border rounded p-3">
+              <div className="text-term-dim text-xs mb-1">Track B</div>
+              <div className="text-term-fg">{data.today_plan.track_b || "No plan set"}</div>
+            </div>
+
+            <div className="border border-term-border rounded p-3">
+              <div className="text-term-dim text-xs mb-1">Capture</div>
+              <div className="text-term-fg">{data.today_plan.capture}</div>
+            </div>
+          </div>
+        </section>
+
+        <section className="border border-term-border rounded p-4">
+          <h2 className="text-term-cyan mb-3">&gt; RECENT ACTIVITY</h2>
+
+          {data.recent_activity.length === 0 ? (
+            <div className="text-term-dim">No sessions logged yet</div>
+          ) : (
+            <div className="space-y-2">
+              {data.recent_activity.map((item, index) => (
+                <div
+                  key={index}
+                  className="border border-term-border rounded p-3 flex items-center justify-between gap-4"
+                >
+                  <div>
+                    <div className="text-term-fg">{item.topic}</div>
+                    <div className="text-term-dim text-xs">{item.date}</div>
+                    {item.notes ? (
+                      <div className="text-term-dim text-xs mt-1">{item.notes}</div>
+                    ) : null}
+                  </div>
+
+                  <div className="text-term-green">{item.minutes}m</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
-
-      <footer className="mx-auto w-full max-w-6xl px-6 pb-6 pt-2">
-        <p className="num text-[10px] leading-relaxed text-dim">
-          every figure traces to server_for_learning.py's own endpoints · empty means not
-          studied/planned yet, stated plainly
-          {" · events stream from Shared_By_All_Screens/Trace_Ledger via /api/learning/live"}
-        </p>
-      </footer>
     </div>
   );
 }

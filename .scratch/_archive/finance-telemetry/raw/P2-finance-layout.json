@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n'use client';\nimport Link from 'next/link';\nimport { usePathname } from 'next/navigation';\n\nconst tabs = [\n  { name: 'Overview', href: '/finance' },\n  { name: 'Investments', href: '/finance/investments' },\n  { name: 'Debt', href: '/finance/debt' },\n  { name: 'Tracker', href: '/finance/tracker' },\n  { name: 'Learning', href: '/finance/learning' },\n];\n\nconst Layout = () => {\n  const pathname = usePathname();\n\n  return (\n    <nav className=\"flex items-center justify-between bg-carbon-light p-4\">\n      <span className=\"status-dot bg-racing-red\"></span>\n      <h1 className=\"text-white\">FINANCE OS</h1>\n      <ul className=\"flex space-x-4\">\n        {tabs.map(tab => (\n          <li key={tab.href}>\n            <Link href={tab.href} className={`text-gray-400 hover:text-white hover:bg-carbon-light ${pathname === tab.href ? 'bg-racing-red text-white shadow-neon-red' : ''}`}>\n              {tab.name}\n            </Link>\n          </li>\n        ))}\n      </ul>\n      <Link href=\"/finance/settings\" className=\"text-gray-400 hover:text-white hover:bg-carbon-light\">Settings</Link>\n    </nav>\n  );\n};\n\nexport default Layout;\n```"
+      }
+    }
+  ],
+  "created": 1788012719,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 302,
+    "prompt_tokens": 3134,
+    "total_tokens": 3436,
+    "prompt_tokens_details": {
+      "cached_tokens": 3062
+    }
+  },
+  "id": "chatcmpl-RSz42IvdnZ4YoOnrOMmLUb7V95ofXdhu",
+  "timings": {
+    "cache_n": 3062,
+    "prompt_n": 72,
+    "prompt_ms": 284.956,
+    "prompt_per_token_ms": 3.9577222222222224,
+    "prompt_per_second": 252.6705877398616,
+    "predicted_n": 302,
+    "predicted_ms": 11872.061,
+    "predicted_per_token_ms": 39.442063122923585,
+    "predicted_per_second": 25.353643314332704
+  }
+}

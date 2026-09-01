@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useState, useEffect } from \"react\";\nimport { useFinanceData } from \"@/lib/api\";\nimport { Card, Skeleton, FormModal } from \"@/components/finance\";\nimport { useSubmit } from \"@/lib/api\";\n\nconst LearningPage = () => {\n  const { data: topics, isLoading, isError, refetch } = useFinanceData<{ id: number; title: string }[]>(\"/learning/topics\");\n  const { data: selectedTopic, isLoading: selectedTopicLoading, isError: selectedTopicError, refetch: selectedTopicRefetch } = useFinanceData<{ content: string }>(`/learning/topic/1`);\n  const { data: personalizedLessons, isLoading: personalizedLessonsLoading, isError: personalizedLessonsError, refetch: personalizedLessonsRefetch } = useFinanceData<{ content: string }[]>(`/learning/personalized`);\n\n  if (isLoading || selectedTopicLoading || personalizedLessonsLoading) return <Skeleton />;\n  if (isError || selectedTopicError || personalizedLessonsError) return <div>Error loading data</div>;\n\n  return (\n    <div className=\"flex flex-col h-full\">\n      <div className=\"flex-1\">\n        <div className=\"flex flex-col h-full\">\n          <div className=\"flex-1 overflow-y-auto\">\n            {topics && topics.map(topic => (\n              <Card key={topic.id} title={topic.title} onClick={() => selectedTopicRefetch()} />\n            ))}\n          </div>\n        </div>\n      </div>\n      <div className=\"flex-1\">\n        <div className=\"flex flex-col h-full\">\n          <div className=\"flex-1 overflow-y-auto\">\n            {selectedTopic && <div dangerouslySetInnerHTML={{ __html: selectedTopic.content }} />}\n          </div>\n        </div>\n      </div>\n      <div className=\"flex-1\">\n        <div className=\"flex flex-col h-full\">\n          <div className=\"flex-1 overflow-y-auto\">\n            {personalizedLessons && personalizedLessons.map(lesson => (\n              <Card key={lesson.id} title={lesson.content} onClick={() => personalizedLessonsRefetch()} />\n            ))}\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default LearningPage;\n```"
+      }
+    }
+  ],
+  "created": 1788021301,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 479,
+    "prompt_tokens": 5566,
+    "total_tokens": 6045,
+    "prompt_tokens_details": {
+      "cached_tokens": 5104
+    }
+  },
+  "id": "chatcmpl-CRkcCa00Z8unB8A4y8ZbcChfC7D6ozbl",
+  "timings": {
+    "cache_n": 5104,
+    "prompt_n": 462,
+    "prompt_ms": 656.454,
+    "prompt_per_token_ms": 1.4208961038961039,
+    "prompt_per_second": 703.7812245793308,
+    "predicted_n": 479,
+    "predicted_ms": 22845.008,
+    "predicted_per_token_ms": 47.79290376569038,
+    "predicted_per_second": 20.923608343669652
+  }
+}

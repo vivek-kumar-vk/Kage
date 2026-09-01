@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import FastAPI, HTTPException\nfrom fastapi.responses import JSONResponse\nfrom fastapi.staticfiles import StaticFiles\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom services.db import connect\nfrom startup import PassthroughAuth\nfrom routers import overview\n\napp = FastAPI()\n\n# CORS configuration\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\n# Middleware for handling authentication\nclass AuthMiddleware(BaseHTTPMiddleware):\n    async def dispatch(self, request, call_next):\n        auth_header = request.headers.get(\"Authorization\")\n        if not auth_header or not PassthroughAuth().authenticate(auth_header):\n            raise HTTPException(status_code=401, detail=\"Unauthorized\")\n        response = await call_next(request)\n        return response\n\napp.add_middleware(AuthMiddleware)\n\n# Mount static files\napp.mount(\"/static\", StaticFiles(directory=\"static\"), name=\"static\")\n\n# Include routers\napp.include_router(overview.router)\n```"
+      }
+    }
+  ],
+  "created": 1788007276,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 229,
+    "prompt_tokens": 3608,
+    "total_tokens": 3837,
+    "prompt_tokens_details": {
+      "cached_tokens": 3534
+    }
+  },
+  "id": "chatcmpl-TNtmtlbWabQh0xfl7V8EPrwppNv9ulpn",
+  "timings": {
+    "cache_n": 3534,
+    "prompt_n": 74,
+    "prompt_ms": 113.139,
+    "prompt_per_token_ms": 1.5289054054054054,
+    "prompt_per_second": 654.0627016325052,
+    "predicted_n": 229,
+    "predicted_ms": 9389.02,
+    "predicted_per_token_ms": 41.17991228070176,
+    "predicted_per_second": 24.28368455919787
+  }
+}

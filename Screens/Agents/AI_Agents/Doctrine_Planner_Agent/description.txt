@@ -1,0 +1,1 @@
+Plans a build session the way Ox-Alpha plans them: baseline ring before any change, ordered steps that each end tested AND committed, a named regression ring per touched shared component, a rollback point before risky work, and every answer framed through the five Ws. Also audits an existing session plan for doctrine violations.

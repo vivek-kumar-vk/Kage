@@ -14,13 +14,13 @@ SCREEN_NAME = "finance"          # must match the folder name, lowercased
 MENU_LABEL = "FINANCE"           # what you actually see in the menu
 MENU_ORDER = 1                   # menu position. Lower comes first
 
-# Four tabs (was five). The Chat tab and its /api/finance/chat route
-# were removed 2026-08-24; asking survives in the Investments and
-# Portfolio Analysis "Ask INKY" strips. Four is under the declared
-# maximum of five.
+# Five tabs — the finance-os app's own nav (2026-08-30 cutover). Each
+# endpoint is a representative address on that tab; the page renders its
+# own full tab strip.
 TABS = [
-    {"key": "overview",     "label": "Overview",            "endpoint": "/api/finance/command"},
-    {"key": "investments",  "label": "Investments",         "endpoint": "/api/finance/investments"},
-    {"key": "portfolio",    "label": "Portfolio Analysis",  "endpoint": "/api/finance/portfolio-analysis"},
-    {"key": "debt",         "label": "Debt & Liabilities",  "endpoint": "/api/finance/debt"},
+    {"key": "overview",     "label": "Overview",     "endpoint": "/api/finance/overview/net-worth"},
+    {"key": "investments",  "label": "Investments",  "endpoint": "/api/finance/investments/holdings"},
+    {"key": "debt",         "label": "Debt",         "endpoint": "/api/finance/debt"},
+    {"key": "tracker",      "label": "Tracker",      "endpoint": "/api/finance/tracker/transactions"},
+    {"key": "learning",     "label": "Learning",     "endpoint": "/api/finance/learning/topics"},
 ]

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nimport logging\nimport os\nimport pathlib\nimport subprocess\nfrom starlette.middleware.base import BaseHTTPMiddleware\n\nlogger = logging.getLogger(__name__)\n\nclass PassthroughAuth(BaseHTTPMiddleware):\n    async def dispatch(self, request, call_next):\n        return await call_next(request)\n\ndef check_encrypted_volume(db_dir) -> None:\n    try:\n        if os.name == 'nt':\n            result = subprocess.run(['manage-bde', '-status', str(pathlib.Path(db_dir).anchor)], capture_output=True, text=True, timeout=10)\n            if 'Percentage Encrypted: 100' not in result.stdout:\n                logger.warning('DB dir %s may not be on an encrypted volume', db_dir)\n        else:\n            result = subprocess.run(['cryptsetup', 'status', str(pathlib.Path(db_dir).anchor)], capture_output=True, text=True, timeout=10)\n            if 'is active' not in result.stdout:\n                logger.warning('DB dir %s may not be on an encrypted volume', db_dir)\n    except Exception as e:\n        logger.warning(f'Error checking encrypted volume: {e}')\n```"
+      }
+    }
+  ],
+  "created": 1787999984,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 237,
+    "prompt_tokens": 4440,
+    "total_tokens": 4677,
+    "prompt_tokens_details": {
+      "cached_tokens": 4067
+    }
+  },
+  "id": "chatcmpl-Mj5ZTiBVL6Ci54ODoiPRWFman5WIVTyG",
+  "timings": {
+    "cache_n": 4067,
+    "prompt_n": 373,
+    "prompt_ms": 346.086,
+    "prompt_per_token_ms": 0.9278445040214478,
+    "prompt_per_second": 1077.7667978479337,
+    "predicted_n": 237,
+    "predicted_ms": 10889.033,
+    "predicted_per_token_ms": 46.13997033898305,
+    "predicted_per_second": 21.673182549818705
+  }
+}

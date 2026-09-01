@@ -1,0 +1,16 @@
+{
+  "ideas": [
+    {
+      "key": "ENH-1",
+      "title": "Example local idea",
+      "note": "Replace this with your own local-only starter ideas.",
+      "area": "example",
+      "source": "user",
+      "status": "ideas",
+      "priority": "medium",
+      "order_index": 1.0,
+      "added_at": "@today",
+      "updated_at": "@today"
+    }
+  ]
+}

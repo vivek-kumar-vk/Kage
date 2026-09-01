@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";\nimport { useCountUp } from \"@/app/lib/useCountUp\";\nimport { formatINR } from \"@/app/lib/formatINR\";\nimport { motion } from \"framer-motion\";\nimport { usePrefersReducedMotion } from \"@/app/lib/usePrefersReducedMotion\";\nimport { TiltCard } from \"./TiltCard\";\n\n/** Cash flow \u2014 income vs expenses, two bars drawing in, net surplus\n    counting up. Seed data (P8). */\nexport function CashFlowPanel() {\n  const reduce = usePrefersReducedMotion();\n  const { income, expenses } = BLUEPRINT_SEED.cashFlow;\n  const net = income - expenses;\n  const shownNet = useCountUp(net);\n  const rows = [\n    { label: \"INCOME\", value: income, grad: true },\n    { label: \"EXPENSES\", value: expenses, grad: false },\n  ];\n  const max = Math.max(income, expenses);\n\n  return (\n    <TiltCard>\n      <div aria-label=\"Cash flow\">\n        <div className=\"flex items-baseline justify-between\">\n          <p className=\"num text-[10px] tracking-[0.24em] text-dim\">CASH FLOW</p>\n          <p className=\"num text-sm grad-text-wealth neon-glow-amber\">\n            net {formatINR(Math.round(shownNet))}\n          </p>\n        </div>\n        {rows.map((r, i) => (\n          <div key={r.label} className=\"mt-3\">\n            <div className=\"flex justify-between text-[11px]\">\n              <span className=\"text-dim\">{r.label}</span>\n              <span className=\"num text-bone\">{formatINR(r.value)}</span>\n            </div>\n            <div className=\"mt-1 h-2 w-full overflow-hidden rounded bg-void\">\n              <motion.div\n                className={`h-full ${r.grad ? \"\" : \"bg-dim/60\"}`}\n                style={{\n                  width: `${(r.value / max) * 100}%`,\n                  transformOrigin: \"left\",\n                  background: r.grad ? \"var(--grad-wealth)\" : undefined,\n                }}\n                initial={{ scaleX: reduce ? 1 : 0 }}\n                animate={{ scaleX: 1 }}\n                transition={{ duration: 0.9, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}\n              />\n            </div>\n          </div>\n        ))}\n      </div>\n    </TiltCard>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787935881,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 574,
+    "prompt_tokens": 642,
+    "total_tokens": 1216,
+    "prompt_tokens_details": {
+      "cached_tokens": 44
+    }
+  },
+  "id": "chatcmpl-g3fpb2YILsb4bWWQxmZZcwulUJYij4jf",
+  "timings": {
+    "cache_n": 44,
+    "prompt_n": 598,
+    "prompt_ms": 2546.107,
+    "prompt_per_token_ms": 4.257704013377927,
+    "prompt_per_second": 234.86836963254098,
+    "predicted_n": 574,
+    "predicted_ms": 22061.0,
+    "predicted_per_token_ms": 38.50087260034904,
+    "predicted_per_second": 25.973437287520966
+  }
+}

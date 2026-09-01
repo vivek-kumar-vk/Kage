@@ -1,0 +1,79 @@
+{
+  "updated": "2026-08-28 22:47:32+0530",
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m @ :8080 (threads 7) \u00b7 60s cooldown",
+  "phase": "building \u2014 0/9 clean",
+  "current": "X1",
+  "counts": {
+    "queued": 8,
+    "sent": 0,
+    "written": 1,
+    "clean": 0,
+    "rework": 0
+  },
+  "tasks": [
+    {
+      "id": "X1",
+      "file": "app/lib/replicaHoldings.ts",
+      "owner": "Model A",
+      "status": "written",
+      "note": "summary + gate alert + 9 holdings rows (exact values)"
+    },
+    {
+      "id": "X2",
+      "file": "app/components/replica/ReplicaTopBar.tsx",
+      "owner": "Model A",
+      "status": "queued",
+      "note": "Rs badge + FINANCE + clock + Back to Menu"
+    },
+    {
+      "id": "X3",
+      "file": "app/components/replica/ReplicaGateAlert.tsx",
+      "owner": "Model A",
+      "status": "queued",
+      "note": "grey to pink banner, G2 in red"
+    },
+    {
+      "id": "X4",
+      "file": "app/components/replica/ReplicaSideNav.tsx",
+      "owner": "Model A",
+      "status": "queued",
+      "note": "5 items, Investments active (bordered card)"
+    },
+    {
+      "id": "X5",
+      "file": "app/components/replica/ReplicaStatCards.tsx",
+      "owner": "Model A",
+      "status": "queued",
+      "note": "INVESTED / CURRENT VALUE / GAIN-LOSS (green)"
+    },
+    {
+      "id": "X6",
+      "file": "app/components/replica/ReplicaHoldingsTable.tsx",
+      "owner": "Model A",
+      "status": "queued",
+      "note": "header + rows: scheme+pill, invested, current input, gain/loss, units input, analysis/save/delete"
+    },
+    {
+      "id": "X7",
+      "file": "app/replica/page.tsx",
+      "owner": "Model A",
+      "status": "queued",
+      "note": "assemble; light gradient bg covering aurora; sidebar+main grid"
+    },
+    {
+      "id": "X8",
+      "file": "tsc + build",
+      "owner": "Claude",
+      "status": "queued",
+      "note": "npx tsc --noEmit + next build"
+    },
+    {
+      "id": "X9",
+      "file": "browser verify",
+      "owner": "Claude",
+      "status": "queued",
+      "note": "compare /replica to screenshot; screenshot"
+    }
+  ],
+  "log": []
+}

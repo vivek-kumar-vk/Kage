@@ -1,0 +1,36 @@
+You are Model A, writing ONE file for Next.js 16 (App Router, output:"export") +
+React 19 + framer-motion ^13. Patched Next — follow THIS prompt.
+
+CONTRACT:
+- The literal first line is these 8 characters then a semicolon: "use client";
+  WITH the double quotes.
+- Colour only via var(--tl-petal) and var(--tl-bg). No raw hex.
+- Animation MUST be frozen when the user prefers reduced motion: import
+  `useReducedMotion` from "framer-motion"; if it returns true, render the petals
+  static (no motion, no infinite animation) or render nothing.
+- Output the file body ONLY, no prose. Under ~90 lines.
+
+FILE: Screens/Finance/Page/next_app/app/theme-lab/petals.tsx
+
+PURPOSE: a slow drifting sakura-petal background layer for the theme-lab
+prototype. PROTOTYPE code.
+
+REQUIREMENTS:
+1. Default export `SakuraPetals`, a client component, no props.
+2. A container: position "absolute", inset 0, overflow "hidden",
+   pointerEvents "none", zIndex 0.
+3. Render 14 petals. Precompute an array of 14 objects with deterministic-ish
+   values (use the index in simple arithmetic, NOT Math.random at module scope):
+   { left: `${(i * 7 + 5) % 100}%`, size: 8 + (i % 4) * 3, delay: (i % 7) * 1.2,
+     duration: 14 + (i % 5) * 4, drift: ((i % 3) - 1) * 40 }.
+4. Each petal is a framer-motion `motion.span` styled as a small rounded blob:
+   width/height = size, borderRadius "50% 0 50% 50%" (a petal shape),
+   background "var(--tl-petal)", opacity 0.5, position "absolute", top "-5%",
+   left from the data.
+5. When motion is allowed, animate each petal with `animate={{ y: ["0vh","110vh"],
+   x: [0, petal.drift, 0], rotate: [0, 180, 360] }}` and
+   `transition={{ duration: petal.duration, delay: petal.delay, repeat: Infinity,
+   ease: "linear" }}`.
+6. When `useReducedMotion()` is true: render the same petals but with NO animate/
+   transition props (static, scattered via top values like `${(i*11)%90}%`).
+7. No imports beyond react and framer-motion.

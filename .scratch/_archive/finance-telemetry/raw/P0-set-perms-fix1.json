@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nimport os\nfrom backend.services.db import DB_PATH\n\ndef set_perms():\n    if not os.path.exists(DB_PATH):\n        print(f\"Notice: {DB_PATH} does not exist. Exiting.\")\n        return 0\n\n    if os.name == 'nt':\n        subprocess.run(['icacls', str(DB_PATH), '/inheritance:r', '/grant:r', f\"{os.environ.get('USERNAME','%USERNAME%')}:F\"], check=False)\n        print(f\"Set permissions for {DB_PATH} on Windows.\")\n    else:\n        os.chmod(DB_PATH, 0o600)\n        print(f\"Set permissions for {DB_PATH} on POSIX.\")\n\nif __name__ == \"__main__\":\n    set_perms()\n```"
+      }
+    }
+  ],
+  "created": 1788000126,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 152,
+    "prompt_tokens": 4128,
+    "total_tokens": 4280,
+    "prompt_tokens_details": {
+      "cached_tokens": 3970
+    }
+  },
+  "id": "chatcmpl-ptIxmKju64rDCNmIOVxV89p7vHPbcPMs",
+  "timings": {
+    "cache_n": 3970,
+    "prompt_n": 158,
+    "prompt_ms": 199.442,
+    "prompt_per_token_ms": 1.2622911392405063,
+    "prompt_per_second": 792.2102666439365,
+    "predicted_n": 152,
+    "predicted_ms": 6777.871,
+    "predicted_per_token_ms": 44.886562913907284,
+    "predicted_per_second": 22.27838210553137
+  }
+}

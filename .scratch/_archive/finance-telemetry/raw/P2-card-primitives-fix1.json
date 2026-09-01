@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport React from 'react';\nimport Skeleton from './Skeleton';\n\ninterface CardProps {\n  title: string;\n  children: React.ReactNode;\n  action?: React.ReactNode;\n}\n\nconst Card: React.FC<CardProps> = ({ title, children, action }) => {\n  return (\n    <div className=\"card\">\n      <div className=\"card-header\">\n        <div className=\"card-title\">{title}</div>\n        {action && <div className=\"card-action\">{action}</div>}\n      </div>\n      <div className=\"card-content\">\n        {children}\n      </div>\n    </div>\n  );\n};\n\nexport { Card };\n```"
+      }
+    }
+  ],
+  "created": 1788014417,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 133,
+    "prompt_tokens": 3614,
+    "total_tokens": 3747,
+    "prompt_tokens_details": {
+      "cached_tokens": 3432
+    }
+  },
+  "id": "chatcmpl-pSazfwjSAnEsIDrUunOSSGTkOYz3Nsaw",
+  "timings": {
+    "cache_n": 3432,
+    "prompt_n": 182,
+    "prompt_ms": 448.852,
+    "prompt_per_token_ms": 2.46621978021978,
+    "prompt_per_second": 405.4788660850347,
+    "predicted_n": 133,
+    "predicted_ms": 5447.444,
+    "predicted_per_token_ms": 41.26851515151515,
+    "predicted_per_second": 24.231547859877033
+  }
+}

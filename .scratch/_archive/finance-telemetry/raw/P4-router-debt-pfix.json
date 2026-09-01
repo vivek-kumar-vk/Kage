@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import APIRouter, Depends, HTTPException, Path\nfrom fastapi.responses import JSONResponse\nfrom services.db import connect\nfrom services.calculations.debt import total_outstanding, highest_interest, next_emi, AvalancheCalculator, SnowballCalculator, Simulator\nfrom services.agents.debt_specialist import DebtSpecialist\nfrom startup import PassthroughAuth\nfrom typing import Optional\n\nrouter = APIRouter(prefix=\"/api/finance/debt\")\n\n@router.get(\"/overview\")\nasync def debt_overview():\n    conn = connect()\n    try:\n        total = total_outstanding(conn)\n        highest = highest_interest(conn)\n        next_emi_date = next_emi(conn)\n        return {\"total_outstanding\": total, \"highest_interest_rate\": highest, \"next_emi_date\": next_emi_date}\n    finally:\n        conn.close()\n\n@router.get(\"/table\")\nasync def debt_table():\n    conn = connect()\n    try:\n        # Fetch debt table data from the database\n        # This is a placeholder for actual database query\n        return {\"debt_table\": []}\n    finally:\n        conn.close()\n\n@router.get(\"/table/{id}\")\nasync def debt_table_item(id: int):\n    conn = connect()\n    try:\n        # Fetch specific debt item from the database\n        # This is a placeholder for actual database query\n        return {\"debt_item\": {}}\n    finally:\n        conn.close()\n\n@router.put(\"/table/{id}\")\nasync def update_debt_table_item(id: int, data: dict):\n    conn = connect()\n    try:\n        # Update specific debt item in the database\n        # This is a placeholder for actual database query\n        return {\"updated\": True}\n    finally:\n        conn.close()\n\n@router.delete(\"/table/{id}\")\nasync def delete_debt_table_item(id: int):\n    conn = connect()\n    try:\n        # Delete specific debt item from the database\n        # This is a placeholder for actual database query\n        return {\"deleted\": True}\n    finally:\n        conn.close()\n\n@router.post(\"/table/{id}/archive\")\nasync def archive_debt_table_item(id: int):\n    conn = connect()\n    try:\n        # Archive specific debt item in the database\n        # This is a placeholder for actual database query\n        return {\"archived\": True}\n    finally:\n        conn.close()\n\n@router.get(\"/payoff-plan\")\nasync def debt_payoff_plan():\n    conn = connect()\n    try:\n        # Fetch debt payoff plan from the database\n        # This is a placeholder for actual database query\n        return {\"payoff_plan\": []}\n    finally:\n        conn.close()\n\n@router.post(\"/simulate\")\nasync def simulate_debt_payment(extra_payment: int, salary_increase: Optional[int] = None, bonus: Optional[int] = None):\n    conn = connect()\n    try:\n        simulator = Simulator()\n        result = simulator.simulate(extra_payment, salary_increase, bonus)\n        return result\n    finally:\n        conn.close()\n\n@router.get(\"/learning/{topic}\")\nasync def debt_learning(topic: str):\n    conn = connect()\n    try:\n        # Fetch debt learning content from the database\n        # This is a placeholder for actual database query\n        return {\"learning_content\": {}}\n    finally:\n        conn.close()\n```"
+      }
+    }
+  ],
+  "created": 1788017649,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 681,
+    "prompt_tokens": 4303,
+    "total_tokens": 4984,
+    "prompt_tokens_details": {
+      "cached_tokens": 4297
+    }
+  },
+  "id": "chatcmpl-6Ny6ocPFQ8NQ34WtF63HVq4MALtBQeBa",
+  "timings": {
+    "cache_n": 4297,
+    "prompt_n": 6,
+    "prompt_ms": 150.718,
+    "prompt_per_token_ms": 25.119666666666664,
+    "prompt_per_second": 39.80944545442482,
+    "predicted_n": 681,
+    "predicted_ms": 28236.406,
+    "predicted_per_token_ms": 41.524126470588236,
+    "predicted_per_second": 24.082384989081117
+  }
+}

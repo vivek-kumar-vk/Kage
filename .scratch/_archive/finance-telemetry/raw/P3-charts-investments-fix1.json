@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useFinanceData } from \"@/components/finance/useFinanceData\";\nimport { motion } from \"framer-motion\";\nimport { useEffect, useState } from \"react\";\nimport { useReducedMotion } from \"@/components/finance/useFinanceData\";\n\nconst AllocationDonut = ({ data }: { data: number[] }) => {\n  const [path, setPath] = useState<string | null>(null);\n  const isReducedMotion = useReducedMotion();\n\n  useEffect(() => {\n    if (data.length === 0) return;\n    const min = Math.min(...data);\n    const max = Math.max(...data);\n    const pathData = data.map((value, index) => {\n      const angle = ((value - min) / (max - min)) * 360;\n      return `M 50 50 L 50 50 A 50 50 0 ${angle > 180 ? 1 : 0} 1 ${50 + 50 * Math.cos((angle * Math.PI) / 180)} ${50 + 50 * Math.sin((angle * Math.PI) / 180)}`;\n    }).join(\" \");\n    setPath(pathData);\n  }, [data]);\n\n  return (\n    <motion.div\n      className=\"relative w-40 h-40\"\n      initial={{ rotate: 0 }}\n      animate={{ rotate: isReducedMotion ? 0 : 360 }}\n      transition={{ duration: 2, repeat: Infinity }}\n    >\n      <svg className=\"w-full h-full\" viewBox=\"0 0 100 100\">\n        <path d=\"M 50 50 L 50 50 A 50 50 0 0 1 50 50\" fill=\"white\" />\n        {path && <path d={path} fill=\"blue\" />}\n      </svg>\n    </motion.div>\n  );\n};\n\nconst RollingReturnsLine = ({ data }: { data: number[] }) => {\n  const [path, setPath] = useState<string | null>(null);\n  const isReducedMotion = useReducedMotion();\n\n  useEffect(() => {\n    if (data.length === 0) return;\n    const min = Math.min(...data);\n    const max = Math.max(...data);\n    const pathData = data.map((value, index) => {\n      const x = (index / (data.length - 1)) * 100;\n      const y = ((value - min) / (max - min)) * 100;\n      return `M ${x} ${y}`;\n    }).join(\" \");\n    setPath(pathData);\n  }, [data]);\n\n  return (\n    <motion.div\n      className=\"relative w-full h-40\"\n      initial={{ x: 0 }}\n      animate={{ x: isReducedMotion ? 0 : -100 }}\n      transition={{ duration: 2, repeat: Infinity }}\n    >\n      <svg className=\"w-full h-full\" viewBox=\"0 0 100 100\">\n        <path d=\"M 0 50 L 100 50\" stroke=\"gray\" />\n        {path && <path d={path} stroke=\"blue\" fill=\"none\" />}\n      </svg>\n    </motion.div>\n  );\n};\n\nconst DrawdownArea = ({ data }: { data: number[] }) => {\n  const [path, setPath] = useState<string | null>(null);\n  const isReducedMotion = useReducedMotion();\n\n  useEffect(() => {\n    if (data.length === 0) return;\n    const min = Math.min(...data);\n    const max = Math.max(...data);\n    const pathData = data.map((value, index) => {\n      const x = (index / (data.length - 1)) * 100;\n      const y = ((value - min) / (max - min)) * 100;\n      return `M ${x} ${y}`;\n    }).join(\" \");\n    setPath(pathData);\n  }, [data]);\n\n  return (\n    <motion.div\n      className=\"relative w-full h-40\"\n      initial={{ y: 0 }}\n      animate={{ y: isReducedMotion ? 0 : -100 }}\n      transition={{ duration: 2, repeat: Infinity }}\n    >\n      <svg className=\"w-full h-full\" viewBox=\"0 0 100 100\">\n        <path d=\"M 50 100 L 50 0\" stroke=\"gray\" />\n        {path && <path d={path} stroke=\"blue\" fill=\"none\" />}\n      </svg>\n    </motion.div>\n  );\n};\n\nconst ConcentrationBar = ({ data }: { data: number[] }) => {\n  const [path, setPath] = useState<string | null>(null);\n  const isReducedMotion = useReducedMotion();\n\n  useEffect(() => {\n    if (data.length === 0) return;\n    const min = Math.min(...data);\n    const max = Math.max(...data);\n    const pathData = data.map((value, index) => {\n      const x = (index / (data.length - 1)) * 100;\n      const y = ((value - min) / (max - min)) * 100;\n      return `M ${x} ${y}`;\n    }).join(\" \");\n    setPath(pathData);\n  }, [data]);\n\n  return (\n    <motion.div\n      className=\"relative w-full h-40\"\n      initial={{ width: 0 }}\n      animate={{ width: isReducedMotion ? 0 : 100 }}\n      transition={{ duration: 2, repeat: Infinity }}\n    >\n      <svg className=\"w-full h-full\" viewBox=\"0 0 100 100\">\n        <path d=\"M 0 50 L 100 50\" stroke=\"gray\" />\n        {path && <path d={path} stroke=\"blue\" fill=\"none\" />}\n      </svg>\n    </motion.div>\n  );\n};\n\nconst TreemapGrid = ({ data }: { data: number[] }) => {\n  const [path, setPath] = useState<string | null>(null);\n  const isReducedMotion = useReducedMotion();\n\n  useEffect(() => {\n    if (data.length === 0) return;\n    const min = Math.min(...data);\n    const max = Math.max(...data);\n    const pathData = data.map((value, index) => {\n      const x = (index / (data.length - 1)) * 100;\n      const y = ((value - min) / (max - min)) * 100;\n      return `M ${x} ${y}`;\n    }).join(\" \");\n    setPath(pathData);\n  }, [data]);\n\n  return (\n    <motion.div\n      className=\"relative w-full h-40\"\n      initial={{ opacity: 0 }}\n      animate={{ opacity: isReducedMotion ? 0 : 1 }}\n      transition={{ duration: 2, repeat: Infinity }}\n    >\n      <svg className=\"w-full h-full\" viewBox=\"0 0 100 100\">\n        <path d=\"M 50 50 L 50 50 A 50 50 0 0 1 50 50\" fill=\"white\" />\n        {path && <path d={path} fill=\"blue\" />}\n      </svg>\n    </motion.div>\n  );\n};\n\nexport { AllocationDonut, RollingReturnsLine, DrawdownArea, ConcentrationBar, TreemapGrid };\n```"
+      }
+    }
+  ],
+  "created": 1788016779,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 1658,
+    "prompt_tokens": 5246,
+    "total_tokens": 6904,
+    "prompt_tokens_details": {
+      "cached_tokens": 4937
+    }
+  },
+  "id": "chatcmpl-16YVxp2jFO24TjmO1UzAUlhjXgzUem2K",
+  "timings": {
+    "cache_n": 4937,
+    "prompt_n": 309,
+    "prompt_ms": 926.564,
+    "prompt_per_token_ms": 2.998588996763754,
+    "prompt_per_second": 333.490185243545,
+    "predicted_n": 1658,
+    "predicted_ms": 190699.858,
+    "predicted_per_token_ms": 115.08742184671092,
+    "predicted_per_second": 8.68904684763845
+  }
+}

@@ -1,0 +1,31 @@
+Fill in the two function bodies in this TypeScript file. Keep the exact
+signatures and the doc comments. No imports, no dependencies.
+
+FILE: app/lib/formatINR.ts
+
+```ts
+/** Rupee formatting for the Finance telemetry panels — Indian digit
+    grouping, with a compact lakh form for tight readouts. */
+
+export function formatINR(n: number): string {
+  // Round to integer. Format the ABSOLUTE value with Indian grouping via
+  //   Math.round(Math.abs(n)).toLocaleString("en-IN", { maximumFractionDigits: 0 })
+  // Prefix "₹". If n < 0, put "-" before the "₹".
+  // formatINR(150000)  === "₹1,50,000"
+  // formatINR(87500)   === "₹87,500"
+  // formatINR(-1700)   === "-₹1,700"
+  // TODO
+}
+
+export function formatINRCompact(n: number): string {
+  // For Math.abs(n) < 1000  -> return formatINR(n)
+  // Otherwise divide by 100000 and format as lakhs with ONE decimal, sign preserved:
+  //   formatINRCompact(150000)  === "₹1.5L"
+  //   formatINRCompact(240000)  === "₹2.4L"
+  //   formatINRCompact(2400000) === "₹24.0L"
+  //   formatINRCompact(-80000)  === "-₹0.8L"
+  // TODO
+}
+```
+
+Return ONLY the completed file inside one ```ts code block. No explanation.

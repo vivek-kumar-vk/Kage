@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { useState, useEffect } from \"react\";\nimport { useSubmit } from \"@/components/finance/FormModal\";\nimport { useFinanceData } from \"@/lib/api\";\nimport { Card, Skeleton } from \"@/components/finance\";\nimport { Empty } from \"@/components/finance/Skeleton\";\n\nconst InvestmentsPage = () => {\n  const [data, setData] = useState(null);\n  const [error, setError] = useState(null);\n  const [loading, setLoading] = useState(true);\n\n  const submit = useSubmit();\n\n  useEffect(() => {\n    const fetchData = async () => {\n      try {\n        const response = await useFinanceData(\"/finance/investments\");\n        if (response.state === \"ok\") {\n          setData(response.data);\n        } else {\n          setError(response.error);\n        }\n      } catch (err) {\n        setError(err.message);\n      } finally {\n        setLoading(false);\n      }\n    };\n\n    fetchData();\n  }, []);\n\n  if (loading) return <Skeleton />;\n  if (error) return <Empty message={error} />;\n\n  return (\n    <div className=\"flex flex-col gap-4\">\n      <Card title=\"Holdings\">\n        <table>\n          <thead>\n            <tr>\n              <th>Asset</th>\n              <th>Units</th>\n              <th>Price</th>\n              <th>Actions</th>\n            </tr>\n          </thead>\n          <tbody>\n            {data.holdings.map((holding) => (\n              <tr key={holding.id}>\n                <td>{holding.asset}</td>\n                <td>{holding.units}</td>\n                <td>{holding.price}</td>\n                <td>\n                  <button onClick={() => submit(`/finance/investments/${holding.id}`, { method: \"PUT\" })}>Edit</button>\n                  <button onClick={() => submit(`/finance/investments/${holding.id}/archive`, { method: \"PUT\" })}>Archive</button>\n                  {holding.lots_count === 0 && <button onClick={() => submit(`/finance/investments/${holding.id}`, { method: \"DELETE\" })}>Delete</button>}\n                </td>\n              </tr>\n            ))}\n          </tbody>\n        </table>\n      </Card>\n      <Card title=\"Quality\">\n        {/* Quality panel content */}\n      </Card>\n      <Card title=\"Research\">\n        {/* Research drawer content */}\n      </Card>\n      <Card title=\"Visuals\">\n        {/* Visuals content */}\n      </Card>\n    </div>\n  );\n};\n\nexport default InvestmentsPage;\n```"
+      }
+    }
+  ],
+  "created": 1788015427,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 533,
+    "prompt_tokens": 2976,
+    "total_tokens": 3509,
+    "prompt_tokens_details": {
+      "cached_tokens": 1801
+    }
+  },
+  "id": "chatcmpl-B3YcNLQWPw7iaWOBc7VZ0mi0RyUr1nkf",
+  "timings": {
+    "cache_n": 1801,
+    "prompt_n": 1175,
+    "prompt_ms": 1226.204,
+    "prompt_per_token_ms": 1.0435778723404254,
+    "prompt_per_second": 958.2418586140642,
+    "predicted_n": 533,
+    "predicted_ms": 22154.415,
+    "predicted_per_token_ms": 41.643637218045114,
+    "predicted_per_second": 24.013272298094982
+  }
+}

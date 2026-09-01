@@ -1,0 +1,1 @@
+Turns source material - a file dropped in Dump/ or a freely-reachable web page - into a knowledge-base note that carries its source, and proposes what to study next from the Learning screen's own recall scores. Proposals land as files on disk, never as chat.

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import FastAPI, Depends, HTTPException, Request\nfrom fastapi.responses import HTMLResponse, FileResponse\nfrom fastapi.staticfiles import StaticFiles\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom services.db import connect\nfrom startup import PassthroughAuth\nfrom routers import overview, accounts, imports, entities, investments, debt, tracker, learning\n\napp = FastAPI()\n\n# Middleware for CORS\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\n# Middleware for handling state\nclass StateMiddleware(BaseHTTPMiddleware):\n    async def dispatch(self, request: Request, call_next):\n        request.state.db = await connect()\n        response = await call_next(request)\n        request.state.db.close()\n        return response\n\napp.add_middleware(StateMiddleware)\n\n# Mount static files\nif \"static\" in app.mounts:\n    app.mount(\"/\", StaticFiles(directory=\"static\", html=True), name=\"static\")\n\n# Catch-all route for deep links\n@app.get(\"/{full_path:path}\", response_class=HTMLResponse)\nasync def catch_all(request: Request, full_path: str):\n    file_path = f\"static/{full_path}.html\"\n    if request.method == \"HEAD\":\n        return FileResponse(file_path, status_code=200)\n    try:\n        return FileResponse(file_path)\n    except FileNotFoundError:\n        file_path = f\"static/{full_path}/index.html\"\n        try:\n            return FileResponse(file_path)\n        except FileNotFoundError:\n            return FileResponse(\"static/index.html\")\n\n# Health check\n@app.get(\"/api/finance/health\")\nasync def health_check():\n    return {\"status\": \"ok\"}\n\n# Routers\napp.include_router(overview.router, prefix=\"/api/finance\")\napp.include_router(accounts.router, prefix=\"/api/finance\")\napp.include_router(imports.router, prefix=\"/api/finance\")\napp.include_router(entities.router, prefix=\"/api/finance\")\napp.include_router(investments.router, prefix=\"/api/finance\")\napp.include_router(debt.router, prefix=\"/api/finance\")\napp.include_router(tracker.router, prefix=\"/api/finance\")\napp.include_router(learning.router, prefix=\"/api/finance\")\n```"
+      }
+    }
+  ],
+  "created": 1788023176,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 480,
+    "prompt_tokens": 5162,
+    "total_tokens": 5642,
+    "prompt_tokens_details": {
+      "cached_tokens": 5090
+    }
+  },
+  "id": "chatcmpl-HEiLC9bSgBnjJzTgWUZyWRrvbi0G4Q6J",
+  "timings": {
+    "cache_n": 5090,
+    "prompt_n": 72,
+    "prompt_ms": 109.431,
+    "prompt_per_token_ms": 1.5198749999999999,
+    "prompt_per_second": 657.9488444773419,
+    "predicted_n": 480,
+    "predicted_ms": 20815.415,
+    "predicted_per_token_ms": 43.45598121085595,
+    "predicted_per_second": 23.01179198204792
+  }
+}

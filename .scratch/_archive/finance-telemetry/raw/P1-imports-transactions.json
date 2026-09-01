@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom services.db import connect\nfrom services.agents.supervisor import sanitize_for_cloud_llm\n\ndef dedupe_transaction(account_id, date, amount, description):\n    normalized_key = f\"{date}_{amount}_{description}\"\n    with connect() as conn:\n        cursor = conn.cursor()\n        cursor.execute(\"SELECT id FROM transactions WHERE account_id = ? AND normalized_key = ?\", (account_id, normalized_key))\n        existing_transaction = cursor.fetchone()\n        if existing_transaction:\n            return False\n        cursor.execute(\"INSERT INTO transactions (account_id, date, amount, description, normalized_key) VALUES (?, ?, ?, ?, ?)\", (account_id, date, amount, description, normalized_key))\n        conn.commit()\n    return True\n\ndef parse_upi_csv(file_bytes):\n    # Implement CSV parsing logic here\n    pass\n\ndef parse_sms(text):\n    # Implement SMS parsing logic here\n    pass\n```"
+      }
+    }
+  ],
+  "created": 1788006538,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 186,
+    "prompt_tokens": 3540,
+    "total_tokens": 3726,
+    "prompt_tokens_details": {
+      "cached_tokens": 3454
+    }
+  },
+  "id": "chatcmpl-Uo9kQAN2xSL5JP8H44tMNtDGQ9HC8osl",
+  "timings": {
+    "cache_n": 3454,
+    "prompt_n": 86,
+    "prompt_ms": 377.884,
+    "prompt_per_token_ms": 4.394,
+    "prompt_per_second": 227.5830678197542,
+    "predicted_n": 186,
+    "predicted_ms": 7438.272,
+    "predicted_per_token_ms": 40.206875675675676,
+    "predicted_per_second": 24.871367973636886
+  }
+}

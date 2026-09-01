@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport { useEffect, useState } from 'react';\nimport { useRouter } from 'next/navigation';\nimport NetWorthCard from '../components/finance/cards/NetWorthCard';\nimport CashflowCard from '../components/finance/cards/CashflowCard';\nimport PortfolioPulseCard from '../components/finance/cards/PortfolioPulseCard';\nimport EmergencyFundCard from '../components/finance/cards/EmergencyFundCard';\nimport DebtStatusCard from '../components/finance/cards/DebtStatusCard';\nimport SurplusAllocationCard from '../components/finance/cards/SurplusAllocationCard';\nimport GoalsCard from '../components/finance/cards/GoalsCard';\nimport TopActionsCard from '../components/finance/cards/TopActionsCard';\nimport DataHealthCard from '../components/finance/cards/DataHealthCard';\n\nconst FinancePage = () => {\n  const router = useRouter();\n  const [isLoading, setIsLoading] = useState(true);\n  const [error, setError] = useState<Error | null>(null);\n\n  useEffect(() => {\n    const fetchData = async () => {\n      try {\n        // Fetch data for each card\n        // Example: const netWorthData = await fetchFinanceData('/api/overview/net-worth');\n        // Example: const cashflowData = await fetchFinanceData('/api/overview/cashflow');\n        // Example: const portfolioPulseData = await fetchFinanceData('/api/overview/portfolio-pulse');\n        // Example: const emergencyFundData = await fetchFinanceData('/api/overview/emergency-fund');\n        // Example: const debtStatusData = await fetchFinanceData('/api/overview/debt-status');\n        // Example: const surplusAllocationData = await fetchFinanceData('/api/overview/surplus-allocation');\n        // Example: const goalsData = await fetchFinanceData('/api/overview/goals');\n        // Example: const topActionsData = await fetchFinanceData('/api/overview/top-actions');\n        // Example: const dataHealthData = await fetchFinanceData('/api/overview/data-health');\n\n        // Update state with fetched data\n        // Example: setNetWorthData(netWorthData);\n        // Example: setCashflowData(cashflowData);\n        // Example: setPortfolioPulseData(portfolioPulseData);\n        // Example: setEmergencyFundData(emergencyFundData);\n        // Example: setDebtStatusData(debtStatusData);\n        // Example: setSurplusAllocationData(surplusAllocationData);\n        // Example: setGoalsData(goalsData);\n        // Example: setTopActionsData(topActionsData);\n        // Example: setDataHealthData(dataHealthData);\n\n        setIsLoading(false);\n      } catch (err) {\n        setError(err as Error);\n        setIsLoading(false);\n      }\n    };\n\n    fetchData();\n  }, []);\n\n  if (isLoading) return <div>Loading...</div>;\n  if (error) return <div>Error: {error.message}</div>;\n\n  return (\n    <div className=\"grid grid-cols-6 gap-4\">\n      <NetWorthCard />\n      <CashflowCard />\n      <PortfolioPulseCard />\n      <EmergencyFundCard />\n      <DebtStatusCard />\n      <SurplusAllocationCard />\n      <GoalsCard />\n      <TopActionsCard />\n      <DataHealthCard />\n    </div>\n  );\n};\n\nexport default FinancePage;\n```"
+      }
+    }
+  ],
+  "created": 1788012788,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 692,
+    "prompt_tokens": 3116,
+    "total_tokens": 3808,
+    "prompt_tokens_details": {
+      "cached_tokens": 3063
+    }
+  },
+  "id": "chatcmpl-A7mcxhvLgMYCKndMCaMzwjHWs1DF9Hbu",
+  "timings": {
+    "cache_n": 3063,
+    "prompt_n": 53,
+    "prompt_ms": 316.176,
+    "prompt_per_token_ms": 5.965584905660377,
+    "prompt_per_second": 167.6281564698143,
+    "predicted_n": 692,
+    "predicted_ms": 27493.356,
+    "predicted_per_token_ms": 39.78778002894356,
+    "predicted_per_second": 25.133344943411053
+  }
+}

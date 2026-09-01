@@ -1,0 +1,72 @@
+{
+  "topics": [
+    {
+      "name": "Learn Docker networking",
+      "stack_area": "core",
+      "track": "A",
+      "status": "learning",
+      "position": 1,
+      "progress": 0.2,
+      "target_date": "@today",
+      "source_doc": null,
+      "group": "core"
+    },
+    {
+      "name": "Kubernetes probes",
+      "stack_area": "drip",
+      "track": "A",
+      "status": "todo",
+      "position": 2,
+      "progress": 0.0,
+      "target_date": null,
+      "source_doc": null,
+      "group": "drip"
+    }
+  ],
+  "week_plans": [
+    {
+      "week_start": "@today",
+      "focus_a": "Docker networking basics",
+      "focus_b": "Kubernetes probe types",
+      "note": "Keep sessions short and concrete."
+    }
+  ],
+  "cards": [
+    {
+      "topic_index": 1,
+      "front": "What is the default Docker network driver?",
+      "part1": "bridge",
+      "part2": "host",
+      "part3": "none",
+      "part4": "overlay",
+      "part5": "macvlan",
+      "tag": "core",
+      "tether": "docker-net"
+    },
+    {
+      "topic_index": 2,
+      "front": "What is a Kubernetes readiness probe for?",
+      "part1": "Traffic gating",
+      "part2": "Dependency checks",
+      "part3": "Not restarts",
+      "part4": "Different from liveness",
+      "part5": "Use HTTP/TCP/exec",
+      "tag": "drip",
+      "tether": "k8s-probes"
+    }
+  ],
+  "reviews": [
+    {
+      "card_index": 1,
+      "due_date": "@today",
+      "ease": 2.5,
+      "status": "active"
+    },
+    {
+      "card_index": 2,
+      "due_date": "@today",
+      "ease": 2.5,
+      "status": "active"
+    }
+  ]
+}

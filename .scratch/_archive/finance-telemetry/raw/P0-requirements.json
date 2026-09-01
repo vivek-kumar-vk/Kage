@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```plaintext\nfastapi==0.100.0\nuvicorn[standard]==0.20.0\npydantic==2.4.2\npython-multipart==0.0.6\npython-dateutil==2.8.2\nyfinance==0.26.0\nmftool==0.1.0\ntenacity==8.2.2\nsentence-transformers==2.2.2\nfaiss-cpu==1.7.2\npdfplumber==0.11.3\npytest==7.4.0\nruff==2.0.0\n```"
+      }
+    }
+  ],
+  "created": 1788005701,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 136,
+    "prompt_tokens": 4541,
+    "total_tokens": 4677,
+    "prompt_tokens_details": {
+      "cached_tokens": 4460
+    }
+  },
+  "id": "chatcmpl-OKKx3ZdyWlAzgykHZAAr69JsmRLB7hfx",
+  "timings": {
+    "cache_n": 4460,
+    "prompt_n": 81,
+    "prompt_ms": 173.918,
+    "prompt_per_token_ms": 2.147135802469136,
+    "prompt_per_second": 465.7367265032946,
+    "predicted_n": 136,
+    "predicted_ms": 5447.105,
+    "predicted_per_token_ms": 40.348925925925926,
+    "predicted_per_second": 24.78380717830848
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom services.calculations.debt import AvalancheCalculator, SnowballCalculator, Simulator\nfrom typing import Dict\n\nclass DebtSpecialist:\n    def __init__(self, llm_client):\n        self.llm_client = llm_client\n        self.calculators = {\n            'avalanche': AvalancheCalculator(),\n            'snowball': SnowballCalculator()\n        }\n\n    def get_action_reason_learn(self, debt_data: Dict) -> Dict:\n        total_outstanding = sum(debt['outstanding'] for debt in debt_data)\n        highest_interest = max(debt['interest_rate'] for debt in debt_data)\n        next_emi = min(debt['next_emi'] for debt in debt_data)\n\n        if total_outstanding == 0:\n            action = 'No debt to pay off'\n            reason = 'All debts are already paid off.'\n            learn = 'Congratulations! You have no debt to manage.'\n        elif highest_interest > 0:\n            action = 'Avalanche Method'\n            reason = 'High-interest debt should be paid off first.'\n            learn = 'The Avalanche Method targets debts with the highest interest rates first.'\n        else:\n            action = 'Snowball Method'\n            reason = 'Low-interest debt should be paid off first.'\n            learn = 'The Snowball Method targets debts with the smallest balances first.'\n\n        return {\n            'action': action,\n            'reason': reason,\n            'learn': self.llm_client.generate_text(action, reason, learn)\n        }\n```"
+      }
+    }
+  ],
+  "created": 1788017284,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 311,
+    "prompt_tokens": 3498,
+    "total_tokens": 3809,
+    "prompt_tokens_details": {
+      "cached_tokens": 3422
+    }
+  },
+  "id": "chatcmpl-7yZwrfkeayKvotcdc6MPJYXyySRHxyO0",
+  "timings": {
+    "cache_n": 3422,
+    "prompt_n": 76,
+    "prompt_ms": 397.564,
+    "prompt_per_token_ms": 5.231105263157895,
+    "prompt_per_second": 191.16418991659205,
+    "predicted_n": 311,
+    "predicted_ms": 12576.441,
+    "predicted_per_token_ms": 40.569164516129035,
+    "predicted_per_second": 24.649262855842917
+  }
+}

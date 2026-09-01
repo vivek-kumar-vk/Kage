@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```jsx\n\"use client\";\n\nimport React from \"react\";\n\nconst ThemeLabStage = () => {\n  return (\n    <div className=\"flex flex-col max-w-920px mx-auto p-32 gap-20 relative z-1\">\n      <nav className=\"flex flex-col gap-10\">\n        <div className=\"text-tl-text border-l-2 border-tl-accent bg-tl-surface p-4\">\n          Overview\n        </div>\n        <div className=\"text-tl-text-dim p-4\">Investments</div>\n        <div className=\"text-tl-text-dim p-4\">Debt</div>\n        <div className=\"text-tl-text-dim p-4\">Portfolio</div>\n      </nav>\n      <div className=\"flex flex-col gap-20\">\n        <div className=\"bg-tl-surface border-tl-line border rounded-14 p-20\">\n          <div className=\"text-tl-text-dim mb-4\">TOTAL BALANCE</div>\n          <div className=\"flex items-center justify-between\">\n            <div className=\"text-tl-text text-3xl font-bold\">\u20b91,50,000</div>\n            <div className=\"text-tl-accent-2 text-sm\">+4.2%</div>\n          </div>\n          <svg viewBox=\"0 0 240 60\" className=\"w-full\">\n            <path\n              d=\"M0 54L20 48L40 54L60 42L80 54L100 48L120 54L140 42L160 54L180 48L200 54L220 42L240 54\"\n              stroke=\"var(--tl-accent)\"\n              strokeWidth=\"2\"\n              fill=\"none\"\n            />\n            <path\n              d=\"M0 54L20 48L40 54L60 42L80 54L100 48L120 54L140 42L160 54L180 48L200 54L220 42L240 54\"\n              fill=\"var(--tl-accent)\"\n              fillOpacity=\"0.15\"\n            />\n          </svg>\n        </div>\n        <div className=\"bg-tl-surface border-tl-line border rounded-14 p-20\">\n          <div className=\"text-tl-text-dim mb-4\">SAVINGS RATE</div>\n          <div className=\"relative h-10 rounded-full bg-tl-bg-2\">\n            <div\n              className=\"absolute top-0 left-0 h-full w-68 bg-tl-accent rounded-full\"\n              style={{ boxShadow: \"0 0 12px var(--tl-glow)\" }}\n            />\n          </div>\n          <div className=\"text-tl-text-dim mt-4\">68% of income kept</div>\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default ThemeLabStage;\n```"
+      }
+    }
+  ],
+  "created": 1787942265,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 708,
+    "prompt_tokens": 843,
+    "total_tokens": 1551,
+    "prompt_tokens_details": {
+      "cached_tokens": 24
+    }
+  },
+  "id": "chatcmpl-Q2HkbR6DWQCIQQazqZKwFdeJjGVCJbcA",
+  "timings": {
+    "cache_n": 24,
+    "prompt_n": 819,
+    "prompt_ms": 1146.861,
+    "prompt_per_token_ms": 1.4003186813186814,
+    "prompt_per_second": 714.123158778614,
+    "predicted_n": 708,
+    "predicted_ms": 47913.108,
+    "predicted_per_token_ms": 67.76960113154172,
+    "predicted_per_second": 14.755878495713532
+  }
+}

@@ -1,0 +1,1 @@
+Leads the agent deck and keeps the ideas board: captures ideas, files them into columns, holds the comment thread for each. Runs locally; wiring to a model comes later.

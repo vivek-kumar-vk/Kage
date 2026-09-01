@@ -1,0 +1,33 @@
+{
+  "name": "finance-frontend",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^15",
+    "react": "^19",
+    "react-dom": "^19",
+    "@react-three/fiber": "^9",
+    "@react-three/drei": "^10",
+    "three": "^0.170",
+    "tailwindcss": "^3.4",
+    "postcss": "^8.4",
+    "autoprefixer": "^10.4",
+    "lucide-react": "^0.400",
+    "class-variance-authority": "^0.7",
+    "clsx": "^2",
+    "tailwind-merge": "^2"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/node": "^20",
+    "@types/three": "^0.170",
+    "eslint": "^9",
+    "eslint-config-next": "^15"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import FastAPI, UploadFile\nfrom fastapi.responses import JSONResponse\nfrom fastapi.staticfiles import StaticFiles\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom services.db import connect\nfrom services.agents.supervisor import Supervisor\nfrom services.agents.cas_specialist import CASSpecialist\nfrom services.agents.groww_specialist import GrowwSpecialist\nfrom services.agents.transactions_specialist import TransactionsSpecialist\n\napp = FastAPI()\n\n# Middleware\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\n# Static files\napp.mount(\"/static\", StaticFiles(directory=\"static\"), name=\"static\")\n\n# Supervisor\nsupervisor = Supervisor()\n\n# CAS Specialist\ncas_specialist = CASSpecialist(supervisor.llm_client)\n\n# Groww Specialist\ngroww_specialist = GrowwSpecialist(supervisor.llm_client)\n\n# Transactions Specialist\ntransactions_specialist = TransactionsSpecialist(supervisor.llm_client)\n\n# Endpoints\n@app.post(\"/import/cas\")\nasync def import_cas(file: UploadFile):\n    # Implement CAS import logic here\n    pass\n\n@app.post(\"/import/groww-csv\")\nasync def import_groww_csv(file: UploadFile):\n    # Implement Groww CSV import logic here\n    pass\n\n@app.post(\"/import/upi-csv\")\nasync def import_upi_csv(file: UploadFile):\n    # Implement UPI CSV import logic here\n    pass\n\n@app.post(\"/import/manual\")\nasync def import_manual(entity: str, **fields):\n    # Implement manual entry logic here\n    pass\n\n@app.get(\"/accounts\")\nasync def get_accounts(include_archived: bool = False):\n    # Implement accounts list logic here\n    pass\n\n@app.get(\"/goals\")\nasync def get_goals(include_archived: bool = False):\n    # Implement goals list logic here\n    pass\n\n@app.get(\"/insurance\")\nasync def get_insurance(include_archived: bool = False):\n    # Implement insurance list logic here\n    pass\n\n@app.get(\"/salary\")\nasync def get_salary(include_archived: bool = False):\n    # Implement salary list logic here\n    pass\n\n@app.get(\"/holdings\")\nasync def get_holdings(include_archived: bool = False):\n    # Implement holdings list logic here\n    pass\n\n@app.get(\"/debts\")\nasync def get_debts(include_archived: bool = False):\n    # Implement debts list logic here\n    pass\n\n@app.post(\"/transactions\")\nasync def create_transaction(account_id: int, date: str, amount: float, description: str):\n    # Implement transaction creation logic here\n    pass\n\n@app.get(\"/transactions\")\nasync def get_transactions(include_archived: bool = False):\n    # Implement transactions list logic here\n    pass\n\n@app.put(\"/transactions/{transaction_id}\")\nasync def update_transaction(transaction_id: int, account_id: int, date: str, amount: float, description: str):\n    # Implement transaction update logic here\n    pass\n\n@app.delete(\"/transactions/{transaction_id}\")\nasync def delete_transaction(transaction_id: int):\n    # Implement transaction deletion logic here\n    pass\n```"
+      }
+    }
+  ],
+  "created": 1788007094,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 675,
+    "prompt_tokens": 3802,
+    "total_tokens": 4477,
+    "prompt_tokens_details": {
+      "cached_tokens": 3548
+    }
+  },
+  "id": "chatcmpl-driPEo9wWu5hiMQOV1HESebUpJDumEmt",
+  "timings": {
+    "cache_n": 3548,
+    "prompt_n": 254,
+    "prompt_ms": 235.277,
+    "prompt_per_token_ms": 0.926287401574803,
+    "prompt_per_second": 1079.5785393387368,
+    "predicted_n": 675,
+    "predicted_ms": 28248.318,
+    "predicted_per_token_ms": 41.91145103857566,
+    "predicted_per_second": 23.85982768956368
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";\nimport { useCountUp } from \"@/app/lib/useCountUp\";\nimport { formatINR } from \"@/app/lib/formatINR\";\nimport { motion } from \"framer-motion\";\nimport { usePrefersReducedMotion } from \"@/app/lib/usePrefersReducedMotion\";\nimport { TiltCard } from \"./TiltCard\";\n\n/** Headline figure on the Finance landing tab \u2014 total balance, counting\n    up on load with a gradient fill and neon glow on glass. Seed (P8). */\nexport function TotalBalanceReadout() {\n  const reduce = usePrefersReducedMotion();\n  const shown = useCountUp(BLUEPRINT_SEED.totalBalance);\n\n  return (\n    <TiltCard className=\"spin-border\">\n      <div aria-label=\"Total balance\">\n        <p className=\"num text-[10px] tracking-[0.24em] text-dim\">TOTAL BALANCE</p>\n        <p className=\"num mt-1 text-5xl font-bold grad-text-wealth neon-glow-amber\">\n          {formatINR(Math.round(shown))}\n        </p>\n        <motion.div\n          className=\"mt-4 h-[3px] rounded\"\n          style={{ transformOrigin: \"left\", background: \"var(--grad-wealth)\" }}\n          initial={{ scaleX: reduce ? 1 : 0 }}\n          animate={{ scaleX: 1 }}\n          transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}\n        />\n      </div>\n    </TiltCard>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787935467,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 357,
+    "prompt_tokens": 445,
+    "total_tokens": 802,
+    "prompt_tokens_details": {
+      "cached_tokens": 24
+    }
+  },
+  "id": "chatcmpl-ehMECc4zs263D5oozpymQB9BqfqfxIqR",
+  "timings": {
+    "cache_n": 24,
+    "prompt_n": 421,
+    "prompt_ms": 1716.357,
+    "prompt_per_token_ms": 4.076857482185273,
+    "prompt_per_second": 245.28696535744018,
+    "predicted_n": 357,
+    "predicted_ms": 13149.316,
+    "predicted_per_token_ms": 36.936280898876404,
+    "predicted_per_second": 27.073651587656727
+  }
+}

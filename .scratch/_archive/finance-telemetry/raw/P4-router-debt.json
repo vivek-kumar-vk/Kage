@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import APIRouter, Depends, HTTPException, Path\nfrom fastapi.responses import JSONResponse\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom services.db import connect\nfrom services.calculations.debt import total_outstanding, highest_interest, next_emi, AvalancheCalculator, SnowballCalculator, Simulator\nfrom services.agents.debt_specialist import DebtSpecialist\nfrom startup import PassthroughAuth\nfrom typing import Optional\n\nrouter = APIRouter(prefix=\"/api/finance/debt\")\n\n@router.get(\"/overview\")\nasync def debt_overview():\n    conn = connect()\n    try:\n        total = total_outstanding(conn)\n        highest = highest_interest(conn)\n        next_emi_date = next_emi(conn)\n        return JSONResponse(content={\"total_outstanding\": total, \"highest_interest_rate\": highest, \"next_emi_date\": next_emi_date})\n    finally:\n        conn.close()\n\n@router.get(\"/table\")\nasync def debt_table():\n    conn = connect()\n    try:\n        # Fetch debt table data from the database\n        # This is a placeholder for actual database query\n        data = [\n            {\"id\": 1, \"description\": \"Credit Card\", \"outstanding\": 5000, \"interest_rate\": 0.05},\n            {\"id\": 2, \"description\": \"Personal Loan\", \"outstanding\": 10000, \"interest_rate\": 0.07}\n        ]\n        return JSONResponse(content=data)\n    finally:\n        conn.close()\n\n@router.get(\"/{id}\")\nasync def debt_detail(id: int):\n    conn = connect()\n    try:\n        # Fetch debt detail data from the database\n        # This is a placeholder for actual database query\n        data = {\"id\": id, \"description\": \"Credit Card\", \"outstanding\": 5000, \"interest_rate\": 0.05}\n        return JSONResponse(content=data)\n    finally:\n        conn.close()\n\n@router.put(\"/{id}\")\nasync def update_debt(id: int, description: str, outstanding: float, interest_rate: float):\n    conn = connect()\n    try:\n        # Update debt detail data in the database\n        # This is a placeholder for actual database query\n        return JSONResponse(content={\"id\": id, \"description\": description, \"outstanding\": outstanding, \"interest_rate\": interest_rate})\n    finally:\n        conn.close()\n\n@router.delete(\"/{id}\")\nasync def delete_debt(id: int):\n    conn = connect()\n    try:\n        # Delete debt detail data from the database\n        # This is a placeholder for actual database query\n        return JSONResponse(content={\"id\": id, \"message\": \"Debt deleted successfully\"})\n    finally:\n        conn.close()\n\n@router.post(\"/archive/{id}\")\nasync def archive_debt(id: int):\n    conn = connect()\n    try:\n        # Archive debt detail data in the database\n        # This is a placeholder for actual database query\n        return JSONResponse(content={\"id\": id, \"message\": \"Debt archived successfully\"})\n    finally:\n        conn.close()\n\n@router.post(\"/payoff-plan\")\nasync def debt_payoff_plan():\n    conn = connect()\n    try:\n        # Calculate debt payoff plan\n        # This is a placeholder for actual database query\n        return JSONResponse(content={\"payoff_plan\": \"Avalanche\"})\n    finally:\n        conn.close()\n\n@router.post(\"/simulate\")\nasync def simulate_debt_payment(extra_payment: float, salary_increase: Optional[float] = None, bonus: Optional[float] = None):\n    conn = connect()\n    try:\n        simulator = Simulator()\n        result = simulator.simulate(extra_payment, salary_increase, bonus)\n        return JSONResponse(content=result)\n    finally:\n        conn.close()\n\n@router.get(\"/learning/{topic}\")\nasync def debt_learning(topic: str):\n    specialist = DebtSpecialist()\n    content = specialist.get_learning_content(topic)\n    return JSONResponse(content=content)\n```"
+      }
+    }
+  ],
+  "created": 1788017221,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 824,
+    "prompt_tokens": 3527,
+    "total_tokens": 4351,
+    "prompt_tokens_details": {
+      "cached_tokens": 3422
+    }
+  },
+  "id": "chatcmpl-gsosmviy4XMKx0BWREIwRl1DDvj3eTAH",
+  "timings": {
+    "cache_n": 3422,
+    "prompt_n": 105,
+    "prompt_ms": 389.032,
+    "prompt_per_token_ms": 3.7050666666666663,
+    "prompt_per_second": 269.9006765510292,
+    "predicted_n": 824,
+    "predicted_ms": 34118.146,
+    "predicted_per_token_ms": 41.45582746051033,
+    "predicted_per_second": 24.122061028755784
+  }
+}

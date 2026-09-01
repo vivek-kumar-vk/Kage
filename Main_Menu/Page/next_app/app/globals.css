@@ -1,73 +1,110 @@
 @import "tailwindcss";
 
 /* =====================================================================
-   INKY.GG - Main Menu, "Agentic OS" redesign (2026-08-27, second pass)
-   Every colour and font comes from Look_And_Feel via /shared/
-   colours_and_fonts.css, loaded by the layout. This is an exact-copy
-   pass of a reference layout (see
-   27-08_UI_Plans/Main_Menu_Agentic_OS_Redesign_Plan.md): near-black
-   panels, thin borders, copper/amber accent, a rotating agent ring
-   around a decorative particle core. See
-   Documentation/Guide_To_Main_Menu_UI_Design.md for the full writeup.
+   RUBRIC // Agentic OS - Main Menu, exact-copy pass of the reference
+   screenshot (this type of desing..png). Strict 3-column dashboard,
+   near-black surfaces, thin 1px borders, one copper/amber accent, a
+   rotating agent ring around a real Three.js particle core.
+
+   Palette is fixed by the reference:
+     bg #0F0F0F  panel #141212  accent #FF7A00  border #333333
+     text #FFFFFF  secondary #8B9099
+   The shared /shared/colours_and_fonts.css (loaded by the layout) still
+   provides the font stacks and the --agentic-* names every INKY page
+   uses; this file only pins the surface values for this screen.
    ===================================================================== */
 
 @theme inline {
-  --color-void: var(--ink-void);
-  --color-panel: var(--ink-panel);
-  --color-raised: var(--ink-raised);
-  --color-line: var(--sumi-line);
-  --color-bone: var(--bone);
-  --color-dim: var(--bone-dim);
-  --color-p5red: var(--p5-red);
-  --color-cyan: var(--p5-cyan);
-  --color-yellow: var(--p5-yellow);
-  --color-jade: var(--jade);
-  --color-amber: var(--amber);
-  --color-violet: var(--violet);
-  --color-magenta: var(--neon-magenta);
-  --color-agentic-amber: var(--agentic-amber);
-  --font-mono: var(--font-term);
+  --color-void: #0f0f0f;
+  --color-panel: #141212;
+  --color-line: #333333;
+  --color-bone: #ffffff;
+  --color-dim: #8b9099;
+  --color-amber: #ff7a00;
+  --font-mono: var(--font-term, ui-monospace, "IBM Plex Mono", monospace);
 }
 
 body {
-  background: #0b0b0b;
+  background: #0f0f0f;
   color: #ffffff;
   font-family: var(--font-body, "IBM Plex Sans", system-ui, sans-serif);
 }
 
-/* Every number is monospace - same rule as every other INKY page. */
+/* Every number and every log/table feed is monospace - same rule as
+   every other INKY page. */
 .num {
-  font-family: var(--font-data);
+  font-family: var(--font-data, var(--font-term, ui-monospace, monospace));
   font-variant-numeric: tabular-nums;
 }
 
-/* Anything a model produced carries a violet left edge. */
-.ai-generated {
-  border-left: 2px solid var(--violet);
-  padding-left: 8px;
-}
-
 /* =====================================================================
-   AGENTIC-OS PANEL
-   Sharp corners, a thin border, no heavy drop shadow - a subtle inner
-   glow instead, exactly like the reference layout.
+   PANEL - sharp corners, a thin border, no heavy drop shadow. A barely
+   -there inner glow gives depth instead, exactly like the reference.
    ===================================================================== */
-.agentic-panel {
-  background: var(--agentic-panel, #141212);
-  border: 1px solid #333;
-  border-radius: 6px;
-  box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.02);
+.rubric-panel {
+  background: #141212;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  box-shadow: inset 0 0 32px rgba(255, 255, 255, 0.015);
 }
 
-.agentic-label {
-  font-size: 10px;
-  letter-spacing: 0.18em;
+/* Small all-caps label above a panel's content. */
+.rubric-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.rubric-sub {
+  font-size: 9px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #8b9099;
 }
 
-.agentic-accent {
-  color: var(--agentic-amber, #ff7a00);
+.rubric-accent {
+  color: #ff7a00;
+}
+
+/* The little outline pill button in panel headers (+ ADD APP, OPEN CAL,
+   + ADD SKILL). */
+.pill {
+  border: 1px solid #333333;
+  border-radius: 3px;
+  padding: 3px 8px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8b9099;
+  white-space: nowrap;
+  transition: border-color 120ms, color 120ms;
+}
+.pill:hover {
+  border-color: #ff7a00;
+  color: #ff7a00;
+}
+
+/* =====================================================================
+   THE AGENT RING
+   The whole track spins once every 90s; every node counter-spins at the
+   same rate so its glyph and cadence tag stay upright for the viewer.
+   Pure CSS - no animation library.
+   ===================================================================== */
+@keyframes rubric-ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes rubric-ring-counter {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+.ring-track {
+  animation: rubric-ring-spin 90s linear infinite;
+}
+.ring-node-upright {
+  animation: rubric-ring-counter 90s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -75,6 +112,14 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* The navigation lives inside the top-left panel (NavPanel.tsx), reusing
+   .rubric-panel / .rubric-label / .pill and the reference's row layout.
+   The one addition it needs: the amber "you are here" cue on a row. */
+.rubric-panel a[data-active] .text-white {
+  color: #ff7a00;
 }

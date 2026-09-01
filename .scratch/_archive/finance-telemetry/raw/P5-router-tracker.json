@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom fastapi import APIRouter, Depends, HTTPException, Path, Query\nfrom fastapi.responses import JSONResponse\nfrom fastapi.security import HTTPBearer\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom services.db import connect\nfrom services.agents.tracker_specialist import RecurringDetector, LeakFinder, BudgetDrift\nfrom shared.constants import categories\nfrom typing import List, Optional\nimport math\n\nrouter = APIRouter(prefix=\"/tracker\")\n\n@router.get(\"/transactions\")\nasync def get_transactions(\n    date_from: Optional[str] = Query(None),\n    date_to: Optional[str] = Query(None),\n    category: Optional[str] = Query(None),\n    account_id: Optional[int] = Query(None)\n):\n    conn = connect()\n    try:\n        # Fetch transactions based on filters\n        transactions = conn.execute(\"SELECT * FROM transactions WHERE date BETWEEN ? AND ? AND category = ? AND account_id = ?\", (date_from, date_to, category, account_id)).fetchall()\n        return transactions\n    finally:\n        conn.close()\n\n@router.get(\"/transactions/{id}\")\nasync def get_transaction(id: int):\n    conn = connect()\n    try:\n        # Fetch a single transaction by ID\n        transaction = conn.execute(\"SELECT * FROM transactions WHERE id = ?\", (id,)).fetchone()\n        if not transaction:\n            raise HTTPException(status_code=404, detail=\"Transaction not found\")\n        return transaction\n    finally:\n        conn.close()\n\n@router.put(\"/transactions/{id}\")\nasync def update_transaction(id: int, payload: dict = Depends()):\n    conn = connect()\n    try:\n        # Update a transaction by ID\n        conn.execute(\"UPDATE transactions SET amount = ? WHERE id = ?\", (payload['amount'], id))\n        conn.commit()\n        return {\"status\": \"success\"}\n    finally:\n        conn.close()\n\n@router.delete(\"/transactions/{id}\")\nasync def delete_transaction(id: int):\n    conn = connect()\n    try:\n        # Delete a transaction by ID\n        conn.execute(\"DELETE FROM transactions WHERE id = ?\", (id,))\n        conn.commit()\n        return {\"status\": \"success\"}\n    finally:\n        conn.close()\n\n@router.get(\"/categories\")\nasync def get_categories():\n    return categories\n\n@router.get(\"/recurring\")\nasync def get_recurring():\n    conn = connect()\n    try:\n        # Fetch recurring transactions\n        recurring = conn.execute(\"SELECT * FROM recurring_transactions\").fetchall()\n        return recurring\n    finally:\n        conn.close()\n\n@router.get(\"/trends\")\nasync def get_trends():\n    conn = connect()\n    try:\n        # Fetch monthly trends\n        trends = conn.execute(\"SELECT * FROM trends\").fetchall()\n        return trends\n    finally:\n        conn.close()\n\n@router.get(\"/insights\")\nasync def get_insights():\n    conn = connect()\n    try:\n        # Fetch tracker insights\n        insights = conn.execute(\"SELECT * FROM insights\").fetchall()\n        return insights\n    finally:\n        conn.close()\n```"
+      }
+    }
+  ],
+  "created": 1788018139,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 621,
+    "prompt_tokens": 4379,
+    "total_tokens": 5000,
+    "prompt_tokens_details": {
+      "cached_tokens": 1352
+    }
+  },
+  "id": "chatcmpl-ScPSKPbPfe4kUqZeH2oeKyWSuZ9lox7d",
+  "timings": {
+    "cache_n": 1352,
+    "prompt_n": 3027,
+    "prompt_ms": 2647.695,
+    "prompt_per_token_ms": 0.8746927651139743,
+    "prompt_per_second": 1143.2585701902976,
+    "predicted_n": 621,
+    "predicted_ms": 27660.44,
+    "predicted_per_token_ms": 44.61361290322581,
+    "predicted_per_second": 22.41468320822084
+  }
+}

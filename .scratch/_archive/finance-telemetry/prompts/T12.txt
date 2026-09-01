@@ -1,0 +1,63 @@
+Write ONE React component file. Next.js 16, React 19, TypeScript, Tailwind v4, framer-motion 13.
+No new dependencies. No Three.js. No red colours (Rule 8).
+
+FILE: app/components/InvestmentsSpark.tsx
+
+KEEP THESE FIRST LINES EXACTLY (verbatim, including quotes):
+
+"use client";
+
+import { BLUEPRINT_SEED } from "@/app/lib/blueprintSeed";
+import { useCountUp } from "@/app/lib/useCountUp";
+import { formatINR } from "@/app/lib/formatINR";
+import { motion } from "framer-motion";
+
+/** Investments — a self-drawing line of the last 12 months, like a feed
+    plotting onto a pit-wall screen. Seed data (P8). */
+export function InvestmentsSpark() {
+
+THEN implement the body EXACTLY like this:
+  const { current, series } = BLUEPRINT_SEED.investments; // series: number[] length 12, in ₹ thousands
+  const shown = useCountUp(current);
+
+  const W = 240;
+  const H = 80;
+  const PAD = 6;
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const span = max - min || 1;
+  const pts = series.map((v, i) => {
+    const x = (i / (series.length - 1)) * (W - PAD * 2) + PAD;
+    const y = H - PAD - ((v - min) / span) * (H - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const d = `M ${pts.join(" L ")}`;
+
+  return (
+    <section
+      aria-label="Investments"
+      className="carbon-face checkered-sweep relative overflow-hidden rounded-lg border border-line p-5"
+    >
+      <div className="flex items-baseline justify-between">
+        <p className="num text-[10px] tracking-[0.2em] text-dim">INVESTMENTS</p>
+        <p className="num text-sm text-amber">{formatINR(Math.round(shown))}</p>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 h-24 w-full" preserveAspectRatio="none">
+        <motion.path
+          d={d}
+          fill="none"
+          stroke="var(--amber)"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.4, ease: "easeInOut" }}
+        />
+      </svg>
+      <p className="num mt-1 text-[10px] text-dim">last 12 months</p>
+    </section>
+  );
+}
+
+Return ONLY the file contents inside one ```tsx code block. No explanation.

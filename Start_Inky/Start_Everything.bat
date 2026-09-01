@@ -20,6 +20,13 @@ set "VPY=%VENV%\Scripts\python.exe"
 set "BASE="
 
 REM --- find a Python to build the private folder with ----------------
+REM The py launcher picks the newest compatible version.
+where py >nul 2>&1 && (
+    for %%V in (3.13 3.12 3.11) do (
+        py -%%V --version >nul 2>&1 && if not defined BASE set "BASE=py -%%V"
+    )
+)
+if defined BASE goto :havepy
 where py >nul 2>&1 && set "BASE=py"
 if defined BASE goto :havepy
 where python >nul 2>&1 && set "BASE=python"
@@ -44,9 +51,12 @@ REM --- install what the screens need --------------------------------
 "%VPY%" -m pip show fastapi >nul 2>&1
 if not errorlevel 1 goto :run
 
+:install
 echo.
 echo Installing what the screens need  (first run only, takes a minute)
 "%VPY%" -m pip install --upgrade pip --quiet
+
+
 
 REM Every screen keeps its own list of what it needs. Install all of
 REM them, whatever they are called - no screen is named in this file.
@@ -67,9 +77,11 @@ for %%R in ("%PROJECT%\Main_Menu\Setup\requirements_*.txt") do (
 
 :run
 echo.
-echo Starting the local AI proxy in its own window...
-start "INKY local AI proxy" /min cmd /c ""%PROJECT%\Tools\run_litellm.bat""
-echo.
+REM --- the model gateway, in its own window --------------------------
+REM The Model screen reports on it. Safe when already running - the
+REM launcher just says so and leaves the gateway alone.
+start "OmniRoute gateway" "%VPY%" "%PROJECT%\Start_Inky\run_omniroute.py"
+timeout /t 2 /nobreak >nul
 "%VPY%" "%PROJECT%\Start_Inky\start_every_screen.py"
 if errorlevel 1 goto :fail
 goto :done

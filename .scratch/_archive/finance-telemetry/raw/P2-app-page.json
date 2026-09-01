@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport { redirect } from 'next/navigation';\n\nexport default function Page() {\n  redirect('/finance');\n}\n```"
+      }
+    }
+  ],
+  "created": 1788012679,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 26,
+    "prompt_tokens": 3089,
+    "total_tokens": 3115,
+    "prompt_tokens_details": {
+      "cached_tokens": 3063
+    }
+  },
+  "id": "chatcmpl-tywymp3gAA8E8f5TDNhQ9jj9z6Pj0BrM",
+  "timings": {
+    "cache_n": 3063,
+    "prompt_n": 26,
+    "prompt_ms": 319.488,
+    "prompt_per_token_ms": 12.288,
+    "prompt_per_second": 81.38020833333333,
+    "predicted_n": 26,
+    "predicted_ms": 992.669,
+    "predicted_per_token_ms": 39.70676,
+    "predicted_per_second": 25.18462851161868
+  }
+}

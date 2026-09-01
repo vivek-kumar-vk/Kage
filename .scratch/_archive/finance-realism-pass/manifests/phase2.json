@@ -1,0 +1,66 @@
+{
+  "phase": "2",
+  "repo": "B:/inky_code",
+  "cwd": "B:/inky_code/Screens/Finance/Page/next_app",
+  "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
+  "progress_file": "B:/inky_code/.scratch/finance-realism-pass/phase2-progress.md",
+  "ledger_file": "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
+  "cooldown_s": 50,
+  "max_retries": 2,
+  "max_tokens": 2600,
+  "min_free_ram_mb": 1800,
+  "min_free_vram_mb": 700,
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 8192 --n-gpu-layers 24 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "final_build": true,
+  "tasks": [
+    {
+      "id": "TotalBalanceBlock",
+      "out": "app/components/overview/TotalBalanceBlock.tsx",
+      "client": false,
+      "spec": "Imports: `import { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";` `import { formatINR } from \"@/app/lib/formatINR\";` `import { TelemetryCard, Sparkline, DeltaBadge } from \"../f1\";`. Export `export function TotalBalanceBlock()`. const { totalBalance, investments } = BLUEPRINT_SEED. Return <TelemetryCard label=\"Total Balance\" value={formatINR(totalBalance)} sub=\"seed \\u00b7 wire live (P8)\"><div style={{ marginBottom: 8 }}><DeltaBadge value=\"+4.2%\" tone=\"ahead\" /></div><Sparkline series={[...investments.series]} height={64} /></TelemetryCard>. No 'use client'. Under 20 lines."
+    },
+    {
+      "id": "CashFlowBlock",
+      "out": "app/components/overview/CashFlowBlock.tsx",
+      "client": false,
+      "spec": "Imports: `import { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";` `import { formatINR } from \"@/app/lib/formatINR\";` `import { TelemetryCard, SegmentMeter } from \"../f1\";`. Export `export function CashFlowBlock()`. const { income, expenses } = BLUEPRINT_SEED.cashFlow; const surplus = income - expenses. const segments = [{ label: \"Income\", pct: 100 }, { label: \"Expenses\", pct: Math.round((expenses / income) * 100) }, { label: \"Surplus\", pct: Math.round((surplus / income) * 100) }]. Return <TelemetryCard label=\"Cash Flow\" value={formatINR(surplus)} sub={`income ${formatINR(income)} \\u00b7 expenses ${formatINR(expenses)}`}><SegmentMeter segments={segments} /></TelemetryCard>. No 'use client'. Under 20 lines."
+    },
+    {
+      "id": "InvestmentsBlock",
+      "out": "app/components/overview/InvestmentsBlock.tsx",
+      "client": false,
+      "spec": "Imports: `import { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";` `import { formatINR } from \"@/app/lib/formatINR\";` `import { TelemetryCard, StatDial } from \"../f1\";`. Export `export function InvestmentsBlock()`. const { current } = BLUEPRINT_SEED.investments. Return <TelemetryCard label=\"Investments\" value={formatINR(current)} sub=\"seed\"><StatDial pct={68} value=\"68%\" label=\"of target\" size={132} /></TelemetryCard>. No 'use client'. Under 15 lines."
+    },
+    {
+      "id": "DebtBlock",
+      "out": "app/components/overview/DebtBlock.tsx",
+      "client": false,
+      "spec": "Imports: `import { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";` `import { formatINR } from \"@/app/lib/formatINR\";` `import { TelemetryCard, SegmentMeter } from \"../f1\";`. Export `export function DebtBlock()`. const { totalDebt } = BLUEPRINT_SEED. Return <TelemetryCard label=\"Total Debt\" value={formatINR(totalDebt)} sub=\"seed\"><SegmentMeter segments={[{ label: \"Paid\", pct: 32 }, { label: \"Outstanding\", pct: 68 }]} /></TelemetryCard>. No 'use client'. Under 15 lines."
+    },
+    {
+      "id": "EmergencyFundBlock",
+      "out": "app/components/overview/EmergencyFundBlock.tsx",
+      "client": false,
+      "spec": "Imports: `import { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";` `import { formatINR } from \"@/app/lib/formatINR\";` `import { TelemetryCard, SegmentMeter } from \"../f1\";`. Export `export function EmergencyFundBlock()`. const ef = BLUEPRINT_SEED.emergencyFund; const held = ef.tiers.reduce((a, t) => a + t.amount, 0); const segments = ef.tiers.map((t) => ({ label: t.label, pct: Math.round((t.amount / ef.target) * 100) })). Return <TelemetryCard label=\"Emergency Fund\" value={formatINR(held)} sub={`target ${formatINR(ef.target)}`}><SegmentMeter segments={segments} /></TelemetryCard>. No 'use client'. Under 18 lines."
+    },
+    {
+      "id": "BucketBlock",
+      "out": "app/components/overview/BucketBlock.tsx",
+      "client": false,
+      "spec": "Imports: `import { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";` `import { TelemetryCard, SegmentMeter } from \"../f1\";`. Export `export function BucketBlock()`. const segments = BLUEPRINT_SEED.buckets.map((b) => ({ label: b.name, pct: b.fillPct })). Return <TelemetryCard label=\"3-Bucket System\"><SegmentMeter segments={segments} /></TelemetryCard>. No 'use client'. Under 12 lines."
+    },
+    {
+      "id": "GoalsList",
+      "out": "app/components/overview/GoalsList.tsx",
+      "client": false,
+      "spec": "Imports: `import { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";` `import { TelemetryCard, TimingRow } from \"../f1\";`. Export `export function GoalsList()`. Comment noting icon images go at public/goals/<slug>.png later (not wired now). Return <TelemetryCard label=\"Goals \\u2014 timing tower\">{BLUEPRINT_SEED.goals.map((g, i) => (<TimingRow key={g.label} rank={String(i + 1).padStart(2, \"0\")} name={g.label} value={`${g.pct}%`} pct={g.pct} tone={g.pct >= 75 ? \"best\" : g.pct >= 40 ? \"ahead\" : \"flat\"} />))}</TelemetryCard>. No 'use client'. Under 18 lines."
+    }
+  ],
+  "ask_excerpt_file": "B:/inky_code/.scratch/finance-realism-pass/ask_excerpt.md",
+  "grill_rounds": 3,
+  "scout": true,
+  "scout_profile": "ui_gap_scout",
+  "scout_cooldown_s": 30,
+  "scout_budget_s": 1200,
+  "scout_max_turns": 10
+}

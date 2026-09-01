@@ -1,0 +1,39 @@
+- 2026-08-29 20:55:51  === PHASE 4 START (4 tasks) === (no git)
+- 2026-08-29 20:55:51  --- task 1/4: P4-calc-debt ---
+- 2026-08-29 20:55:51  P4-calc-debt: generating (py)
+- 2026-08-29 20:56:06  P4-calc-debt: clean
+- 2026-08-29 20:56:26  --- task 2/4: P4-router-debt ---
+- 2026-08-29 20:56:26  P4-router-debt: generating (py)
+- 2026-08-29 20:57:01  P4-router-debt: gate failed, retry 1
+- 2026-08-29 20:57:30  P4-router-debt: DIRTY -> phase-fix
+- 2026-08-29 20:57:50  --- task 3/4: P4-debt-specialist ---
+- 2026-08-29 20:57:51  P4-debt-specialist: generating (py)
+- 2026-08-29 20:58:04  P4-debt-specialist: clean
+- 2026-08-29 20:58:24  --- task 4/4: P4-page-debt ---
+- 2026-08-29 20:58:25  P4-page-debt: generating (tsx)
+- 2026-08-29 20:59:06  P4-page-debt: gate failed, retry 1
+- 2026-08-29 20:59:54  P4-page-debt: DIRTY -> phase-fix
+- 2026-08-29 21:00:14  === PHASE 4 FIX ROUND 1/2 (2 file(s): P4-router-debt, P4-page-debt) ===
+- 2026-08-29 21:00:15  P4-router-debt: generating (py)
+- 2026-08-29 21:00:46  P4-router-debt: gate failed, retry 1
+- 2026-08-29 21:01:19  P4-router-debt: DIRTY -> phase-fix
+- 2026-08-29 21:01:39  P4-page-debt: generating (tsx)
+- 2026-08-29 21:02:30  P4-page-debt: gate failed, retry 1
+- 2026-08-29 21:03:20  P4-page-debt: DIRTY -> phase-fix
+- 2026-08-29 21:03:40  === PHASE 4 FIX ROUND 2/2 (2 file(s): P4-router-debt, P4-page-debt) ===
+- 2026-08-29 21:03:40  P4-router-debt: generating (py)
+- 2026-08-29 21:04:09  P4-router-debt: gate failed, retry 1
+- 2026-08-29 21:04:39  P4-router-debt: DIRTY -> phase-fix
+- 2026-08-29 21:05:00  P4-page-debt: generating (tsx)
+- 2026-08-29 21:05:50  P4-page-debt: gate failed, retry 1
+- 2026-08-29 21:06:42  P4-page-debt: DIRTY -> phase-fix
+- 2026-08-29 21:07:02  === PHASE 4 still-dirty after 2 fix rounds: P4-router-debt, P4-page-debt ===
+- 2026-08-29 21:07:02  running gate_cmd: python .scratch/finance-os-build/gates/gate_phase4.py
+- 2026-08-29 21:07:04  gate_cmd rc=1
+ok: backend hygiene (no cross-router import, no bare Depends(), no stub routes)
+GATE FAIL: create debt -> 400
+- 2026-08-29 21:07:04  === PHASE 4 DONE ok=2 dirty=2 blocked=0 error=0 gate_rc=1 ===
+- 2026-08-29 21:11:46  === PHASE 4 SKIP (gate already green on resume) ===
+- 2026-08-29 21:53:25  === PHASE 4 SKIP (gate already green on resume) ===
+- 2026-08-29 22:08:25  === PHASE 4 SKIP (gate already green on resume) ===
+- 2026-08-29 22:40:30  === PHASE 4 SKIP (gate already green on resume) ===

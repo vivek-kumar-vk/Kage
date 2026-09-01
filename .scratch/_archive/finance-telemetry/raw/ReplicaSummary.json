@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport { REPLICA_SUMMARY, REPLICA_GATE } from \"@/app/lib/replicaHoldings\";\nimport { formatINR } from \"@/app/lib/formatINR\";\nimport { TelemetryCard, DeltaBadge } from \"../f1\";\n\nexport function ReplicaSummary() {\n  const gain = REPLICA_SUMMARY.gainLoss;\n  return (\n    <TelemetryCard label=\"Portfolio\" value={formatINR(REPLICA_SUMMARY.currentValue)} sub={`invested ${formatINR(REPLICA_SUMMARY.invested)}`}>\n      <div style={{ display: \"flex\", alignItems: \"center\", gap: 12 }}>\n        <DeltaBadge value={formatINR(gain)} tone={gain >= 0 ? \"ahead\" : \"alert\"} />\n      </div>\n      <div style={{ marginTop: 8, fontFamily: \"ui-monospace, monospace\", fontSize: 11, color: \"var(--liv-text-dim)\" }}>\n        {REPLICA_GATE.code}{REPLICA_GATE.text}\n      </div>\n    </TelemetryCard>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787948796,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 231,
+    "prompt_tokens": 871,
+    "total_tokens": 1102,
+    "prompt_tokens_details": {
+      "cached_tokens": 626
+    }
+  },
+  "id": "chatcmpl-Yyz92nguZ8rCxLV1lNBi5VO9ccQPEHZY",
+  "timings": {
+    "cache_n": 626,
+    "prompt_n": 245,
+    "prompt_ms": 534.347,
+    "prompt_per_token_ms": 2.181008163265306,
+    "prompt_per_second": 458.50355667758964,
+    "predicted_n": 231,
+    "predicted_ms": 14463.81,
+    "predicted_per_token_ms": 62.88613043478261,
+    "predicted_per_second": 15.901757559038732
+  }
+}

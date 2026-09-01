@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nimport math\nfrom fastapi import APIRouter, Depends, Body\nfrom fastapi.responses import JSONResponse\nfrom starlette.middleware.base import BaseHTTPMiddleware\nfrom services.db import connect\nfrom shared.constants.categories import CategoryEnum\nfrom backend.services.calculations import calculate_recurring_transactions, calculate_leak_finder, calculate_budget_drift\n\nrouter = APIRouter(prefix=\"/tracker\")\n\nclass TrackerSpecialist:\n    def __init__(self, llm_client):\n        self.llm_client = llm_client\n\n    def detect_recurring_transactions(self, transactions):\n        return calculate_recurring_transactions(transactions)\n\n    def find_leak_finder(self, transactions):\n        return calculate_leak_finder(transactions)\n\n    def detect_budget_drift(self, transactions):\n        return calculate_budget_drift(transactions)\n\n@router.get(\"/transactions\")\nasync def get_transactions(date_range: dict = Body(default={}), category: CategoryEnum = Body(default=None), account: str = Body(default=None)):\n    conn = connect()\n    try:\n        transactions = conn.execute(\"SELECT * FROM transactions WHERE date BETWEEN ? AND ?\", (date_range['start'], date_range['end'])).fetchall()\n        if category:\n            transactions = [t for t in transactions if t['category'] == category.value]\n        if account:\n            transactions = [t for t in transactions if t['account'] == account]\n        return JSONResponse(content={\"state\": \"ok\", \"transactions\": transactions})\n    finally:\n        conn.close()\n\n@router.get(\"/transactions/{id}\")\nasync def get_transaction(id: int):\n    conn = connect()\n    try:\n        transaction = conn.execute(\"SELECT * FROM transactions WHERE id = ?\", (id,)).fetchone()\n        if transaction:\n            return JSONResponse(content={\"state\": \"ok\", \"transaction\": transaction})\n        else:\n            return JSONResponse(content={\"state\": \"not_found\"}, status_code=404)\n    finally:\n        conn.close()\n\n@router.put(\"/transactions/{id}\")\nasync def update_transaction(id: int, amount: float):\n    conn = connect()\n    try:\n        conn.execute(\"UPDATE transactions SET amount = ? WHERE id = ?\", (amount, id))\n        conn.commit()\n        return JSONResponse(content={\"state\": \"ok\"})\n    finally:\n        conn.close()\n\n@router.delete(\"/transactions/{id}\")\nasync def delete_transaction(id: int):\n    conn = connect()\n    try:\n        conn.execute(\"DELETE FROM transactions WHERE id = ?\", (id,))\n        conn.commit()\n        return JSONResponse(content={\"state\": \"ok\"})\n    finally:\n        conn.close()\n\n@router.get(\"/categories\")\nasync def get_categories():\n    conn = connect()\n    try:\n        categories = conn.execute(\"SELECT category, SUM(amount) as total FROM transactions GROUP BY category\").fetchall()\n        return JSONResponse(content={\"state\": \"ok\", \"categories\": categories})\n    finally:\n        conn.close()\n\n@router.get(\"/recurring\")\nasync def get_recurring_transactions():\n    conn = connect()\n    try:\n        transactions = conn.execute(\"SELECT * FROM transactions\").fetchall()\n        specialist = TrackerSpecialist(llm_client=None)\n        recurring_transactions = specialist.detect_recurring_transactions(transactions)\n        return JSONResponse(content={\"state\": \"ok\", \"recurring_transactions\": recurring_transactions})\n    finally:\n        conn.close()\n\n@router.get(\"/trends\")\nasync def get_monthly_trends():\n    conn = connect()\n    try:\n        trends = conn.execute(\"SELECT date, SUM(amount) as total FROM transactions GROUP BY date\").fetchall()\n        return JSONResponse(content={\"state\": \"ok\", \"trends\": trends})\n    finally:\n        conn.close()\n\n@router.get(\"/insights\")\nasync def get_insights():\n    conn = connect()\n    try:\n        transactions = conn.execute(\"SELECT * FROM transactions\").fetchall()\n        specialist = TrackerSpecialist(llm_client=None)\n        leak_finder = specialist.find_leak_finder(transactions)\n        budget_drift = specialist.detect_budget_drift(transactions)\n        insight = f\"Leak of the week: {leak_finder['category']} with a delta of {leak_finder['delta']}. Budget drift: {budget_drift}%.\"\n        return JSONResponse(content={\"state\": \"ok\", \"insight\": insight})\n    finally:\n        conn.close()\n```"
+      }
+    }
+  ],
+  "created": 1788018698,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 882,
+    "prompt_tokens": 4358,
+    "total_tokens": 5240,
+    "prompt_tokens_details": {
+      "cached_tokens": 4275
+    }
+  },
+  "id": "chatcmpl-2K9zemKRyK5AvdM6bP1snvxpSqElRiFf",
+  "timings": {
+    "cache_n": 4275,
+    "prompt_n": 83,
+    "prompt_ms": 279.392,
+    "prompt_per_token_ms": 3.366168674698795,
+    "prompt_per_second": 297.073645630512,
+    "predicted_n": 882,
+    "predicted_ms": 39621.199,
+    "predicted_per_token_ms": 44.97298410896708,
+    "predicted_per_second": 22.235571417210267
+  }
+}

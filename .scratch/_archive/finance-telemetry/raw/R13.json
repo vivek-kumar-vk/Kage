@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\n\"use client\";\n\nimport { BLUEPRINT_SEED } from \"@/app/lib/blueprintSeed\";\nimport { motion } from \"framer-motion\";\nimport { usePrefersReducedMotion } from \"@/app/lib/usePrefersReducedMotion\";\nimport { TiltCard } from \"./TiltCard\";\n\n/** Goals progress as RPM dials \u2014 a needle sweeps to each goal's percent\n    and settles with a small wobble. Seed data (P8). */\nexport function GoalsGauges() {\n  const reduce = usePrefersReducedMotion();\n  const goals = BLUEPRINT_SEED.goals;\n\n  const angleFor = (pct: number) => -135 + (pct / 100) * 270;\n  const TRACK = \"M 23.13 81.87 A 38 38 0 1 1 76.87 81.87\";\n\n  return (\n    <TiltCard>\n      <div aria-label=\"Goals progress\">\n        <p className=\"num text-[10px] tracking-[0.24em] text-dim\">GOALS PROGRESS</p>\n        <div className=\"mt-3 grid grid-cols-2 gap-4\">\n          {goals.map((g) => (\n            <div key={g.label} className=\"flex flex-col items-center\">\n              <svg viewBox=\"0 0 100 100\" className=\"h-24 w-24 neon-glow-amber\">\n                <path d={TRACK} fill=\"none\" stroke=\"var(--sumi-line)\" strokeWidth={6} strokeLinecap=\"round\" />\n                <path d={TRACK} fill=\"none\" stroke=\"var(--gold)\" strokeWidth={6} strokeLinecap=\"round\"\n                  pathLength={1}\n                  style={{ strokeDasharray: 1, strokeDashoffset: 1 - g.pct / 100, opacity: 0.9 }} />\n                <motion.g\n                  style={{ transformOrigin: \"50px 55px\" }}\n                  initial={{ rotate: reduce ? angleFor(g.pct) : -135 }}\n                  animate={{ rotate: angleFor(g.pct) }}\n                  transition={reduce ? { duration: 0 } : { type: \"spring\", stiffness: 60, damping: 12 }}\n                >\n                  <line x1={50} y1={55} x2={50} y2={25} stroke=\"var(--amber)\" strokeWidth={3} strokeLinecap=\"round\" />\n                </motion.g>\n                <circle cx={50} cy={55} r={4} fill=\"var(--amber)\" />\n                <text x={50} y={70} textAnchor=\"middle\" className=\"num\" fill=\"var(--bone)\" fontSize={14}>\n                  {g.pct}%\n                </text>\n              </svg>\n              <p className=\"mt-1 text-center text-[11px] text-bone\">{g.label}</p>\n            </div>\n          ))}\n        </div>\n      </div>\n    </TiltCard>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787935978,
+  "model": "C:/inky_models/Model_A/qwen2.5-coder-7b-instruct-q5_k_m.gguf",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 675,
+    "prompt_tokens": 744,
+    "total_tokens": 1419,
+    "prompt_tokens_details": {
+      "cached_tokens": 44
+    }
+  },
+  "id": "chatcmpl-EQ6bXLJ0l1KaKRSHsPwPwY9nW9tGStOJ",
+  "timings": {
+    "cache_n": 44,
+    "prompt_n": 700,
+    "prompt_ms": 3090.569,
+    "prompt_per_token_ms": 4.4150985714285715,
+    "prompt_per_second": 226.49550940296106,
+    "predicted_n": 675,
+    "predicted_ms": 26540.73,
+    "predicted_per_token_ms": 39.37793768545994,
+    "predicted_per_second": 25.394930734761253
+  }
+}

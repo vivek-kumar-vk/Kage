@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```python\nfrom typing import Dict, List\nimport math\nfrom services.rag import Rag\nfrom services.calculations.portfolio import get_portfolio_summary\nfrom services.calculations.debt import get_debt_summary\n\nclass Retriever:\n    def __init__(self, rag: Rag):\n        self.rag = rag\n\n    def retrieve(self, query: str, k: int = 5) -> List[str]:\n        return self.rag.retrieve(query, k)\n\nclass Personalizer:\n    def __init__(self, llm_client):\n        self.llm_client = llm_client\n\n    def personalize(self, summary: Dict[str, float]) -> List[str]:\n        topics = []\n        if summary.get('debt_ratio', 0) > 0.5:\n            topics.append(\"Managing Debt\")\n        if summary.get('investment_return', 0) < 0:\n            topics.append(\"Investment Losses\")\n        if summary.get('cash_flow', 0) < 0:\n            topics.append(\"Cash Flow Management\")\n        return topics\n\n    def get_lesson_text(self, topic: str) -> str:\n        if topic == \"Managing Debt\":\n            return \"Learn how to manage your debt effectively.\"\n        elif topic == \"Investment Losses\":\n            return \"Understand the reasons behind investment losses.\"\n        elif topic == \"Cash Flow Management\":\n            return \"Master the art of cash flow management.\"\n        return \"No relevant lessons available.\"\n\nclass LearningSpecialist:\n    def __init__(self, llm_client):\n        self.retriever = Retriever(Rag())\n        self.personalizer = Personalizer(llm_client)\n\n    def get_topics(self, summary: Dict[str, float]) -> List[str]:\n        topics = self.personalizer.personalize(summary)\n        return topics\n\n    def get_topic_text(self, topic: str) -> str:\n        return self.personalizer.get_lesson_text(topic)\n```"
+      }
+    }
+  ],
+  "created": 1788021077,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 403,
+    "prompt_tokens": 4374,
+    "total_tokens": 4777,
+    "prompt_tokens_details": {
+      "cached_tokens": 4303
+    }
+  },
+  "id": "chatcmpl-EP6Ci4N8io48itRRRffQkwbhTbN3P0rR",
+  "timings": {
+    "cache_n": 4303,
+    "prompt_n": 71,
+    "prompt_ms": 424.702,
+    "prompt_per_token_ms": 5.981718309859155,
+    "prompt_per_second": 167.1760434375162,
+    "predicted_n": 403,
+    "predicted_ms": 18078.571,
+    "predicted_per_token_ms": 44.97156965174129,
+    "predicted_per_second": 22.236270776047512
+  }
+}

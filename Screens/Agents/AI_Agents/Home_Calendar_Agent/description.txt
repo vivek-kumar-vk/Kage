@@ -1,0 +1,1 @@
+Keeps the home page's small calendar: shows the dated events it has been given and adds new ones to its own flat file - zero model calls.

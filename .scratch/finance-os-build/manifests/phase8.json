@@ -1,0 +1,59 @@
+{
+  "phase": "8",
+  "repo": "B:/inky_code",
+  "cwd": "B:/inky_code/finance-os",
+  "lang": "py",
+  "contract_file": "B:/inky_code/.scratch/lm-ui-gaps/prompt-contract.md",
+  "ask_excerpt_file": "B:/inky_code/.scratch/finance-os-build/spec/phase8.md",
+  "progress_file": "B:/inky_code/.scratch/finance-os-build/progress/phase8-progress.md",
+  "ledger_file": "B:/inky_code/.scratch/lm-ui-gaps/ledger.md",
+  "cooldown_s": 20,
+  "max_retries": 3,
+  "max_tokens": 3000,
+  "grill_rounds": 1,
+  "min_free_ram_mb": 400,
+  "min_free_vram_mb": 200,
+  "llama_cmd": "C:\\inky_models\\bin\\llama-server.exe --model C:/inky_models/Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf --alias qwen2.5-coder-7b-instruct-q5_k_m --host 127.0.0.1 --port 8080 --threads 6 --ctx-size 24576 --parallel 1 --n-gpu-layers 28 --flash-attn on --cache-type-k q8_0 --cache-type-v q8_0",
+  "gate_cmd": "python .scratch/finance-os-build/gates/gate_phase8.py",
+  "scout": false,
+  "scout_profile": "ui_gap_scout",
+  "scout_cooldown_s": 30,
+  "scout_budget_s": 1200,
+  "scout_max_turns": 10,
+  "tasks": [
+    {
+      "id": "P8-night-worker",
+      "lang": "py",
+      "out": "night_worker.py",
+      "spec": "Per phase brief. CLI with --once. Sequence: db.connect(); market_data.batch_refresh(active_holdings + benchmarks, total_retry_budget_s from a module const); WEEKLY branch (only when date.weekday()==6 or --weekly) does gap-only price_history refresh per symbol MAX(date)+1..today with INSERT OR IGNORE; placeholder local-LLM review; new snapshots row per day; data_health UPDATE WHERE id=1; compress agent_memory older than 90d; write research_notes; copy finance.db -> backend/data/backups/finance_YYYYMMDD.db keeping the newest 7. Schedule note in a comment (Task Scheduler 23:00 IST)."
+    },
+    {
+      "id": "P8-build-py",
+      "lang": "py",
+      "out": "build.py",
+      "spec": "Steps, each exit-non-zero on failure: (1) npm --prefix frontend run build; (2) rm/clean backend/static/; (3) copytree frontend/out -> backend/static. Print each step. This is the ONLY export path (no next export)."
+    },
+    {
+      "id": "P8-view-perf-check",
+      "lang": "py",
+      "out": "backend/scripts/check_view_perf.py",
+      "spec": "Open the db via services.db; run EXPLAIN QUERY PLAN on 'SELECT * FROM latest_prices' and assert the plan uses idx_price_history_symbol_date (string 'idx_price_history_symbol_date' in the plan). Print the plan. Exit non-zero if the index is not used."
+    },
+    {
+      "id": "P8-main-static-fallback",
+      "lang": "py",
+      "out": "backend/main.py",
+      "op": "write",
+      "spec": "REWRITE finance-os/backend/main.py keeping everything from Phase 0 (startup init_db + encrypted-volume warning + auth passthrough + /api/finance routers + GET /api/finance/health) and ENSURING: StaticFiles(directory=here/'static', html=True) mounted at '/' when static/ exists; a catch-all GET '/{full_path:path}' that returns FileResponse(static/<full_path>.html) if it exists, else FileResponse(static/<full_path>/index.html), else FileResponse(static/index.html), else 404 - so deep links like /finance/investments resolve to Next's investments.html. Do not shadow /api/finance/*. This file is self-contained; do not assume you can read the old one - reconstruct it fully from the Phase 0 brief + this spec."
+    },
+    {
+      "id": "P8-cutover-notes",
+      "lang": "md",
+      "out": "CUTOVER.md",
+      "spec": "A short human checklist for making finance-os THE Finance screen (the one manual step after the autonomous build passes): (1) in Start_Inky/serve_everything_on_one_port.py, point the Finance route at `uvicorn main:app` from finance-os/backend + its static bundle, and stop mounting Screens/Finance/server_for_finance.py (leave the tree in git history); (2) if the served path changed, update the Finance target in Main_Menu/Page/next_app/app/components/NavPanel.tsx; (3) run finance-os/build.py; (4) smoke Start_Inky/Start_Everything.bat. List the exact lines to change if you can infer them from the current serve file."
+    }
+  ],
+  "phase_fix": true,
+  "phase_fix_rounds": 2,
+  "pause_before_fix": false
+}

@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport type { TelemetryCardProps } from \"./types\";\n\nexport function TelemetryCard({ label, value, sub, edge = true, children }: TelemetryCardProps) {\n  return (\n    <div className={edge ? \"livery-edge\" : undefined} style={{ background: \"var(--liv-surface)\", border: \"1px solid var(--liv-line)\", borderRadius: 14, padding: 20, position: \"relative\" }}>\n      <div style={{ fontFamily: \"ui-monospace, monospace\", fontSize: 11, letterSpacing: 1.5, textTransform: \"uppercase\", color: \"var(--liv-text-dim)\", marginBottom: value ? 6 : 12 }}>{label}</div>\n      {value && <div style={{ fontFamily: \"ui-monospace, monospace\", fontVariantNumeric: \"tabular-nums\", fontSize: 30, fontWeight: 700, color: \"var(--liv-text)\" }}>{value}</div>}\n      {sub && <div style={{ fontFamily: \"ui-monospace, monospace\", fontSize: 11, color: \"var(--liv-text-dim)\", marginTop: 4 }}>{sub}</div>}\n      {children && <div style={{ marginTop: 14 }}>{children}</div>}\n    </div>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1787947760,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 280,
+    "prompt_tokens": 922,
+    "total_tokens": 1202,
+    "prompt_tokens_details": {
+      "cached_tokens": 628
+    }
+  },
+  "id": "chatcmpl-HxgTyXXSHkBYdw4MZmUAWC96hPN4DsAJ",
+  "timings": {
+    "cache_n": 628,
+    "prompt_n": 294,
+    "prompt_ms": 511.27,
+    "prompt_per_token_ms": 1.7390136054421768,
+    "prompt_per_second": 575.0386292956755,
+    "predicted_n": 280,
+    "predicted_ms": 17132.807,
+    "predicted_per_token_ms": 61.40791039426524,
+    "predicted_per_second": 16.284546951354788
+  }
+}

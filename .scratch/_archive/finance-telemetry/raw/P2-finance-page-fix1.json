@@ -1,0 +1,36 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "```tsx\nimport NetWorthCard from '../components/finance/cards/NetWorthCard';\nimport CashflowCard from '../components/finance/cards/CashflowCard';\nimport PortfolioPulseCard from '../components/finance/cards/PortfolioPulseCard';\nimport EmergencyFundCard from '../components/finance/cards/EmergencyFundCard';\nimport DebtStatusCard from '../components/finance/cards/DebtStatusCard';\nimport SurplusAllocationCard from '../components/finance/cards/SurplusAllocationCard';\nimport GoalsCard from '../components/finance/cards/GoalsCard';\nimport TopActionsCard from '../components/finance/cards/TopActionsCard';\nimport DataHealthCard from '../components/finance/cards/DataHealthCard';\n\nexport default function Page() {\n  return (\n    <div className=\"grid grid-cols-3 gap-4\">\n      <NetWorthCard />\n      <CashflowCard />\n      <PortfolioPulseCard />\n      <EmergencyFundCard />\n      <DebtStatusCard />\n      <SurplusAllocationCard />\n      <GoalsCard />\n      <TopActionsCard />\n      <DataHealthCard />\n    </div>\n  );\n}\n```"
+      }
+    }
+  ],
+  "created": 1788014375,
+  "model": "qwen2.5-coder-7b-instruct-q5_k_m",
+  "system_fingerprint": "b10621-c1d0e7a00",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 232,
+    "prompt_tokens": 4391,
+    "total_tokens": 4623,
+    "prompt_tokens_details": {
+      "cached_tokens": 3857
+    }
+  },
+  "id": "chatcmpl-xszFkWvGsh00fRw6Njn8fxqQJFW2TfsG",
+  "timings": {
+    "cache_n": 3857,
+    "prompt_n": 534,
+    "prompt_ms": 761.763,
+    "prompt_per_token_ms": 1.4265224719101124,
+    "prompt_per_second": 701.0054308229725,
+    "predicted_n": 232,
+    "predicted_ms": 9896.907,
+    "predicted_per_token_ms": 42.843753246753245,
+    "predicted_per_second": 23.340625510576185
+  }
+}

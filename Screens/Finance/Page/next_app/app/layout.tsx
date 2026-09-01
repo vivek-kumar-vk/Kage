@@ -7,21 +7,17 @@ export const metadata: Metadata = {
     "Real money, honestly stated - surplus, the four gates, the health score, holdings, debt and portfolio structure. No recommendation is ever computed here (C5).",
 };
 
-// The responsive contract (C9): follow the device width, and reach past
-// the notch so env(safe-area-inset-*) means something on a real phone.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
 };
 
-// The four widths every INKY page changes its mind at (ADR-060) and the
-// one question that is not about width. Written in
-// Shared_By_All_Screens/Look_And_Feel/responsive_layout.css; repeated
-// here because CSS cannot read a custom property inside a @media query.
 const RESPONSIVE_CONTRACT = `
 @media (max-width: 1100px) {
   .grid-main { grid-template-columns: 1fr; }
+  .speedo-nav { width: 100% !important; height: auto !important; }
+  .speedo-nav svg { width: 100%; height: 64px; }
 }
 @media (max-width: 820px) {
   .rail { flex-direction: row; flex-wrap: wrap; }
@@ -39,9 +35,6 @@ const RESPONSIVE_CONTRACT = `
 @media (max-width: 420px) {
   .header-pad { padding-left: 12px; padding-right: 12px; }
 }
-/* A phone held sideways is wide and very short: panels already scroll
-   their own overflow, so only the header needs to shrink to keep
-   everything reachable without vertical scroll. */
 @media (orientation: landscape) and (max-height: 560px) {
   .page-header { position: static; }
   .page-main { padding-top: 8px; }

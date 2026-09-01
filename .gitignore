@@ -18,6 +18,7 @@ __pycache__/
 node_modules/
 **/next_app/out/
 **/next_app/.next/
+**/next_app/next-env.d.ts
 **/svelte_app/build/
 **/svelte_app/.svelte-kit/
 dist/
@@ -34,6 +35,7 @@ desktop.ini
 Secrets_Keys/
 .env
 .env.*
+!.env.example
 google_service_account.json
 *_service_account.json
 credentials.json
@@ -63,3 +65,24 @@ restart_requested.flag
 *.sqlite
 *.sqlite3
 *.db
+
+# --- Kage's project-managed Postgres cluster + gateway logs (T3/T4) ---
+Start_Inky/pgdata/
+Tools/*.log
+
+# personal / local-only (never in public Kage repo)
+personal-financial-blueprint.html
+Gemini_Generated_Image_*.png
+Screenshot *.png
+Screens/Finance/Page/next_app.7z
+finance-os/finance-datamigration.md
+current.png
+
+# --- Claude Code session plans (ephemeral; outcomes land in PLANNED_WORK.md) ---
+.zcode/
+
+# --- Anime screen: local-only, never on GitHub (restored from the old checkout) ---
+Screens/Anime/
+
+# --- AGENT DECK build scaffolding (Qwen turn scripts + apply state) ---
+Stage_agents/
