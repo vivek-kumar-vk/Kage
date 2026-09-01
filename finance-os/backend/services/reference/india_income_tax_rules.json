@@ -1,0 +1,162 @@
+{
+  "_what_this_is": "Indian income tax, as data rather than as numbers typed into a calculation. Every figure compare_tax_regimes.py uses comes from this file, so C4 is satisfied structurally: the number traces to a source file, and the source file says where it came from.",
+
+  "_the_rule_that_matters": "These are the rates for the financial year named in `financial_year` below. Slabs change with every Union Budget, usually in February. If `financial_year` is not the year you are filing for, every figure computed from this file is out of date and INKY says so on the report rather than quietly using stale rates.",
+
+  "financial_year": "2025-26",
+  "assessment_year": "2026-27",
+  "as_of": "2026-08-20",
+  "source": "Finance Act 2025, as passed. New-regime slabs and the raised 87A rebate were announced in the Union Budget presented 2025-02-01.",
+  "verified_by_a_person": false,
+  "_verified_note": "Set this to true only after somebody has opened incometax.gov.in and checked these numbers against the current Finance Act. Until then every figure derived from this file is tagged [UNVERIFIED] wherever it is shown, per C4.",
+
+  "regimes": {
+    "new": {
+      "label": "New regime (Section 115BAC) - the default since FY 2023-24",
+      "is_default": true,
+      "slabs": [
+        { "upto": 400000,  "rate_pct": 0 },
+        { "upto": 800000,  "rate_pct": 5 },
+        { "upto": 1200000, "rate_pct": 10 },
+        { "upto": 1600000, "rate_pct": 15 },
+        { "upto": 2000000, "rate_pct": 20 },
+        { "upto": 2400000, "rate_pct": 25 },
+        { "upto": null,    "rate_pct": 30 }
+      ],
+      "standard_deduction_salaried": 75000,
+      "rebate_87a": {
+        "total_income_upto": 1200000,
+        "max_rebate": 60000,
+        "marginal_relief": true,
+        "_note": "Income up to 12,00,000 after the standard deduction pays no tax at all. For a salaried person that is 12,75,000 of salary. Just above the line, marginal relief caps the tax at the amount by which income exceeds 12,00,000."
+      },
+      "deductions_allowed": ["80CCD(2)"],
+      "_deductions_note": "This is the half people get wrong. Under the new regime 80C, 80D, 80E, 80TTA and the self-occupied 24(b) interest are ALL unavailable. Only the employer's NPS contribution under 80CCD(2) and the standard deduction survive. A person carrying a big education loan or a big 80C basket has a genuine decision to make; a person with neither does not."
+    },
+    "old": {
+      "label": "Old regime - must be opted into",
+      "is_default": false,
+      "slabs": [
+        { "upto": 250000,  "rate_pct": 0 },
+        { "upto": 500000,  "rate_pct": 5 },
+        { "upto": 1000000, "rate_pct": 20 },
+        { "upto": null,    "rate_pct": 30 }
+      ],
+      "standard_deduction_salaried": 50000,
+      "rebate_87a": {
+        "total_income_upto": 500000,
+        "max_rebate": 12500,
+        "marginal_relief": false
+      },
+      "basic_exemption_by_age": {
+        "below_60": 250000,
+        "senior_60_to_79": 300000,
+        "super_senior_80_plus": 500000
+      },
+      "deductions_allowed": [
+        "80C", "80CCD(1B)", "80CCD(2)", "80D", "80E", "80G", "80TTA", "80TTB", "24(b)"
+      ]
+    }
+  },
+
+  "cess": {
+    "name": "Health and Education Cess",
+    "rate_pct": 4,
+    "_note": "Charged on tax AFTER rebate, in both regimes."
+  },
+
+  "surcharge": [
+    { "income_above": 5000000,  "rate_pct": 10 },
+    { "income_above": 10000000, "rate_pct": 15 },
+    { "income_above": 20000000, "rate_pct": 25 },
+    { "income_above": 50000000, "rate_pct": 25, "_note": "The new regime caps surcharge at 25%. The old regime goes to 37% above 5 crore." }
+  ],
+
+  "deduction_limits": {
+    "80C": {
+      "limit": 150000,
+      "regime": "old only",
+      "what_counts": [
+        "EPF employee contribution", "VPF", "PPF", "ELSS mutual funds",
+        "Life insurance premium", "Home loan principal repayment",
+        "Sukanya Samriddhi Yojana", "NSC", "5-year tax-saver FD",
+        "Tuition fees for up to two children"
+      ],
+      "_note": "One shared 1,50,000 ceiling across all of the above, not one each. Most salaried people fill a large part of it with EPF before choosing anything."
+    },
+    "80CCD(1B)": {
+      "limit": 50000,
+      "regime": "old only",
+      "what_counts": ["NPS Tier 1, self contribution"],
+      "_note": "Sits on top of 80C, so the combined ceiling is 2,00,000."
+    },
+    "80CCD(2)": {
+      "limit_pct_of_salary_new_regime": 14,
+      "limit_pct_of_salary_old_regime": 10,
+      "regime": "both",
+      "what_counts": ["Employer's NPS contribution"],
+      "_note": "The only meaningful deduction that survives into the new regime. It costs the employee nothing directly - it is the employer routing part of CTC into NPS."
+    },
+    "80D": {
+      "limit_self_family": 25000,
+      "limit_self_family_senior": 50000,
+      "limit_parents": 25000,
+      "limit_parents_senior": 50000,
+      "preventive_health_checkup_within_limit": 5000,
+      "regime": "old only",
+      "what_counts": ["Health insurance premium", "Preventive health check-up"]
+    },
+    "80E": {
+      "limit": null,
+      "years": 8,
+      "regime": "old only",
+      "what_counts": ["Interest on an education loan - interest only, never principal"],
+      "_note": "No monetary ceiling at all: the whole interest is deductible. Available for 8 assessment years starting from the year repayment begins, or until the interest is fully paid, whichever is earlier. Only for a loan from a bank or an approved financial institution - a loan from a relative does not qualify, which matters when somebody is carrying both."
+    },
+    "24(b)": {
+      "limit_self_occupied": 200000,
+      "limit_let_out": null,
+      "regime": "old only for self-occupied",
+      "what_counts": ["Home loan interest"],
+      "_note": "A let-out property has no ceiling on the interest itself, but the loss that can be set off against other heads is capped at 2,00,000 a year."
+    },
+    "80TTA": { "limit": 10000, "regime": "old only", "what_counts": ["Savings account interest, under 60"] },
+    "80TTB": { "limit": 50000, "regime": "old only", "what_counts": ["Interest income, 60 and over"] }
+  },
+
+  "capital_gains": {
+    "_as_of": "Finance (No. 2) Act 2024, effective 23 July 2024",
+    "listed_equity_and_equity_mutual_funds": {
+      "long_term_after_months": 12,
+      "ltcg_rate_pct": 12.5,
+      "ltcg_annual_exemption": 125000,
+      "stcg_rate_pct": 20,
+      "_note": "The 1,25,000 exemption is per financial year and per person, and it does not carry forward. Gains not booked before 31 March are gains whose exemption was thrown away."
+    },
+    "debt_mutual_funds_bought_on_or_after_2023_04_01": {
+      "taxed_at": "slab",
+      "indexation": false,
+      "_note": "Section 50AA. There is no long-term rate for these at all - every gain is added to income and taxed at the person's own slab, however long it was held."
+    },
+    "gold_and_unlisted": {
+      "long_term_after_months": 24,
+      "ltcg_rate_pct": 12.5,
+      "indexation": false
+    },
+    "immovable_property": {
+      "long_term_after_months": 24,
+      "ltcg_rate_pct": 12.5,
+      "indexation": false,
+      "_note": "For property acquired before 23 July 2024, a resident individual may instead choose 20% with indexation, whichever is lower."
+    }
+  },
+
+  "_what_this_file_does_not_cover": [
+    "Surcharge marginal relief arithmetic above 50 lakh",
+    "HUF, firm and company rates - this is an individual's file",
+    "Presumptive taxation under 44AD / 44ADA for freelance and professional income",
+    "Advance tax instalment dates and interest under 234B / 234C",
+    "TDS credit and Form 26AS reconciliation",
+    "Anything about GST"
+  ]
+}

@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root { --background: #0a0a0a; --foreground: #e5e7eb; }
-body { background-color: var(--background); color: var(--foreground); font-family: 'Inter', sans-serif; }
+body { background-color: var(--background); color: var(--foreground); font-family: var(--font-sans), system-ui, sans-serif; }
 
+/* legacy racing card (still used by tabs not yet re-skinned) */
 .card {
   background: linear-gradient(145deg, #1a1a1a 0%, #0f0f0f 100%);
   border: 1px solid #2d2d2d;
@@ -16,7 +17,88 @@ body { background-color: var(--background); color: var(--foreground); font-famil
 .card:hover { border-color: #e10600; box-shadow: 0 0 12px rgba(225, 6, 0, 0.3); transition: all 0.3s ease; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 .card-title { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #c0c0c0; }
-.value-large { font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: #ffffff; }
+.value-large { font-size: 2rem; font-weight: 700; font-family: var(--font-mono), ui-monospace, monospace; color: #ffffff; }
 .value-positive { color: #00ff87; }
 .value-negative { color: #e10600; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #00ff87; box-shadow: 0 0 6px #00ff87; }
+
+/* ------------------------------------------------------------------ */
+/* AURUM — private-wealth terminal skin (Overview + finance chrome).  */
+/* Additive: the .card block above still serves the un-re-skinned tabs.*/
+/* Red is NOT in this set — coral (#FF7A6B) marks a monetary loss,     */
+/* aurum-coral/emergency red tone stays "act now" only (house rule D1).*/
+/* ------------------------------------------------------------------ */
+.aurum-page {
+  --bg0: #08090F;
+  --bg1: #0C0E16;
+  --au-panel: rgba(255, 255, 255, 0.028);
+  --au-panel2: rgba(255, 255, 255, 0.015);
+  --au-hair: rgba(255, 255, 255, 0.075);
+  --au-gold: #E4C07C;
+  --au-gold-bright: #F5DCA4;
+  --au-gold-border: rgba(228, 192, 124, 0.22);
+  background:
+    radial-gradient(1100px 620px at -180px -260px, rgba(228, 192, 124, 0.075), transparent 70%),
+    radial-gradient(900px 560px at calc(100% + 160px) calc(100% + 220px), rgba(139, 147, 255, 0.06), transparent 70%),
+    var(--bg0);
+  color: var(--au-text, #ECEAE2);
+}
+
+.panel {
+  background: linear-gradient(180deg, var(--au-panel), var(--au-panel2));
+  border: 1px solid var(--au-hair);
+  border-radius: 16px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+}
+.panel.hero { border-color: var(--au-gold-border); }
+.panel.hero::before {
+  content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, rgba(228,192,124,.5), rgba(228,192,124,.06) 30%, transparent 55%, rgba(139,147,255,.18));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+
+.plabel { font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #9A9DAA; display: flex; align-items: center; gap: 8px; }
+.plabel .tag { font-family: var(--font-mono), ui-monospace, monospace; font-size: 9px; letter-spacing: .1em; color: rgba(228,192,124,.85); border: 1px solid rgba(228,192,124,.25); border-radius: 999px; padding: 2px 8px; text-transform: uppercase; white-space: nowrap; }
+.plabel .tag.dim { color: #5B5F6E; border-color: var(--au-hair); }
+.plabel .tag.warn { color: #FF7A6B; border-color: rgba(255,122,107,.35); }
+
+.value-hero { font-family: var(--font-serif), Georgia, serif; font-weight: 400; font-size: clamp(38px, 4vw, 58px); line-height: 1; color: #ECEAE2; letter-spacing: -.01em; }
+.value-hero .cur { font-size: .55em; color: #9A9DAA; margin-right: 6px; }
+.value-lg { font-family: var(--font-serif), Georgia, serif; font-weight: 500; font-size: clamp(26px, 2.4vw, 34px); line-height: 1; color: #ECEAE2; }
+.value-lg .cur { font-size: .58em; color: #9A9DAA; margin-right: 4px; }
+.value-md { font-family: var(--font-mono), ui-monospace, monospace; font-size: 21px; font-weight: 500; }
+
+.delta { font-family: var(--font-mono), ui-monospace, monospace; font-size: 11.5px; font-weight: 500; border-radius: 999px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.delta.up { color: #3DDC97; background: rgba(61,220,151,.09); border: 1px solid rgba(61,220,151,.22); }
+.delta.down { color: #FF7A6B; background: rgba(255,122,107,.09); border: 1px solid rgba(255,122,107,.22); }
+.delta.gold { color: #E4C07C; background: rgba(228,192,124,.08); border: 1px solid rgba(228,192,124,.25); }
+.pos { color: #3DDC97; } .neg { color: #FF7A6B; } .goldc { color: #E4C07C; }
+.mutedtx { color: #9A9DAA; } .fainttx { color: #5B5F6E; }
+
+.aurum-row { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; border-bottom: 1px dashed rgba(255,255,255,.05); font-size: 13px; }
+.aurum-row:last-child { border-bottom: none; }
+.aurum-row .k { color: #9A9DAA; }
+.aurum-row .v { font-family: var(--font-mono), ui-monospace, monospace; font-size: 13px; }
+
+.track { height: 6px; border-radius: 4px; background: rgba(255,255,255,.06); overflow: hidden; display: flex; }
+.fill { height: 100%; border-radius: 4px; }
+
+.chip { font-family: var(--font-mono), ui-monospace, monospace; font-size: 10px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--au-hair); color: #9A9DAA; display: inline-block; white-space: nowrap; }
+.chip.g { color: #E4C07C; border-color: rgba(228,192,124,.3); background: rgba(228,192,124,.06); }
+.chip.e { color: #3DDC97; border-color: rgba(61,220,151,.25); background: rgba(61,220,151,.06); }
+.chip.c { color: #8B93FF; border-color: rgba(139,147,255,.3); background: rgba(139,147,255,.07); }
+.chip.r { color: #FF7A6B; border-color: rgba(255,122,107,.3); background: rgba(255,122,107,.06); }
+
+.footnote { font-family: var(--font-mono), ui-monospace, monospace; font-size: 9.5px; color: #5B5F6E; letter-spacing: .06em; }
+
+.pill { font-family: var(--font-mono), ui-monospace, monospace; font-size: 11px; color: #9A9DAA; border: 1px solid var(--au-hair); border-radius: 999px; padding: 6px 14px; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: #3DDC97; box-shadow: 0 0 8px rgba(61,220,151,.8); flex-shrink: 0; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--au-gold-border); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #E4C07C; background: rgba(228,192,124,.08); flex-shrink: 0; }
+
+/* motion discipline: everything decorative freezes under reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .panel.hero::before, .pill .dot { animation: none !important; transition: none !important; }
+}

@@ -32,7 +32,7 @@ from services.calculations.data_health import recompute_health  # noqa: E402
 try:
     from services.market_data import batch_refresh
 except Exception:  # pragma: no cover - keep the pass resilient
-    def batch_refresh(symbols, total_retry_budget_s: int = 120):
+    def batch_refresh(symbols, budget_s: int = 120):
         return {}
 
 RETRY_BUDGET_S = 90          # capped total retry budget for the whole nightly pass
@@ -52,36 +52,53 @@ def refresh_latest_prices(conn) -> None:
     if not syms:
         _log("no symbols to refresh")
         return
-    out = batch_refresh(syms, total_retry_budget_s=RETRY_BUDGET_S)
-    _log(f"latest-price refresh: {len([v for v in out.values() if v is not None])}/{len(syms)} priced "
+    out = batch_refresh(syms, budget_s=RETRY_BUDGET_S)
+    prices = out.get("prices", out) if isinstance(out, dict) else {}
+    priced = len([v for v in prices.values() if v is not None])
+    _log(f"latest-price refresh: {priced}/{len(syms)} priced "
          f"(retry budget {RETRY_BUDGET_S}s)")
 
 
 def weekly_gap_only_refresh(conn) -> None:
-    """Per symbol, extend price_history from MAX(date)+1 to today. INSERT OR
-    IGNORE, so it is safe to re-run and never re-pulls the full history."""
-    today = _dt.date.today()
+    """Per symbol, extend price_history past MAX(date) with the feed's own
+    published points. INSERT OR IGNORE, so it is safe to re-run.
+
+    It must be the real series: carrying the last price forward one row per
+    calendar day manufactures a quote for every weekend and holiday, and makes
+    the Overview's day change read a false 0.00 because the newest two rows
+    always hold the same number. A day the feed did not publish stays absent.
+    """
+    try:
+        from services.market_data import history_for
+    except ImportError:
+        _log("weekly gap-only refresh: market_data unavailable, skipped")
+        return
+
+    types = {
+        r["symbol"]: (r["type"] or "")
+        for r in conn.execute("SELECT symbol, COALESCE(type,'') AS type FROM active_holdings")
+    }
     rows = conn.execute(
-        "SELECT symbol, MAX(date) AS max_date, "
-        "(SELECT price FROM price_history p2 WHERE p2.symbol = p1.symbol "
-        " ORDER BY date DESC LIMIT 1) AS last_price "
-        "FROM price_history p1 GROUP BY symbol"
+        "SELECT symbol, MAX(date) AS max_date FROM price_history GROUP BY symbol"
     ).fetchall()
     added = 0
     for r in rows:
+        last = str(r["max_date"] or "")[:10]
         try:
-            start = _dt.date.fromisoformat(str(r["max_date"])[:10]) + _dt.timedelta(days=1)
-        except (TypeError, ValueError):
+            res = history_for(r["symbol"], types.get(r["symbol"]))
+        except Exception:
             continue
-        px = float(r["last_price"] or 0.0)
-        d = start
-        while d <= today:
+        if not res.get("has_data"):
+            continue
+        for p in res.get("points") or []:
+            day = str(p.get("date") or "")[:10]
+            if not day or day <= last:
+                continue
             cur = conn.execute(
                 "INSERT OR IGNORE INTO price_history(symbol,date,price,source) VALUES (?,?,?,?)",
-                (r["symbol"], d.isoformat(), px, "night_worker_gap"),
+                (r["symbol"], day, float(p["price"]), "night_worker_gap"),
             )
             added += cur.rowcount or 0
-            d += _dt.timedelta(days=1)
     conn.commit()
     _log(f"weekly gap-only refresh: +{added} price_history rows")
 

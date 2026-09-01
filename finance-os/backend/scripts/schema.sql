@@ -118,6 +118,12 @@ CREATE TABLE data_health (
 );
 INSERT INTO data_health (id) VALUES (1);
 
+CREATE TABLE IF NOT EXISTS app_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE agent_memory (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     advice TEXT,

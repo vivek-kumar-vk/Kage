@@ -125,6 +125,7 @@ export default function ScenarioPage() {
             </li>
           </ul>
         )}
+        {/* Visualization planned: before/after projection bars (net worth, goal probability) */}
       </Card>
     </div>
   );

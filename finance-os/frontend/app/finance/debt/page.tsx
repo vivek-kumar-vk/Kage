@@ -77,6 +77,7 @@ function OverviewCard() {
           </li>
         </ul>
       )}
+      {/* Visualization planned: none — summary figures */}
     </Card>
   );
 }
@@ -111,6 +112,7 @@ function DebtTableCard() {
           </table>
         </div>
       )}
+      {/* Visualization planned: outstanding-by-lender horizontal bar */}
     </Card>
   );
 }
@@ -140,6 +142,7 @@ function PayoffPlanCard() {
           ))}
         </ol>
       )}
+      {/* Visualization planned: payoff timeline / month-to-clear waterfall */}
     </Card>
   );
 }

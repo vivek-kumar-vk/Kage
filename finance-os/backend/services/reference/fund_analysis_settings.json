@@ -1,0 +1,30 @@
+{
+  "_comment": "Settings for the per-fund holdings analysis (analyse_a_fund.py). Every number here is an assumption a person should confirm - the flag below says nobody has yet. Changing a number here to make a chart look better is the exact failure india_planning_assumptions.json was built to prevent.",
+  "verified_by_a_person": false,
+
+  "benchmark_symbol": "^NSEI",
+  "benchmark_name": "NIFTY 50",
+  "risk_free_rate_pct": 5.5,
+  "_risk_free_note": "Standing in for the 91-day T-bill. Confirm the current rate on rbi.org.in and set verified_by_a_person to true.",
+
+  "lookback_days": 365,
+  "min_points_for_ratios": 60,
+  "trading_days_per_year": 252,
+
+  "target_allocation": {
+    "_comment": "Asset-class TARGETS for build_the_portfolio_review.py's allocation-drift observation. These four numbers were placed by an agent as a reasonable starting point - NO person has chosen or confirmed them, so verified_by_a_person stays false and every drift figure built on them prints [UNVERIFIED]. The owner edits the numbers AND flips the flag only when the targets are genuinely theirs; changing a number here so the drift table flatters today's mix is exactly the failure this file's honesty rules exist to stop.",
+    "verified_by_a_person": false,
+    "targets": {
+      "equity": 65,
+      "debt": 20,
+      "commodity": 10,
+      "cash": 5
+    }
+  },
+
+  "market_cap_thresholds_cr": {
+    "large_cap_min_cr": 75000,
+    "mid_cap_min_cr": 25000,
+    "_note": "SEBI defines caps by AMFI rank (top 100 / 101-250 / rest), which moves twice a year. Absolute crore thresholds are a standing approximation until somebody maps the AMFI lists - hence unverified."
+  }
+}

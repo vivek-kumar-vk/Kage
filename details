@@ -1,0 +1,76 @@
+Aurum rebuild — finance-os Overview (2026-09-02)
+================================================
+
+This file was the empty artifact the interrupted session left behind. The real
+handoff was the approved plan at
+`.zcode/plans/plan-sess_8175c092-3c3d-4bce-a31b-9d6d641b0b63.md`, worked against
+the mockups in `.scratch/finance-redesign/mockups/`.
+
+Status: DONE. Uncommitted — the tree also holds unrelated work.
+
+What shipped
+------------
+Chrome + theme    Aurum tokens in `tailwind.config.ts` / `globals.css` (additive;
+                  `.card` + racing palette still serve the un-re-skinned tabs).
+                  Header rebuilt to the mockup, LIVE pill fed by real freshness
+                  from `/overview/data-health`, re-polled every 60 s.
+Fonts             Fraunces / Inter / JetBrains Mono via `next/font`, wired through
+                  CSS variables — naming the families literally silently fell back
+                  to Georgia and ui-monospace.
+Nine cards        All rebuilt as Aurum panels on the 12-col grid (8+4 / 5+4+3 /
+                  4+4+4) with hand-rolled SVG charts: mirrored cashflow bars,
+                  surplus donut, emergency ring, debt share bar, goal probability
+                  bars, health-score ring. No chart library.
+Net-worth ridge   `components/finance/three/NetWorthRidge.tsx` — react-three-fiber,
+                  dynamic `ssr:false`, camera framed off the live aspect ratio,
+                  geometry disposed on unmount. Falls back to a static gold SVG
+                  built from the same real series on no-WebGL, on reduced-motion,
+                  and if a mounted WebGL context has not painted in 1.5 s. The
+                  panel tag names whichever renderer drew. `three/HeroScene.tsx`
+                  (dead) deleted.
+Docs             `AGENTS.md` D13/D13.1-3, `finance-os/DECISIONS.md` FD5 + FD6,
+                  `PLANNED_WORK.md` P12 (done) + P13 (follow-ups).
+
+Bugs found while verifying
+--------------------------
+1. `services/db.connect` opened SQLite with the default `check_same_thread=True`.
+   FastAPI runs a sync generator dependency and its sync endpoint on *different*
+   threadpool threads, so the nine concurrent card fetches 500'd. Now
+   `check_same_thread=False` — safe, since every request opens and closes its own
+   connection.
+2. `market_data.batch_refresh` stamped every quote `date.today()`, including a
+   stale NAV and a cached read. yfinance 404s on every AMFI code, so once any
+   history existed the NAV feed was never consulted and the cached price was
+   re-stamped as today — the two newest rows per symbol held the same number and
+   the day change read a false 0.00.
+3. `night_worker.weekly_gap_only_refresh` did not fetch anything: it carried the
+   last price forward one row per calendar day. Same effect, nightly. It now
+   inserts the feed's real points past `MAX(date)`.
+   (20 fabricated rows written during this session's own verification runs were
+   deleted; the DB holds published quotes only.)
+
+Verified
+--------
+- All nine `/overview/*` endpoints return computed values against the real DB
+  (net worth -5,01,853 / assets 2,58,897 / liabilities 7,60,750; day change
+  -553.48, -0.34%; sweep split 45/36/19 from `app_settings`; health score 85).
+- `market/backfill` pulled real NAV history for 10/10 holdings, 0 failures.
+- `scripts/backfill_snapshots.py` wrote 28 month-end rows (2024-06 → 2026-09).
+- `night_worker.py --once` runs clean and no longer flattens the day change.
+- `npm run build` static export passes; `python build.py` stages 80 files.
+- Page verified in Chrome against the mockup PNGs at 1690 px: layout, charts,
+  fonts, freshness pill, no console errors, no horizontal overflow.
+
+Not verified here
+-----------------
+The three.js ridge could not be watched: the automated Chrome window is
+`visibilityState: hidden`, which freezes `requestAnimationFrame` (0 ticks/s), and
+that profile also reports `prefers-reduced-motion: reduce`. The SVG fallback was
+verified with real data; the WebGL path, its draw-in, and drag-to-tilt need one
+look in a normal window.
+
+Known data gaps (not code)
+--------------------------
+`lots` is empty, so XIRR is `null` and the portfolio-value history is all zeros
+plus today — the Pulse card says so instead of drawing a cliff. `goals` is empty,
+so the Monte-Carlo path is unexercised. Both fill in from the data migration.

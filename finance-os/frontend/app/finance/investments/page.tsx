@@ -15,6 +15,7 @@ interface Holding {
   type: string | null;
   units: number;
   avg_cost: number;
+  invested: number | null;
   value: number | null;
   weight: number;
   priced: boolean;
@@ -61,6 +62,8 @@ function HoldingsTable() {
               <tr className="text-left text-racing-silver">
                 <th className="py-1 pr-4">Asset</th>
                 <th className="py-1 pr-4">Units</th>
+                <th className="py-1 pr-4">Avg cost</th>
+                <th className="py-1 pr-4">Invested</th>
                 <th className="py-1 pr-4">Value</th>
                 <th className="py-1 pr-4">Weight</th>
                 <th className="py-1 pr-4" />
@@ -78,6 +81,8 @@ function HoldingsTable() {
                     )}
                   </td>
                   <td className="py-1 pr-4 font-mono">{h.units}</td>
+                  <td className="py-1 pr-4 font-mono">{inr(h.avg_cost)}</td>
+                  <td className="py-1 pr-4 font-mono">{inr(h.invested)}</td>
                   <td className="py-1 pr-4 font-mono">{inr(h.value)}</td>
                   <td className="py-1 pr-4 font-mono">
                     {Math.round(h.weight * 100)}%
@@ -107,6 +112,7 @@ function HoldingsTable() {
           </table>
         </div>
       )}
+      {/* Visualization planned: none — holdings table (value column fills once prices backfill) */}
     </Card>
   );
 }
@@ -135,6 +141,7 @@ function RollingReturnsCard() {
       ) : (
         <RollingReturnsLine points={points} />
       )}
+      {/* Visualization: rolling 30-day returns line chart (RollingReturnsLine) — pending price backfill */}
     </Card>
   );
 }
@@ -167,6 +174,7 @@ function DrawdownCard() {
           <DrawdownArea points={points} />
         </>
       )}
+      {/* Visualization: drawdown area chart (DrawdownArea) + max-drawdown % — pending price backfill */}
     </Card>
   );
 }
@@ -189,6 +197,7 @@ function AllocationCard() {
           }))}
         />
       )}
+      {/* Visualization: asset-allocation donut (AllocationDonut) — pending priced holdings */}
     </Card>
   );
 }

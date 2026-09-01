@@ -9,7 +9,8 @@ import startup
 from services import db
 
 ROUTERS = ["overview", "investments", "debt", "tracker", "learning", "health",
-           "accounts", "goals", "insurance", "salary", "imports", "entities", "settings"]
+           "accounts", "goals", "insurance", "salary", "imports", "entities", "settings",
+           "market"]
 
 
 def create_app() -> FastAPI:

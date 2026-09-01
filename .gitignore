@@ -80,6 +80,13 @@ current.png
 
 # --- Claude Code session plans (ephemeral; outcomes land in PLANNED_WORK.md) ---
 .zcode/
+.scratch/
+
+# --- Private finance source docs + backfill data (NEVER commit) ---
+*.pdf
+LOAN ACCOUNT*.pdf
+finance-os/backend/data/
+qwen_agent_port/
 
 # --- Anime screen: local-only, never on GitHub (restored from the old checkout) ---
 Screens/Anime/

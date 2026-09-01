@@ -64,6 +64,7 @@ function TransactionsCard() {
           </table>
         </div>
       )}
+      {/* Visualization planned: none — transaction ledger table */}
     </Card>
   );
 }
@@ -101,6 +102,7 @@ function CategoryBreakdownCard() {
             ))}
         </ul>
       )}
+      {/* Visualization: horizontal bar per category (inline, spend share) */}
     </Card>
   );
 }
@@ -135,6 +137,7 @@ function TrendCard() {
           ))}
         </div>
       )}
+      {/* Visualization: monthly income vs expense paired bars (inline) */}
     </Card>
   );
 }
@@ -159,6 +162,7 @@ function RecurringCard() {
           ))}
         </ul>
       )}
+      {/* Visualization planned: none — detected recurring-payment list */}
     </Card>
   );
 }

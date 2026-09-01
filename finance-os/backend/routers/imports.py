@@ -46,16 +46,29 @@ async def import_groww_csv(background_tasks: BackgroundTasks, file: UploadFile =
 
 @router.post("/import/cas")
 async def import_cas(file: UploadFile = File(...), pan: str | None = None):
-    rows = parse_cas(await file.read(), pan)
+    result = parse_cas(await file.read(), pan)
+    rows = result.get("rows", [])
     with connect() as db:
         acc_id = _account(db, "CAS", "demat")
         for r in rows:
-            upsert_holding(acc_id, r.get("symbol"), name=r.get("name"),
-                           type=r.get("type"), units=r.get("units", 0),
-                           cost_per_unit=r.get("cost_per_unit"),
+            symbol = r.get("amfi_code") or r.get("isin")
+            if not symbol:
+                continue
+            units = r.get("units") or 0
+            invested = r.get("invested")
+            cpu = (invested / units) if (invested and units and r.get("full_cost_coverage")) else None
+            upsert_holding(acc_id, symbol, name=r.get("name"),
+                           type="mutual_fund", units=units,
+                           cost_per_unit=cpu,
                            mode="set_snapshot", conn=db)
         db.commit()
-    return {"state": "ok", "holdings": len(rows)}
+    return {
+        "state": "ok",
+        "holdings": len(rows),
+        "as_of": result.get("as_of", ""),
+        "skipped_stale": len(result.get("skipped_stale", [])),
+        "unmatched": len(result.get("unmatched", [])),
+    }
 
 
 _MANUAL_TABLES = {"debt": "debts", "insurance": "insurance", "goal": "goals",

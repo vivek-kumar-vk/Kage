@@ -42,3 +42,33 @@ routing decision, not finance-os code.
 
 `archived_at` timestamp is the default deletion path. Hard delete / `ON DELETE CASCADE`
 is reserved for a separate, restricted path — not the blanket default.
+
+## FD5 — The Overview wears the "Aurum" skin
+
+The Overview tab is the Aurum private-wealth terminal: near-black ground, gold `#E4C07C`
+accent, Fraunces serif hero numbers, JetBrains Mono for figures, a 12-column panel grid,
+and hand-rolled SVG charts — no chart library. Ported from
+`.scratch/finance-redesign/mockups/overview.html`. Repo-wide decision: `AGENTS.md` D13.
+
+Additive, not a replacement: `.card` and the racing palette still serve Investments,
+Debt, Tracker and Scenario. Coral `#FF7A6B` marks a monetary loss only — nothing
+decorative is red.
+
+The net-worth ridge is react-three-fiber (`components/finance/three/NetWorthRidge.tsx`),
+dynamically imported with `ssr:false`, and falls back to a static gold SVG built from the
+same real series on no-WebGL, on `prefers-reduced-motion`, or when a mounted WebGL
+context has not painted in 1.5 s. The panel labels whichever renderer drew.
+
+## FD6 — Never write a price for a day the feed did not publish
+
+`price_history` holds published quotes only. Two paths were manufacturing rows —
+`market_data.batch_refresh` stamped a stale NAV (and any cached price) with
+`date.today()`, and `night_worker.weekly_gap_only_refresh` carried the last price forward
+one row per calendar day. Both left the two newest rows per symbol holding the same
+number, so `portfolio_pulse`'s day change read a false `0.00`.
+
+Rules: a quote is stored under the feed's own date; a cached read is not a quote and
+writes nothing; the gap refresh inserts the feed's real points past `MAX(date)`. A day
+with no published NAV simply has no row. Where a series is too sparse to mean anything,
+the card says so rather than drawing a curve (the Portfolio Pulse sparkline does this
+while `lots` is empty).

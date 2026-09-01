@@ -10,6 +10,7 @@ data_health is never INSERTed here.  [singleton]
 from __future__ import annotations
 
 import datetime as _dt
+import json
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
@@ -142,6 +143,33 @@ def add_salary(payload: dict = Body(default={}), conn=Depends(_db)):
     )
     conn.commit()
     return _dict(_get(conn, "salary", cur.lastrowid))
+
+
+# --- app settings (small JSON-per-key KV; drives things like the sweep rule) --
+
+@router.get("/settings/app")
+def get_app_settings(conn=Depends(_db)):
+    rows = conn.execute("SELECT key, value FROM app_settings ORDER BY key").fetchall()
+    out = {}
+    for r in rows:
+        try:
+            out[r["key"]] = json.loads(r["value"])
+        except (TypeError, ValueError):
+            out[r["key"]] = r["value"]
+    return out
+
+
+@router.put("/settings/app")
+def put_app_settings(payload: dict = Body(default={}), conn=Depends(_db)):
+    for key, value in (payload or {}).items():
+        conn.execute(
+            "INSERT INTO app_settings(key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value, "
+            "updated_at = CURRENT_TIMESTAMP",
+            (str(key), json.dumps(value)),
+        )
+    conn.commit()
+    return {"state": "ok", "keys": sorted((payload or {}).keys())}
 
 
 # --- scenario simulator -----------------------------------------------------

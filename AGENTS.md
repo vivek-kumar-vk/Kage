@@ -184,6 +184,26 @@ Read this first, every session. Standing rules for this repo; the plan list is
   - **D12.2 — Demo events opt-in.** Ambient simulated activity is `AGENTS_DEMO_EVENTS`
     off by default (public repo); every generated event carries `sim=1` and is
     labeled simulated client-side. Never presented as real work.
+- **D13 — Aurum is the Overview skin (finance-os/; 2026-09-02).** The finance-os
+  Overview wears the "Aurum" private-wealth theme — near-black ground, gold
+  `#E4C07C` accent, Fraunces serif hero numbers, 12-col panel grid, hand-rolled
+  SVG charts (no chart library) — ported from
+  `.scratch/finance-redesign/mockups/overview.html`. The racing palette and
+  `.card` stay for the tabs that have not been re-skinned; the two coexist.
+  - **D13.1 — Red is still act-now only.** Aurum's coral `#FF7A6B` marks a
+    monetary loss (an expense bar, a negative day change, an above-20% APR).
+    Nothing decorative is red, and no card is red at rest.
+  - **D13.2 — The 3D ridge degrades, it does not disappear.** The net-worth
+    ridge is react-three-fiber, dynamically imported, `ssr:false`. It falls back
+    to a static gold SVG drawn from *the same real series* on no-WebGL, on
+    `prefers-reduced-motion`, and when a mounted WebGL context has not painted
+    within 1.5 s. The panel's tag names whichever one actually drew.
+  - **D13.3 — No manufactured market data.** A price row is written only for a
+    date the feed actually published. Carrying the last NAV forward (or stamping
+    a stale NAV as today) fills the series with duplicates and silently flattens
+    every day change to 0.00 — both paths did this and both were fixed. A day
+    with no published quote stays absent, and a card with nothing real to plot
+    says so instead of drawing a curve.
 - **D15 — Pixel Office is 2D, not 3D (Screens/Agents/; 2026-09-02).** The D12 stage
   was Three.js/r3f. It could not reach the reference art (`Agent-idea.png`, a 16-bit
   top-down game scene), so the whole 3D pass — including the abandoned

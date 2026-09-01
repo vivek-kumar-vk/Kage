@@ -22,7 +22,9 @@ def backfill_price_history(symbol: str, asset_type: str | None = None, days: int
     with connect() as db:
         if _has_history(db, sym):
             return 0
-        base = get_current_price(sym, asset_type) or 100.0
+        quote = get_current_price(sym, asset_type)
+        base = quote.get("price") if isinstance(quote, dict) and quote.get("has_data") else None
+        base = base or 100.0
         today = datetime.date.today()
         written = 0
         for i in range(days, -1, -1):

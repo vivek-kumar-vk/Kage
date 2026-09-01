@@ -122,6 +122,29 @@ bottom. Status: `queued` | `in progress` | `done`.
   Q10 (finance AI agent + cloud LLM routing), Q12 (OmniRoute before/after
   the data migration).
 
+## P12 — finance-os Overview: the "Aurum" rebuild
+- **Status:** DONE (2026-09-02) — see `AGENTS.md` D13, `finance-os/DECISIONS.md` FD5
+- Overview re-skinned to the Aurum private-wealth theme
+  (`.scratch/finance-redesign/mockups/overview.html`): 12-col grid, serif hero
+  numbers, hand-rolled SVG charts, a three.js net-worth ridge with a static SVG
+  fallback. Racing red stays "act now" only; the other tabs keep the old skin.
+- All nine `/overview/*` endpoints now return computed values — real day change
+  from `price_history`, settings-backed sweep split, Monte-Carlo goal
+  probability, on-pace ETA, freshness strings.
+- Three data-honesty bugs fixed along the way: `batch_refresh` stamped a stale
+  NAV as today's quote; `night_worker.weekly_gap_only_refresh` carried the last
+  price forward one row per calendar day; both flattened the day change to
+  0.00. `services/db.connect` also needed `check_same_thread=False` — nine
+  concurrent card fetches 500'd without it.
+- **Left open:** `lots` is empty, so XIRR is `null` and the portfolio history
+  sparkline has nothing to plot (the card says so rather than drawing a cliff).
+  Filling it is a data-migration task, not a UI one.
+
+## P13 — Overview follow-ups (queued)
+- Interactive month selector in the header (the pill is display-only today).
+- SMS import pipeline → `sms_last_import` stops going stale by hand.
+- Benchmark comparison on the net-worth ridge (index line behind the actual).
+
 ---
 
 ## Active order
@@ -137,7 +160,8 @@ One item at a time. Full map with links: [`WAYFINDER.md`](WAYFINDER.md).
 7. Remove `Shared_By_All_*` (P2)
 8. Python → Node stack migration (P4)
 9. Anime-removal cleanup (P5)
-10. dsh local-model observability (`.scratch/dsh-local-model/PLAN.md`, parked)
+10. Overview follow-ups (P13)
+11. dsh local-model observability (`.scratch/dsh-local-model/PLAN.md`, parked)
 
 ---
 
