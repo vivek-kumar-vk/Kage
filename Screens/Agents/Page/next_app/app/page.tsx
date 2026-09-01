@@ -11,8 +11,8 @@ import {
   type OfficeAgent,
 } from "../lib/office";
 
-// WebGL must run client-only (Main Menu's CenterCore pattern).
-const OfficeStage = dynamic(() => import("../components/office/OfficeStage"), {
+// The stage measures its container and owns a canvas, so it stays client-only.
+const PixelOffice = dynamic(() => import("../components/office/PixelOffice"), {
   ssr: false,
   loading: () => (
     <div className="absolute inset-0 flex items-center justify-center">
@@ -96,7 +96,7 @@ export default function OfficePage() {
       />
 
       <main className="relative min-h-0 flex-1 overflow-hidden">
-        <OfficeStage
+        <PixelOffice
           agents={workspace.data?.agents ?? []}
           departments={workspace.data?.departments ?? []}
           states={states}

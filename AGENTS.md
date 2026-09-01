@@ -184,4 +184,26 @@ Read this first, every session. Standing rules for this repo; the plan list is
   - **D12.2 — Demo events opt-in.** Ambient simulated activity is `AGENTS_DEMO_EVENTS`
     off by default (public repo); every generated event carries `sim=1` and is
     labeled simulated client-side. Never presented as real work.
+- **D15 — Pixel Office is 2D, not 3D (Screens/Agents/; 2026-09-02).** The D12 stage
+  was Three.js/r3f. It could not reach the reference art (`Agent-idea.png`, a 16-bit
+  top-down game scene), so the whole 3D pass — including the abandoned
+  `vivek/agent-chambers-wip` chambers branch — is replaced by a **2D pixel-art canvas
+  renderer**. `three`, `@react-three/fiber`, `@react-three/drei` and `@types/three`
+  are out of `package.json`; static export drops ~1.2 MB → ~770 KB.
+  - **D15.1 — Still no binary assets.** Art is code: a palette + string-matrix
+    sprites + painter functions (`components/office/pixelArt.ts`), composed into one
+    468 x 206 plan buffer (`components/office/roomPlan.ts`) blitted at an integer
+    scale with smoothing off. Nothing to license, nothing to ship.
+  - **D15.2 — One attached building.** Six chambers in a 3x2 block with shared walls
+    and doorways (Model server room / Finance trading floor / Learning library /
+    Agent Deck war room / Anime lounge / Lobby reception), not six floating tiles.
+    Desks are generated per occupied seat, so dropping a profile folder in furnishes
+    a desk automatically — the roster stays registry-driven (D12).
+  - **D15.3 — Device-pixel camera.** Pan/wheel-zoom/room-focus all work in *device*
+    pixels so one art pixel is always an exact square of physical pixels on
+    fractional-DPI displays. Text (name plates, room plates, speech bubbles) stays in
+    a DOM overlay above the canvas so it never gets pixel-scaled.
+  - **D15.4 — One bubble at a time.** With a busy event stream every desk would shout
+    at once; the stage speaks for the selected agent, else the hovered one, else
+    whoever was tasked most recently. Dormant subs show no name plate.
 
