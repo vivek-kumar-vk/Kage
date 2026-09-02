@@ -32,10 +32,12 @@ SCREEN_NAME = "learning"         # must match the folder name, lowercased
 MENU_LABEL = "LEARNING"          # what you actually see in the menu
 MENU_ORDER = 2                   # menu position. Finance is 1
 
-# Three tabs. The most allowed is five - a screen that needs six is
-# really two screens.
+# Five tabs (the menu's maximum). The room player is a detail route off
+# Path, not its own tab - a room is a place inside the journey.
 TABS = [
-    {"key": "today",  "label": "Today",  "endpoint": "/api/learning/today"},
-    {"key": "plan",   "label": "Plan",   "endpoint": "/api/learning/plan"},
-    {"key": "recall", "label": "Recall", "endpoint": "/api/learning/recall"},
+    {"key": "today",    "label": "Today",    "endpoint": "/api/learning/today"},
+    {"key": "path",     "label": "Path",     "endpoint": "/api/learning/path"},
+    {"key": "recall",   "label": "Recall",   "endpoint": "/api/learning/recall"},
+    {"key": "insights", "label": "Insights", "endpoint": "/api/learning/insights"},
+    {"key": "crew",     "label": "Crew",     "endpoint": "/api/learning/crew"},
 ]

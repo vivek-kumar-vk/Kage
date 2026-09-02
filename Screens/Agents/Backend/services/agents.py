@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -9,15 +10,29 @@ from pydantic import BaseModel
 
 import settings_for_agents as cfg
 from db import connect
-from services import office
+from services import events, office
 
 router = APIRouter()
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
+# D17.4 — profile files the Agent Deck may read/write. Name only, no
+# separators, known extension: the path can never leave the profile folder.
+SAFE_FILE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\.(md|txt|json)$")
+MAX_FILE_BYTES = 100_000
+MAX_MESSAGE_CHARS = 2000
+
 
 class AskBody(BaseModel):
     message: Optional[str] = None
+
+
+class MessageBody(BaseModel):
+    body: Optional[str] = None
+
+
+class FileBody(BaseModel):
+    content: Optional[str] = None
 
 
 def _now():
@@ -237,6 +252,176 @@ async def ask_agent(name: str, payload: Optional[AskBody] = Body(default=None)):
         "state": "pending",
         "reply": None,
         "note": "agent wiring lands in PLAN.md item 3",
+    }
+
+
+@router.post(cfg.API_PREFIX + "/agents/{name}/messages")
+async def post_agent_message(name: str, payload: Optional[MessageBody] = Body(default=None)):
+    """Persist a user DM to an agent and announce it on the office stage.
+
+    The reply itself stays the honest pending state (D12.1) — live agent
+    responses land with PLAN.md item 4 V2.
+    """
+    body = (payload.body or "").strip() if payload else ""
+    if not body:
+        return JSONResponse(
+            status_code=422,
+            content={"state": "error", "problem": "empty message"},
+        )
+
+    conn = connect()
+    try:
+        agents = {agent["name"]: agent for agent in _agent_entries(conn)}
+        if name not in agents:
+            return JSONResponse(
+                status_code=404,
+                content={"state": "error", "problem": "unknown agent"},
+            )
+
+        room_id = agents[name]["room_id"]
+        message_id = "msg-" + uuid.uuid4().hex[:10]
+        created = _now()
+        conn.execute(
+            """
+            INSERT INTO messages (id, room_id, author, agent_name, body, created_at)
+            VALUES (?, ?, 'user', ?, ?, ?)
+            """,
+            (message_id, room_id, name, body[:MAX_MESSAGE_CHARS], created),
+        )
+        conn.commit()
+        message = {
+            "id": message_id,
+            "room_id": room_id,
+            "author": "user",
+            "agent_name": name,
+            "body": body[:MAX_MESSAGE_CHARS],
+            "created_at": created,
+        }
+    finally:
+        conn.close()
+
+    events.emit(
+        "ui",
+        "note",
+        f"DM: {body[:80]}",
+        agent_name=name,
+        department=agents[name]["department"],
+        sim=False,
+    )
+
+    return {
+        "state": "queued",
+        "message": message,
+        "note": "queued · live replies land in PLAN.md item 4 V2",
+    }
+
+
+def _known_agent_dir(name: str):
+    known = {agent["name"] for agent in _get_agents()}
+    if name not in known:
+        return None
+    return cfg.AI_AGENTS_DIR / name
+
+
+@router.get(cfg.API_PREFIX + "/agents/{name}/files")
+async def list_agent_files(name: str):
+    agent_dir = _known_agent_dir(name)
+    if agent_dir is None:
+        return JSONResponse(
+            status_code=404,
+            content={"state": "error", "problem": "unknown agent"},
+        )
+
+    files = []
+    if agent_dir.is_dir():
+        for path in sorted(agent_dir.iterdir()):
+            if not path.is_file() or not SAFE_FILE.match(path.name):
+                continue
+            stat = path.stat()
+            files.append(
+                {
+                    "name": path.name,
+                    "size": stat.st_size,
+                    "updated": datetime.fromtimestamp(stat.st_mtime, IST)
+                    .replace(microsecond=0)
+                    .isoformat(),
+                }
+            )
+    return {"state": "ok", "files": files}
+
+
+@router.get(cfg.API_PREFIX + "/agents/{name}/files/{filename}")
+async def read_agent_file(name: str, filename: str):
+    agent_dir = _known_agent_dir(name)
+    if agent_dir is None:
+        return JSONResponse(
+            status_code=404,
+            content={"state": "error", "problem": "unknown agent"},
+        )
+    if not SAFE_FILE.match(filename):
+        return JSONResponse(
+            status_code=422,
+            content={"state": "error", "problem": "bad filename"},
+        )
+
+    path = agent_dir / filename
+    if not path.is_file():
+        return JSONResponse(
+            status_code=404,
+            content={"state": "error", "problem": "no such file"},
+        )
+
+    stat = path.stat()
+    return {
+        "state": "ok",
+        "file": {
+            "name": filename,
+            "content": path.read_text(encoding="utf-8", errors="replace")[:MAX_FILE_BYTES],
+            "size": stat.st_size,
+            "updated": datetime.fromtimestamp(stat.st_mtime, IST)
+            .replace(microsecond=0)
+            .isoformat(),
+        },
+    }
+
+
+@router.put(cfg.API_PREFIX + "/agents/{name}/files/{filename}")
+async def write_agent_file(
+    name: str, filename: str, payload: Optional[FileBody] = Body(default=None)
+):
+    agent_dir = _known_agent_dir(name)
+    if agent_dir is None:
+        return JSONResponse(
+            status_code=404,
+            content={"state": "error", "problem": "unknown agent"},
+        )
+    if not SAFE_FILE.match(filename):
+        return JSONResponse(
+            status_code=422,
+            content={"state": "error", "problem": "bad filename"},
+        )
+
+    content = payload.content if payload and payload.content is not None else ""
+    if len(content.encode("utf-8")) > MAX_FILE_BYTES:
+        return JSONResponse(
+            status_code=413,
+            content={"state": "error", "problem": "file too large"},
+        )
+
+    path = agent_dir / filename
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    stat = path.stat()
+
+    return {
+        "state": "ok",
+        "file": {
+            "name": filename,
+            "size": stat.st_size,
+            "updated": datetime.fromtimestamp(stat.st_mtime, IST)
+            .replace(microsecond=0)
+            .isoformat(),
+        },
     }
 
 

@@ -54,6 +54,8 @@ def holdings_with_value(conn) -> list[dict]:
                 "gain_loss": round(value - invested, 2) if value is not None else None,
                 "priced": priceable,
                 "lots_count": _lots_count(conn, h["id"]),
+                "direct_regular": h["direct_regular"] if "direct_regular" in h.keys() else "regular",
+                "folio": h["folio"] if "folio" in h.keys() else None,
             }
         )
     total = sum(x["value"] for x in out if x["value"] is not None)
@@ -78,18 +80,47 @@ def portfolio_summary(conn) -> dict:
 
 def _portfolio_value_series(conn) -> list[tuple[str, float]]:
     """Daily portfolio value = sum over holdings of units * price_on_that_date.
-    Only dates present in price_history are emitted."""
+
+    Funds publish NAVs on different lags; summing only same-date prices
+    makes the whole portfolio dip on any day one fund is missing — a fake
+    drawdown that then corrupts volatility and Sharpe. So each fund rides
+    on its own LAST KNOWN price between publications, in memory only.
+    Nothing is written back: the ledger keeps only published rows (D13.3/
+    FD6 — a carried price is never stamped as a quote).
+    """
     rows = conn.execute(
         """
-        SELECT ph.date AS d, SUM(ah.units * ph.price) AS v
+        SELECT ph.symbol AS s, ph.date AS d, ph.price AS p, ah.units AS u
         FROM price_history ph
         JOIN active_holdings ah ON ah.symbol = ph.symbol
         WHERE COALESCE(ah.type,'') NOT IN ('bond','other')
-        GROUP BY ph.date
         ORDER BY ph.date ASC
         """
     ).fetchall()
-    return [(r["d"], float(r["v"] or 0.0)) for r in rows]
+    series_by_sym: dict[str, list[tuple[str, float]]] = {}
+    units: dict[str, float] = {}
+    for r in rows:
+        series_by_sym.setdefault(r["s"], []).append((r["d"], float(r["p"])))
+        units[r["s"]] = float(r["u"] or 0.0)
+    all_dates = sorted({r["d"] for r in rows})
+    if not all_dates:
+        return []
+    # pointer sweep: each fund's latest published price up to each date
+    out: list[tuple[str, float]] = []
+    idx = {s: 0 for s in series_by_sym}
+    last = {s: None for s in series_by_sym}
+    for d in all_dates:
+        total = 0.0
+        for s, pts in series_by_sym.items():
+            i = idx[s]
+            while i < len(pts) and pts[i][0] <= d:
+                last[s] = pts[i][1]
+                i += 1
+            idx[s] = i
+            if last[s] is not None:
+                total += units[s] * last[s]
+        out.append((d, total))
+    return out
 
 
 def rolling_returns(conn, window_days: int = 30) -> dict:

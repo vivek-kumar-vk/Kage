@@ -8,9 +8,10 @@ import type { DataHealthData } from '@/lib/types';
 const tabs = [
   { name: 'Overview', href: '/finance' },
   { name: 'Investments', href: '/finance/investments' },
+  { name: 'Analysis', href: '/finance/analysis' },
+  { name: 'Trade Desk', href: '/finance/tradedesk' },
   { name: 'Debt', href: '/finance/debt' },
   { name: 'Tracker', href: '/finance/tracker' },
-  { name: 'Learning', href: '/finance/learning' },
 ];
 
 function isActive(pathname: string, href: string) {

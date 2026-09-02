@@ -1,48 +1,55 @@
-"""One-time price-history backfill for a newly seen symbol. ALWAYS runs as a
-FastAPI BackgroundTask — never inline in a request. Offline / no network -> a
-short synthetic series so time-series endpoints have data from day one."""
+"""Fills the price ledger with REAL dated history only.
+
+HISTORY NOTE: an earlier version drew a synthetic straight-line series
+off the latest quote when a source had no history. That is exactly the
+manufactured-data failure D13.3/FD6 exist to prevent — the fabricated
+rows silently flattened every day change, return and drawdown computed
+from the ledger. When no source answers, NOTHING is written and the
+caller gets 0 rows; the UI's honest "no history" state is the result.
+"""
 from __future__ import annotations
 
-import datetime
-
 from services.db import connect
-from services.market_data import get_current_price, normalize_symbol
+from services.market_data import history_for, normalize_symbol
 
 
-def _has_history(db, symbol: str) -> bool:
+def _has_history(db, sym: str) -> bool:
     return db.execute(
-        "SELECT 1 FROM price_history WHERE symbol=? LIMIT 1", (symbol,)
+        "SELECT 1 FROM price_history WHERE symbol = ? LIMIT 1", (sym,)
     ).fetchone() is not None
 
 
-def backfill_price_history(symbol: str, asset_type: str | None = None, days: int = 90) -> int:
-    """Insert up to `days`+1 daily rows for `symbol` if it has none yet.
-    Returns the number of rows written (0 if history already existed)."""
+def backfill_price_history(symbol: str, asset_type: str | None = None,
+                           days: int = 90) -> int:
+    """Insert real daily rows for `symbol` if it has none yet.
+    Returns the number of rows written (0 when the source has no history)."""
     sym = normalize_symbol(symbol, asset_type)
     with connect() as db:
         if _has_history(db, sym):
             return 0
-        quote = get_current_price(sym, asset_type)
-        base = quote.get("price") if isinstance(quote, dict) and quote.get("has_data") else None
-        base = base or 100.0
-        today = datetime.date.today()
-        written = 0
-        for i in range(days, -1, -1):
-            d = (today - datetime.timedelta(days=i)).isoformat()
-            px = round(float(base) * (1 + 0.0004 * (days - i)), 4)
+    res = history_for(sym, asset_type, days=days)
+    if not res.get("has_data"):
+        return 0
+    written = 0
+    with connect() as db:
+        for p in res.get("points") or []:
+            day = (p.get("date") or "")[:10]
+            price = p.get("price")
+            try:
+                price = float(price) if price is not None else None
+            except (TypeError, ValueError):
+                price = None
+            if not day or price is None or price <= 0:
+                continue
             try:
                 cur = db.execute(
-                    "INSERT OR IGNORE INTO price_history(symbol,date,price,source) "
-                    "VALUES (?,?,?,?)",
-                    (sym, d, px, "backfill"),
+                    "INSERT OR IGNORE INTO price_history(symbol,date,price,source,currency) "
+                    "VALUES (?,?,?,?,?)",
+                    (sym, day, price, res.get("where_from", "unknown"),
+                     p.get("currency", "INR")),
                 )
                 written += cur.rowcount or 0
-            except Exception:
+            except Exception:  # noqa: BLE001
                 pass
         db.commit()
-        return written
-
-
-def enqueue_backfill(symbol: str, asset_type: str | None = None) -> None:
-    """For callers that are not inside a request/BackgroundTasks context."""
-    backfill_price_history(symbol, asset_type)
+    return written

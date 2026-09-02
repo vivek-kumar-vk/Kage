@@ -1,52 +1,60 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   ALERT,
+  CAT,
   CHAR_H,
   CHAR_W,
   MONITOR,
   P as PALETTE,
   POSE_IDLE,
   POSE_TYPING,
+  POSE_WALK,
+  px,
+  pxFlipX,
   charPalette,
   fill,
   halo,
   mix,
-  px,
+  puff,
   shade,
   shadowBlob,
+  sparkle,
   type Palette,
 } from "./pixelArt";
 import {
   MON_DX,
   MON_DY,
-  PLAN_H,
-  PLAN_W,
   RH,
   ROOMS,
   ROOM_BY_ID,
   RW,
-  WALLH,
+  buildLayout,
   drawPlan,
   roomRect,
   seatWorld,
+  type Layout,
   type RoomDef,
 } from "./roomPlan";
 import type { AgentView, OfficeAgent, OfficeDepartment } from "../../lib/office";
 
-const MIN_SCALE = 1;
+const MIN_ZOOM = 2; // never below 2× — below that the floor can't cover a desktop viewport
 const MAX_SCALE = 16;
+// D18.3: agents exist only while working — done, they stretch, puff and are
+// gone. Dormant desks sit empty.
+const LEAVE_MS = 6000;
+const SPAWN_MS = 700;
+const PUFF_MS = 500;
+const WALK_SPEED = 0.06; // buffer px per ms
 const BUBBLE_LINGER_MS = 8000;
-// A sub sits dormant (dark monitor, empty chair) until it is tasked, and stays
-// on for a grace period afterwards so a burst of work reads as one presence.
-const DORMANT_GRACE_MS = 12000;
-const POP_MS = 260;
+const MAX_CLOUDS = 3; // D18.5 — up to three speakers, most-recent win
 
+// Warm screens: off is pale beige, working glows amber, stuck is coral.
 const STATUS_SCREEN: Record<string, string> = {
-  idle: "#2f6a72",
-  working: "#7fd7e1",
-  stuck: "#e0403a",
+  off: "#CBB894",
+  working: "#E8A13C",
+  stuck: "#D95F43",
 };
 
 interface View {
@@ -60,6 +68,16 @@ interface Placed {
   room: RoomDef;
   x: number;
   y: number;
+}
+
+type Pt = { x: number; y: number };
+
+interface Life {
+  mode: "materialize" | "walk";
+  t0: number;
+  path?: Pt[];
+  segs?: number[];
+  total?: number;
 }
 
 function shortName(name: string) {
@@ -76,11 +94,56 @@ function pickBox(placed: Placed) {
     : { x: placed.x - 6, y: placed.y - 3, w: 24, h: 24 };
 }
 
+/** Walk-in route from the lobby café to a seat, along the honey walkways. */
+function walkPath(from: Pt, to: Pt, targetRow: number, layout: Layout): Pt[] {
+  const corr =
+    Math.abs(to.x - layout.corrX[0]) <= Math.abs(to.x - layout.corrX[1]) ? 0 : 1;
+  const cx = layout.corrX[corr];
+  if (targetRow === 0) {
+    return [
+      from,
+      { x: from.x, y: layout.ringBottomY },
+      { x: cx, y: layout.ringBottomY },
+      { x: cx, y: layout.midY },
+      { x: to.x, y: layout.midY },
+      to,
+    ];
+  }
+  return [from, { x: from.x, y: layout.ringBottomY }, { x: to.x, y: layout.ringBottomY }, to];
+}
+
+function measurePath(path: Pt[]) {
+  const segs: number[] = [];
+  let total = 0;
+  for (let i = 1; i < path.length; i++) {
+    const len = Math.abs(path[i].x - path[i - 1].x) + Math.abs(path[i].y - path[i - 1].y);
+    segs.push(len);
+    total += len;
+  }
+  return { segs, total };
+}
+
+function pointAt(path: Pt[], segs: number[], dist: number): Pt {
+  let acc = 0;
+  for (let i = 0; i < segs.length; i++) {
+    if (dist <= acc + segs[i] || i === segs.length - 1) {
+      const t = segs[i] === 0 ? 0 : clamp((dist - acc) / segs[i], 0, 1);
+      return {
+        x: path[i].x + (path[i + 1].x - path[i].x) * t,
+        y: path[i].y + (path[i + 1].y - path[i].y) * t,
+      };
+    }
+    acc += segs[i];
+  }
+  return path[path.length - 1];
+}
+
 interface Props {
   agents: OfficeAgent[];
   departments: OfficeDepartment[];
   states: Map<string, AgentView>;
-  tab: string;
+  /** Agents whose task was handed over by another zone's agent — they walk in. */
+  walkIns: Set<string>;
   selected: string | null;
   onSelect: (name: string) => void;
   now: number;
@@ -90,12 +153,11 @@ export default function PixelOffice({
   agents,
   departments,
   states,
-  tab,
+  walkIns,
   selected,
   onSelect,
   now,
 }: Props) {
-  const tabRef = useRef(tab);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const planRef = useRef<HTMLCanvasElement | null>(null);
@@ -104,15 +166,33 @@ export default function PixelOffice({
 
   const [view, setView] = useState<View>({ scale: 2, ox: 0, oy: 0 });
   const viewRef = useRef(view);
+  // The responsive layout owns the zoom floor: fit scale = cover scale, and
+  // pan is clamped so the space beyond the floor can never be shown (D18.7).
+  const layoutRef = useRef<Layout | null>(null);
+  const fitScaleRef = useRef(MIN_ZOOM);
   const setViewBoth = useCallback((next: View) => {
-    viewRef.current = next;
-    setView(next);
+    const l = layoutRef.current;
+    const size = sizeRef.current;
+    const scale = clamp(Math.round(next.scale), fitScaleRef.current, MAX_SCALE);
+    const slackX = l ? size.w - l.bw * scale : 0;
+    const slackY = l ? size.h - l.bh * scale : 0;
+    const nextView: View = {
+      scale,
+      ox: slackX >= 0 ? Math.round(slackX / 2) : clamp(Math.round(next.ox), slackX, 0),
+      oy: slackY >= 0 ? Math.round(slackY / 2) : clamp(Math.round(next.oy), slackY, 0),
+    };
+    viewRef.current = nextView;
+    setView(nextView);
   }, []);
+
+  // The responsive plan layout: rebuilt from the viewport on every resize.
+  const [layout, setLayout] = useState<Layout | null>(null);
 
   const [hovered, setHovered] = useState<string | null>(null);
   const hoveredRef = useRef<string | null>(null);
-  const [follow, setFollow] = useState(true);
-  const followRef = useRef(true);
+  // Fit-all is the resting camera (D16.2); Follow is opt-in per session.
+  const [follow, setFollow] = useState(false);
+  const followRef = useRef(false);
   useEffect(() => {
     followRef.current = follow;
   }, [follow]);
@@ -126,11 +206,12 @@ export default function PixelOffice({
   // --- roster -> seats ---------------------------------------------------
 
   const accentOf = useCallback(
-    (roomId: string) => departments.find((d) => d.id === roomId)?.color ?? "#8B9099",
+    (roomId: string) => departments.find((d) => d.id === roomId)?.color ?? "#A08762",
     [departments]
   );
 
   const { placed, byName } = useMemo(() => {
+    const layout = layoutRef.current;
     const buckets = new Map<string, OfficeAgent[]>();
     for (const room of ROOMS) buckets.set(room.id, []);
     for (const agent of agents) {
@@ -141,6 +222,7 @@ export default function PixelOffice({
     const rank = (a: OfficeAgent) => (a.tier === "head" ? 0 : a.tier === "main" ? 1 : 2);
     const list: Placed[] = [];
     const index = new Map<string, Placed>();
+    if (!layout) return { placed: list, byName: index };
 
     for (const room of ROOMS) {
       const members = buckets
@@ -149,7 +231,7 @@ export default function PixelOffice({
         .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
 
       members.forEach((agent, i) => {
-        const world = seatWorld(room, i);
+        const world = seatWorld(room, i, layout);
         const entry: Placed = { agent, room, x: world.x, y: world.y };
         list.push(entry);
         index.set(agent.name, entry);
@@ -157,7 +239,7 @@ export default function PixelOffice({
     }
 
     return { placed: list, byName: index };
-  }, [agents]);
+  }, [agents, layout]);
 
   const occupancy = useMemo(() => {
     const counts = new Map<string, number>();
@@ -165,53 +247,50 @@ export default function PixelOffice({
     return counts;
   }, [placed]);
 
-  // --- static plan buffer ------------------------------------------------
+  // --- static plan buffer (rebuilt per responsive layout) ----------------
 
   useEffect(() => {
+    if (!layout) return;
     const buffer = document.createElement("canvas");
-    buffer.width = PLAN_W;
-    buffer.height = PLAN_H;
+    buffer.width = layout.bw;
+    buffer.height = layout.bh;
     const ctx = buffer.getContext("2d");
     if (!ctx) return;
     ctx.imageSmoothingEnabled = false;
-    drawPlan(ctx, accentOf, occupancy);
+    drawPlan(ctx, layout, accentOf, occupancy);
     planRef.current = buffer;
-  }, [accentOf, occupancy]);
+  }, [layout, accentOf, occupancy]);
 
   // --- camera ------------------------------------------------------------
 
   const fitAll = useCallback(() => {
-    const { w, h } = sizeRef.current;
-    if (!w || !h) return;
-    const scale = clamp(Math.floor(Math.min(w / PLAN_W, h / PLAN_H)), MIN_SCALE, MAX_SCALE);
-    setViewBoth({
-      scale,
-      ox: Math.round((w - PLAN_W * scale) / 2),
-      oy: Math.round((h - PLAN_H * scale) / 2),
-    });
+    const l = layoutRef.current;
+    if (!l) return;
+    setViewBoth({ scale: l.scale, ox: 0, oy: 0 });
   }, [setViewBoth]);
 
   const focusRoom = useCallback(
     (roomId: string) => {
+      const l = layoutRef.current;
       const room = ROOM_BY_ID.get(roomId);
       const { w, h } = sizeRef.current;
-      if (!room || !w || !h) return;
-      const rect = roomRect(room);
+      if (!l || !room || !w || !h) return;
+      const rect = roomRect(room, l);
       const scale = clamp(
         Math.floor(Math.min(w / (RW + 24), h / (RH + 24))),
-        Math.max(MIN_SCALE, 2),
+        Math.max(MIN_ZOOM, 2),
         MAX_SCALE
       );
       setViewBoth({
         scale,
-        ox: Math.round(w / 2 - (rect.x + rect.w / 2) * scale),
-        oy: Math.round(h / 2 - (rect.y + rect.h / 2) * scale),
+        ox: w / 2 - (rect.x + rect.w / 2) * scale,
+        oy: h / 2 - (rect.y + rect.h / 2) * scale,
       });
     },
     [setViewBoth]
   );
 
-  // Size + first fit.
+  // Size + responsive layout + first fit. Re-runs on every resize.
   useEffect(() => {
     const el = wrapRef.current;
     const canvas = canvasRef.current;
@@ -227,8 +306,12 @@ export default function PixelOffice({
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
       // Everything downstream works in device pixels; the DOM overlay divides
-      // back out by dpr. Scale therefore stays an integer at any zoom level.
+      // back out by dpr. One art pixel stays an exact square of device pixels.
       sizeRef.current = { w: canvas.width, h: canvas.height };
+      const l = buildLayout(canvas.width, canvas.height);
+      layoutRef.current = l;
+      fitScaleRef.current = l.scale;
+      setLayout(l);
     };
 
     measure();
@@ -236,22 +319,15 @@ export default function PixelOffice({
 
     const observer = new ResizeObserver(() => {
       measure();
-      if (tabRef.current === "all") fitAll();
-      else focusRoom(tabRef.current);
+      fitAll();
     });
     observer.observe(el);
     return () => observer.disconnect();
-    // fitAll/focusRoom are stable; run once on mount.
+    // fitAll is stable; run once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    tabRef.current = tab;
-    if (tab === "all") fitAll();
-    else focusRoom(tab);
-  }, [tab, fitAll, focusRoom]);
-
-  // Follow the newest tasked agent into its room (D15: SSE drives the camera).
+  // Follow the newest tasked agent into its zone.
   const lastFollowedRef = useRef(0);
   useEffect(() => {
     if (!followRef.current) return;
@@ -267,7 +343,7 @@ export default function PixelOffice({
     if (!bestName || bestAt <= lastFollowedRef.current) return;
     lastFollowedRef.current = bestAt;
     const entry = byName.get(bestName);
-    if (entry && tabRef.current === "all") focusRoom(entry.room.id);
+    if (entry) focusRoom(entry.room.id);
   }, [states, byName, focusRoom]);
 
   // --- pointer -----------------------------------------------------------
@@ -328,8 +404,8 @@ export default function PixelOffice({
         const dpr = dprRef.current;
         setViewBoth({
           scale: v.scale,
-          ox: Math.round(v.ox + dx * dpr),
-          oy: Math.round(v.oy + dy * dpr),
+          ox: v.ox + dx * dpr,
+          oy: v.oy + dy * dpr,
         });
         return;
       }
@@ -365,7 +441,7 @@ export default function PixelOffice({
       event.preventDefault();
       const v = viewRef.current;
       const step = event.deltaY > 0 ? -1 : 1;
-      const scale = clamp(v.scale + step, MIN_SCALE, MAX_SCALE);
+      const scale = clamp(v.scale + step, fitScaleRef.current, MAX_SCALE);
       if (scale === v.scale) return;
       const rect = el.getBoundingClientRect();
       const dpr = dprRef.current;
@@ -373,7 +449,7 @@ export default function PixelOffice({
       const cy = (event.clientY - rect.top) * dpr;
       const wx = (cx - v.ox) / v.scale;
       const wy = (cy - v.oy) / v.scale;
-      setViewBoth({ scale, ox: Math.round(cx - wx * scale), oy: Math.round(cy - wy * scale) });
+      setViewBoth({ scale, ox: cx - wx * scale, oy: cy - wy * scale });
     };
 
     el.addEventListener("pointerdown", onDown);
@@ -394,7 +470,7 @@ export default function PixelOffice({
     };
   }, [hitTest, onSelect, setViewBoth, toWorld]);
 
-  // --- render loop -------------------------------------------------------
+  // --- lifecycle ---------------------------------------------------------
 
   const statesRef = useRef(states);
   statesRef.current = states;
@@ -402,7 +478,11 @@ export default function PixelOffice({
   placedRef.current = placed;
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
-  const awakeSince = useRef(new Map<string, number>());
+  const walkInsRef = useRef(walkIns);
+  walkInsRef.current = walkIns;
+  const lifeRef = useRef(new Map<string, Life>());
+
+  // --- render loop -------------------------------------------------------
 
   useEffect(() => {
     let raf = 0;
@@ -415,107 +495,208 @@ export default function PixelOffice({
       const ctx = canvas?.getContext("2d");
       if (!canvas || !plan || !ctx) return;
 
-      const dpr = dprRef.current;
       const v = viewRef.current;
       const clock = Date.now();
+      const layout = layoutRef.current;
 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = "#0E0E0E";
+      // The page backdrop IS the walkway honey — the floor reads full-bleed
+      // with no letterbox (D16.2).
+      ctx.fillStyle = "#DBA768";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Faint survey grid so the space around the building reads as a plan
-      // sheet rather than dead black.
-      const step = Math.max(12, Math.round(24 * dpr));
-      ctx.fillStyle = "#191614";
-      for (let gx = 0; gx < canvas.width; gx += step) {
-        for (let gy = 0; gy < canvas.height; gy += step) ctx.fillRect(gx, gy, dpr, dpr);
+      const dpr = dprRef.current;
+      const dot = Math.max(16, Math.round(26 * dpr));
+      const grain = Math.max(2, Math.round(dpr));
+      ctx.fillStyle = "#D2A05F";
+      for (let gx = dot / 2; gx < canvas.width; gx += dot) {
+        for (let gy = dot / 2; gy < canvas.height; gy += dot) {
+          ctx.fillRect(gx, gy, grain, grain);
+        }
       }
 
       ctx.setTransform(v.scale, 0, 0, v.scale, v.ox, v.oy);
       ctx.imageSmoothingEnabled = false;
-      // Drop shadow under the building.
-      ctx.fillStyle = "rgba(0,0,0,0.55)";
-      ctx.fillRect(2, 2, PLAN_W, PLAN_H);
       ctx.drawImage(plan, 0, 0);
+
+      // --- ambient life (D18.4) -----------------------------------------
+      const amb = layout?.ambient;
+      if (!reducedMotion && amb) {
+        // lamp pools in the library
+        for (const lamp of amb.lamps) {
+          ctx.globalAlpha = 0.14 + Math.sin(time / 900 + lamp.x) * 0.04;
+          ctx.fillStyle = "#F4D488";
+          ctx.fillRect(lamp.x - 14, lamp.y + 4, 28, 12);
+          ctx.fillRect(lamp.x - 10, lamp.y, 20, 18);
+          ctx.fillRect(lamp.x - 6, lamp.y - 4, 12, 24);
+          ctx.globalAlpha = 1;
+        }
+        // dust motes drifting through the light
+        ctx.fillStyle = "#FFF6DC";
+        for (let i = 0; i < 12; i++) {
+          const bx = amb.dust.x + ((i * 67) % amb.dust.w);
+          const by = amb.dust.y + ((i * 31) % amb.dust.h);
+          const dx = Math.sin(time / 1700 + i) * 6;
+          const dy = Math.cos(time / 2300 + i * 1.7) * 4;
+          ctx.globalAlpha = 0.22 + (i % 3) * 0.06;
+          ctx.fillRect(Math.round(bx + dx), Math.round(by + dy), 1, 1);
+        }
+        ctx.globalAlpha = 1;
+        // coffee steam
+        for (const [ai, anchor] of amb.steam.entries()) {
+          for (let k = 0; k < 3; k++) {
+            const prog = (time / 1500 + k / 3 + ai * 0.2) % 1;
+            const sx = anchor.x + Math.sin(prog * 6 + k) * 2.5;
+            const sy = anchor.y - prog * 13;
+            ctx.globalAlpha = (1 - prog) * 0.45;
+            ctx.fillStyle = k % 2 ? "#FFF6DC" : "#E8CFA0";
+            ctx.fillRect(Math.round(sx), Math.round(sy), prog > 0.6 ? 1 : 2, 2);
+          }
+        }
+        ctx.globalAlpha = 1;
+        // amber LED flicker on the server racks
+        for (const [ri, rack] of amb.leds.entries()) {
+          const idx = Math.floor(time / 700 + ri * 3) % 12;
+          ctx.fillStyle = "#FFD98E";
+          ctx.fillRect(rack.x + (idx % 4) * 3, rack.y + Math.floor(idx / 4) * 4, 2, 1);
+        }
+        // CRT scanline shimmer
+        const sy = amb.crt.y + ((time / 300) % amb.crt.h);
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = "#FFF6DC";
+        ctx.fillRect(amb.crt.x + 1, Math.round(sy), amb.crt.w, 1);
+        ctx.globalAlpha = 1;
+        // the office cat patrols the bottom walkway
+        const cycle = (time / 1000) % 26;
+        const d = cycle < 13 ? cycle / 13 : 2 - cycle / 13;
+        const catX = 30 + d * (layout.bw - 70);
+        const dir = cycle < 13 ? 1 : -1;
+        const catY = amb.catY + Math.round(Math.sin(time / 160) * 0.8);
+        if (dir > 0) px(ctx, CAT, Math.round(catX), catY);
+        else pxFlipX(ctx, CAT, Math.round(catX), catY);
+      }
+
+      // --- agents --------------------------------------------------------
+      const life = lifeRef.current;
 
       for (const entry of placedRef.current) {
         const agentView = statesRef.current.get(entry.agent.name);
         const status = agentView?.status ?? "idle";
         const at = agentView?.at ?? 0;
-        const isSub = entry.agent.tier === "sub";
-        const awake = !isSub || status !== "idle" || clock - at < DORMANT_GRACE_MS;
-
+        const working = status === "working";
+        const stuck = status === "stuck";
+        const leaving = !working && !stuck;
         const accent = accentOf(entry.agent.department);
 
+        // Monitors sit on every desk; only the living ones light up.
         if (entry.room.desks) {
-          const screen = awake ? STATUS_SCREEN[status] : "#1a2226";
+          const screen = working
+            ? STATUS_SCREEN.working
+            : stuck
+              ? STATUS_SCREEN.stuck
+              : STATUS_SCREEN.off;
           const glow =
-            status === "working" && !reducedMotion
-              ? mix(screen, "#ffffff", 0.18 + Math.sin(time / 180) * 0.12)
+            working && !reducedMotion
+              ? mix(screen, "#FFE9AE", 0.18 + Math.sin(time / 180) * 0.12)
               : screen;
           monitorPalette["$"] = glow;
           px(ctx, MONITOR, entry.x + MON_DX, entry.y + MON_DY, monitorPalette);
         }
 
-        if (!awake) continue;
-
-        let since = awakeSince.current.get(entry.agent.name);
-        if (since === undefined) {
-          since = time;
-          awakeSince.current.set(entry.agent.name, time);
+        if (status === "idle" && clock - at >= LEAVE_MS) {
+          life.delete(entry.agent.name);
+          continue;
         }
-        const pop = reducedMotion ? 1 : clamp((time - since) / POP_MS, 0, 1);
-        const rise = Math.round((1 - pop) * 7);
+        if (!agentView) continue;
+
+        let record = life.get(entry.agent.name);
+        if (!record) {
+          const mode: Life["mode"] = walkInsRef.current.has(entry.agent.name)
+            ? "walk"
+            : "materialize";
+          record = { mode, t0: clock };
+          if (mode === "walk" && layout) {
+            const path = walkPath(layout.lobbySpawn, { x: entry.x, y: entry.y }, entry.room.row, layout);
+            const { segs, total } = measurePath(path);
+            record.path = path;
+            record.segs = segs;
+            record.total = total;
+          }
+          life.set(entry.agent.name, record);
+        }
+
+        let cx = entry.x;
+        let cy = entry.y;
+        let alpha = 1;
+        let pose = POSE_IDLE;
+        let walking = false;
+
+        if (record.mode === "walk" && record.path && record.segs && record.total) {
+          const dur = clamp(record.total / WALK_SPEED, 2500, 8000);
+          const prog = reducedMotion ? 1 : clamp((clock - record.t0) / dur, 0, 1);
+          const pt = pointAt(record.path, record.segs, prog * record.total);
+          cx = Math.round(pt.x);
+          cy = Math.round(pt.y);
+          walking = prog < 1;
+          if (walking) {
+            pose = !reducedMotion && Math.floor(time / 160) % 2 === 0 ? POSE_WALK : POSE_IDLE;
+          } else if (working && !reducedMotion && Math.floor(time / 170) % 2 === 0) {
+            pose = POSE_TYPING;
+          }
+        } else {
+          // materialize: sparkle + fade in
+          const spawnProg = reducedMotion ? 1 : clamp((clock - record.t0) / SPAWN_MS, 0, 1);
+          alpha = spawnProg;
+          cy -= Math.round((1 - spawnProg) * 6);
+          if (!reducedMotion && spawnProg < 1) {
+            sparkle(ctx, cx + CHAR_W / 2, cy + CHAR_H / 2, spawnProg, accent);
+          }
+          if (working && !reducedMotion && Math.floor(time / 170) % 2 === 0) pose = POSE_TYPING;
+        }
+
+        // leaving: stretch up + fade, with a parting puff
+        if (leaving) {
+          const leaveProg = clamp((clock - at) / LEAVE_MS, 0, 1);
+          alpha *= 1 - leaveProg;
+          cy -= Math.round(leaveProg * 8);
+          if (!reducedMotion) {
+            const puffProg = clamp((clock - at) / PUFF_MS, 0, 1);
+            if (puffProg < 1) puff(ctx, cx + CHAR_W / 2, cy + CHAR_H, puffProg, shade(accent, 1.3));
+          }
+        }
 
         const phase = entry.x * 0.7 + entry.y * 0.3;
         const bob = reducedMotion
           ? 0
-          : status === "working"
-            ? Math.round(Math.sin(time / 150 + phase) * 0.6)
-            : Math.round(Math.sin(time / 620 + phase) * 0.6);
+          : walking
+            ? Math.round(Math.sin(time / 90 + phase) * 1)
+            : working
+              ? Math.round(Math.sin(time / 150 + phase) * 0.6)
+              : Math.round(Math.sin(time / 620 + phase) * 0.6);
 
-        const cy = entry.y - rise + bob;
-        const pose =
-          status === "working" && !reducedMotion && Math.floor(time / 170) % 2 === 0
-            ? POSE_TYPING
-            : POSE_IDLE;
+        ctx.globalAlpha = clamp(alpha, 0, 1);
 
-        const ringColor =
-          status === "working" ? accent : status === "stuck" ? "#e0403a" : shade(accent, 0.55);
-        const ringAlpha =
-          status === "working"
-            ? reducedMotion
-              ? 0.55
-              : 0.35 + Math.sin(time / 260) * 0.2
-            : status === "stuck"
-              ? 0.6
-              : 0.18;
-        ctx.globalAlpha = clamp(ringAlpha, 0, 1) * pop;
-        halo(ctx, entry.x + CHAR_W / 2, entry.y + CHAR_H - 1, 10, 4, ringColor);
-        ctx.globalAlpha = 1;
-
-        shadowBlob(ctx, entry.x, entry.y + CHAR_H - 1, CHAR_W);
-        px(ctx, pose, entry.x, cy, paletteFor(accent));
-
-        if (status === "stuck") {
-          px(ctx, ALERT, entry.x + CHAR_W - 2, cy - 9);
+        if (!leaving && (working || stuck)) {
+          const ringColor = working ? accent : "#D95F43";
+          const ringAlpha = reducedMotion ? 0.5 : 0.35 + Math.sin(time / 260) * 0.2;
+          ctx.globalAlpha = clamp(ringAlpha, 0, 1) * alpha;
+          halo(ctx, cx + CHAR_W / 2, cy + CHAR_H - 1, 10, 4, ringColor);
+          ctx.globalAlpha = clamp(alpha, 0, 1);
         }
+
+        if (!leaving) shadowBlob(ctx, cx, cy + CHAR_H - 1, CHAR_W);
+        px(ctx, pose, cx, cy + bob, paletteFor(accent));
+
+        if (stuck) {
+          px(ctx, ALERT, cx + CHAR_W - 2, cy + bob - 9);
+        }
+
+        ctx.globalAlpha = 1;
 
         if (selectedRef.current === entry.agent.name || hoveredRef.current === entry.agent.name) {
           const box = pickBox(entry);
-          const color = selectedRef.current === entry.agent.name ? "#FF7A00" : "#F4F2EE";
+          const color = selectedRef.current === entry.agent.name ? "#C96F4A" : "#4A3527";
           bracket(ctx, box.x, box.y, box.w, box.h, color);
-        }
-      }
-
-      // Focused room reads bright; the rest of the plan stays legible but back.
-      if (tabRef.current !== "all") {
-        ctx.fillStyle = "rgba(10,9,8,0.62)";
-        for (const room of ROOMS) {
-          if (room.id === tabRef.current) continue;
-          const rect = roomRect(room);
-          ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
         }
       }
 
@@ -524,19 +705,15 @@ export default function PixelOffice({
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [accentOf, reducedMotion]);
+  }, [accentOf, reducedMotion, layout]);
 
-  // Forget pop timers for agents that went dormant so they pop again next time.
+  // Clean lifecycle records for agents the roster no longer knows.
   useEffect(() => {
-    for (const entry of placed) {
-      const agentView = states.get(entry.agent.name);
-      const status = agentView?.status ?? "idle";
-      const at = agentView?.at ?? 0;
-      const isSub = entry.agent.tier === "sub";
-      const awake = !isSub || status !== "idle" || now - at < DORMANT_GRACE_MS;
-      if (!awake) awakeSince.current.delete(entry.agent.name);
+    const known = new Set(placed.map((entry) => entry.agent.name));
+    for (const name of Array.from(lifeRef.current.keys())) {
+      if (!known.has(name)) lifeRef.current.delete(name);
     }
-  }, [placed, states, now]);
+  }, [placed]);
 
   // --- DOM overlay (crisp text over the pixel canvas) --------------------
 
@@ -548,69 +725,73 @@ export default function PixelOffice({
 
   const showPlates = view.scale / dpr >= 3;
 
-  // One bubble at a time. With a busy stream every desk would shout at once, so
-  // the stage speaks for whoever you picked, else whoever was just tasked.
-  const bubbleFor = useMemo(() => {
-    if (selected) return selected;
-    if (hovered) return hovered;
-    let name = "";
-    let at = 0;
-    for (const [candidate, value] of Array.from(states.entries())) {
-      if (!value.text || value.at <= at) continue;
-      at = value.at;
-      name = candidate;
+  // D18.5: up to three clouds, most-recent first; the selected agent always
+  // keeps the mic while visible.
+  const cloudNames = useMemo(() => {
+    const candidates: { name: string; at: number }[] = [];
+    for (const [name, value] of Array.from(states.entries())) {
+      if (!value.text || value.status === "idle") continue;
+      candidates.push({ name, at: value.at });
     }
-    return name;
-  }, [selected, hovered, states]);
+    candidates.sort((a, b) => {
+      const aSel = a.name === selected ? 1 : 0;
+      const bSel = b.name === selected ? 1 : 0;
+      return bSel - aSel || b.at - a.at;
+    });
+    return new Set(candidates.slice(0, MAX_CLOUDS).map((c) => c.name));
+  }, [states, selected]);
 
   return (
     <div ref={wrapRef} className="office-stage absolute inset-0">
       <canvas ref={canvasRef} className="office-canvas" />
 
       <div className="office-overlay">
-        {ROOMS.map((room) => {
-          const rect = roomRect(room);
-          const pos = screenOf(rect.x + 4, rect.y + 2);
-          const dept = departments.find((d) => d.id === room.id);
-          const dim = tab !== "all" && tab !== room.id;
-          return (
-            <span
-              key={room.id}
-              className={`room-plate${dim ? " room-plate-dim" : ""}`}
-              style={{ ...pos, color: dept?.color ?? "#8B9099" }}
-            >
-              {dept?.label ?? room.id}
-            </span>
-          );
-        })}
+        {layout
+          ? ROOMS.map((room) => {
+              const rect = roomRect(room, layout);
+              const pos = screenOf(rect.x + 6, rect.y - 1);
+              const dept = departments.find((d) => d.id === room.id);
+              return (
+                <button
+                  key={room.id}
+                  type="button"
+                  className="room-plate"
+                  style={
+                    { ...pos, "--plate-accent": dept?.color ?? "#A08762" } as CSSProperties
+                  }
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={() => focusRoom(room.id)}
+                  title={`Focus ${dept?.label ?? room.id}`}
+                >
+                  {dept?.label ?? room.id}
+                </button>
+              );
+            })
+          : null}
 
         {placed.map((entry) => {
           const agentView = states.get(entry.agent.name);
           const status = agentView?.status ?? "idle";
           const at = agentView?.at ?? 0;
-          const isSub = entry.agent.tier === "sub";
-          const awake = !isSub || status !== "idle" || now - at < DORMANT_GRACE_MS;
+          const clock = now;
+          const visible = status !== "idle" || clock - at < LEAVE_MS;
+          if (!visible) return null;
+
           const isSelected = selected === entry.agent.name;
           const isHovered = hovered === entry.agent.name;
-          const dim = tab !== "all" && tab !== entry.room.id;
-          if (dim && !isSelected) return null;
-
-          const plate =
-            isSelected || isHovered || (awake && (showPlates || status !== "idle"));
-          const bubbleFresh = now - at < BUBBLE_LINGER_MS;
+          const showPlate = isSelected || isHovered || showPlates || status !== "idle";
+          const bubbleFresh = clock - at < BUBBLE_LINGER_MS;
           const showBubble =
-            bubbleFor === entry.agent.name &&
+            cloudNames.has(entry.agent.name) &&
             Boolean(agentView?.text) &&
-            awake &&
             (status !== "idle" || bubbleFresh);
 
           const labelPos = screenOf(
             entry.x + CHAR_W / 2,
             entry.y + (entry.room.desks ? 27 : 19)
           );
-          // Agents sitting near a room's back wall would push their bubble up
-          // into the room above, so those speak downwards instead.
-          const roomTop = roomRect(entry.room).y;
+          // Agents sitting near a zone's top edge push their bubble down instead.
+          const roomTop = layout ? roomRect(entry.room, layout).y : 0;
           const bubbleBelow = entry.y - roomTop < 34;
           const bubblePos = screenOf(
             entry.x + CHAR_W / 2,
@@ -619,11 +800,9 @@ export default function PixelOffice({
 
           return (
             <span key={entry.agent.name}>
-              {plate ? (
+              {showPlate ? (
                 <span
-                  className={`desk-label${isSelected ? " desk-label-selected" : ""}${
-                    awake ? "" : " desk-label-dormant"
-                  }`}
+                  className={`desk-label${isSelected ? " desk-label-selected" : ""}`}
                   style={labelPos}
                 >
                   {shortName(entry.agent.name)}
@@ -649,7 +828,7 @@ export default function PixelOffice({
           type="button"
           onClick={() => {
             const v = viewRef.current;
-            zoomAtCentre(v, -1, sizeRef.current, setViewBoth);
+            zoomAtCentre(v, -1, sizeRef.current, fitScaleRef.current, setViewBoth);
           }}
           aria-label="Zoom out"
         >
@@ -660,7 +839,7 @@ export default function PixelOffice({
           type="button"
           onClick={() => {
             const v = viewRef.current;
-            zoomAtCentre(v, 1, sizeRef.current, setViewBoth);
+            zoomAtCentre(v, 1, sizeRef.current, fitScaleRef.current, setViewBoth);
           }}
           aria-label="Zoom in"
         >
@@ -686,15 +865,17 @@ function zoomAtCentre(
   v: View,
   step: number,
   size: { w: number; h: number },
+  minScale: number,
   apply: (next: View) => void
 ) {
-  const scale = clamp(v.scale + step, MIN_SCALE, MAX_SCALE);
+  const scale = clamp(v.scale + step, minScale, MAX_SCALE);
   if (scale === v.scale) return;
+  // Keep the canvas centre anchored while zooming.
   const cx = size.w / 2;
   const cy = size.h / 2;
   const wx = (cx - v.ox) / v.scale;
   const wy = (cy - v.oy) / v.scale;
-  apply({ scale, ox: Math.round(cx - wx * scale), oy: Math.round(cy - wy * scale) });
+  apply({ scale, ox: cx - wx * scale, oy: cy - wy * scale });
 }
 
 function bracket(
@@ -722,7 +903,7 @@ const charPalettes = new Map<string, Palette>();
 function paletteFor(accent: string): Palette {
   let hit = charPalettes.get(accent);
   if (!hit) {
-    hit = charPalette(shade(accent, 0.72), "#3a2a1c");
+    hit = charPalette(shade(accent, 0.78), "#4A3527");
     charPalettes.set(accent, hit);
   }
   return hit;

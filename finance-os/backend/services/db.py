@@ -21,6 +21,97 @@ def connect():
     return conn
 
 
+_MIGRATIONS = (
+    # (name, sql). Table migrations use IF NOT EXISTS; column migrations are
+    # pragma-guarded in _migrate below. schema.sql stays the fresh-install
+    # base; everything added later lives ONLY here so the two can never drift.
+    ("app_settings", """CREATE TABLE IF NOT EXISTS app_settings (
+           key TEXT PRIMARY KEY,
+           value TEXT NOT NULL,
+           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+       )"""),
+    ("fund_facts", """CREATE TABLE IF NOT EXISTS fund_facts (
+           amfi_code TEXT PRIMARY KEY,
+           slug TEXT,
+           source TEXT NOT NULL DEFAULT 'groww',
+           data TEXT NOT NULL,
+           portfolio_as_of TEXT,
+           fetched_at TEXT NOT NULL
+       )"""),
+    ("fund_portfolios", """CREATE TABLE IF NOT EXISTS fund_portfolios (
+           amfi_code TEXT NOT NULL,
+           company TEXT NOT NULL,
+           sector TEXT,
+           weight REAL NOT NULL,
+           instrument TEXT,
+           isin TEXT,
+           as_of TEXT,
+           PRIMARY KEY (amfi_code, company, instrument, as_of)
+       )"""),
+    ("watchlist", """CREATE TABLE IF NOT EXISTS watchlist (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           symbol TEXT NOT NULL UNIQUE,
+           name TEXT,
+           asset_type TEXT NOT NULL DEFAULT 'stock',
+           notes TEXT,
+           added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+           archived_at TIMESTAMP
+       )"""),
+    ("trades", """CREATE TABLE IF NOT EXISTS trades (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           symbol TEXT NOT NULL,
+           name TEXT,
+           asset_type TEXT NOT NULL DEFAULT 'stock',
+           exchange TEXT NOT NULL DEFAULT 'NSE',
+           qty REAL NOT NULL,
+           entry_price REAL NOT NULL,
+           entry_date TEXT NOT NULL,
+           exit_price REAL,
+           exit_date TEXT,
+           charges REAL NOT NULL DEFAULT 0,
+           thesis TEXT,
+           notes TEXT,
+           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+       )"""),
+    ("ipos", """CREATE TABLE IF NOT EXISTS ipos (
+           name TEXT PRIMARY KEY,
+           symbol TEXT,
+           open_date TEXT,
+           close_date TEXT,
+           price_min REAL,
+           price_max REAL,
+           lot_size INTEGER,
+           listing_date TEXT,
+           status TEXT,
+           applied INTEGER NOT NULL DEFAULT 0,
+           upi_mandate TEXT,
+           notes TEXT,
+           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+       )"""),
+    ("ref_cache", """CREATE TABLE IF NOT EXISTS ref_cache (
+           key TEXT PRIMARY KEY,
+           payload TEXT NOT NULL,
+           fetched_at TEXT NOT NULL
+       )"""),
+)
+
+
+def _migrate(conn) -> None:
+    for _, sql in _MIGRATIONS:
+        conn.execute(sql)
+    # column migrations: add when absent, never touch when present
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(holdings)")}
+    if "folio" not in cols:
+        conn.execute("ALTER TABLE holdings ADD COLUMN folio TEXT")
+    # benchmark seed — NIFTY 50 is the reference index for every beta/alpha
+    # in the analysis (fund_analysis_settings.json). INSERT OR IGNORE keeps
+    # any hand-edited benchmark row untouched.
+    conn.execute(
+        "INSERT OR IGNORE INTO benchmarks(name, symbol, type) "
+        "VALUES ('NIFTY 50', '^NSEI', 'index')"
+    )
+
+
 def init_db():
     with connect() as conn:
         has = conn.execute(
@@ -29,14 +120,7 @@ def init_db():
         if not has:
             conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
             conn.commit()
-        # migrations for DBs created before the table existed (idempotent)
-        conn.execute(
-            """CREATE TABLE IF NOT EXISTS app_settings (
-                   key TEXT PRIMARY KEY,
-                   value TEXT NOT NULL,
-                   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-               )"""
-        )
+        _migrate(conn)
         conn.commit()
 
 

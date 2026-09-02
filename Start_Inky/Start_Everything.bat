@@ -82,6 +82,11 @@ REM The Model screen reports on it. Safe when already running - the
 REM launcher just says so and leaves the gateway alone.
 start "OmniRoute gateway" "%VPY%" "%PROJECT%\Start_Inky\run_omniroute.py"
 timeout /t 2 /nobreak >nul
+REM --- the market-data MCP server, in its own window -----------------
+REM Tool seam for the Agent Deck research agents (port 3101). Safe when
+REM already running - the launcher just says so and leaves it alone.
+start "Market MCP" "%VPY%" "%PROJECT%\Start_Inky\run_market_mcp.py"
+timeout /t 2 /nobreak >nul
 "%VPY%" "%PROJECT%\Start_Inky\start_every_screen.py"
 if errorlevel 1 goto :fail
 goto :done

@@ -9,12 +9,12 @@ import json
 from pathlib import Path
 
 DEPARTMENTS = [
-    {"id": "lobby", "label": "Lobby", "color": "#F4F2EE"},
-    {"id": "model", "label": "Model", "color": "#6E8BA0"},
-    {"id": "finance", "label": "Finance", "color": "#3FD9A4"},
-    {"id": "learning", "label": "Learning", "color": "#F2A93B"},
-    {"id": "deck", "label": "Agent Deck", "color": "#FF7A00"},
-    {"id": "anime", "label": "Anime", "color": "#B18CFF"},
+    {"id": "lobby", "label": "Lobby", "color": "#A0693C"},
+    {"id": "model", "label": "Model", "color": "#6F9B8D"},
+    {"id": "finance", "label": "Finance", "color": "#C98A2E"},
+    {"id": "learning", "label": "Learning", "color": "#7E9463"},
+    {"id": "deck", "label": "Agent Deck", "color": "#C96F4A"},
+    {"id": "anime", "label": "Anime", "color": "#C77B9E"},
 ]
 
 _DEPT_IDS = {dept["id"] for dept in DEPARTMENTS}
@@ -45,4 +45,4 @@ def dept_color(department: str) -> str:
     for dept in DEPARTMENTS:
         if dept["id"] == department:
             return dept["color"]
-    return "#8B9099"
+    return "#A08762"

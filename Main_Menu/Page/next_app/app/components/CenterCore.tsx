@@ -53,32 +53,16 @@ function HeaderIcon({ label, d }: { label: string; d: React.ReactNode }) {
   );
 }
 
-/** The centre column: the RUBRIC title block, then the agent ring
-    spinning around the live 3D particle core - the reference image's
-    focal element. */
+/** The centre column: the utility icon row, then the agent ring spinning
+    around the live 3D particle core - the reference image's focal element.
+    (The Kage.GG title block now lives in the TopBar.) */
 export function CenterCore() {
   const { box, radius } = useRingSize();
 
   return (
     <div className="flex flex-col items-center gap-6 py-2">
-      <header className="flex flex-col items-center gap-2 text-center">
-        <div className="flex items-center gap-2">
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M12 2.5 20.5 7v10L12 21.5 3.5 17V7z"
-              fill="none"
-              stroke="#ff7a00"
-              strokeWidth="1.6"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <h1 className="text-xl font-semibold tracking-[0.14em]">
-            Kage<span className="rubric-accent font-normal">.GG</span>
-          </h1>
-        </div>
-        <p className="rubric-sub text-[10px]">Vivek Kumar &nbsp;|&nbsp; KageEnsui</p>
-        <div className="mt-1 flex items-center gap-2">
-          <HeaderIcon
+      <div className="flex items-center gap-2">
+        <HeaderIcon
             label="edit"
             d={
               <path
@@ -120,8 +104,7 @@ export function CenterCore() {
               </>
             }
           />
-        </div>
-      </header>
+      </div>
 
       <div
         className="relative flex items-center justify-center"

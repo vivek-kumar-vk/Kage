@@ -8,9 +8,9 @@ from fastapi.staticfiles import StaticFiles
 import startup
 from services import db
 
-ROUTERS = ["overview", "investments", "debt", "tracker", "learning", "health",
-           "accounts", "goals", "insurance", "salary", "imports", "entities", "settings",
-           "market"]
+ROUTERS = ["overview", "investments", "analysis", "tradedesk", "debt", "tracker",
+           "health", "accounts", "goals", "insurance", "salary", "imports",
+           "entities", "settings", "market"]
 
 
 def create_app() -> FastAPI:

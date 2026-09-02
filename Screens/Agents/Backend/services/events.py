@@ -28,6 +28,8 @@ KEEP_EVENTS = 3000
 
 _subscribers: set = set()
 _real_active: set = set()  # agents with a live real (source=run) run right now
+_demo_active: set = set()  # agents mid demo-burst, so bursts can overlap
+_bg_tasks: set = set()  # keep fire-and-forget burst tasks referenced
 _demo_task = None
 
 
@@ -193,27 +195,17 @@ async def _demo_burst():
     candidates = [
         (name, dept)
         for name, dept, tier in roster
-        if tier != "head" and name not in _real_active
+        if tier != "head" and name not in _real_active and name not in _demo_active
     ]
     if not candidates:
         return
 
     name, dept = random.choice(candidates)
     actions = DEMO_ACTIONS.get(dept) or DEMO_ACTIONS["deck"]
-
-    emit(source="demo", type_="started", agent_name=name, department=dept, sim=True)
-    await asyncio.sleep(random.uniform(0.8, 1.6))
-    emit(
-        source="demo",
-        type_="output",
-        text=random.choice(actions),
-        agent_name=name,
-        department=dept,
-        sim=True,
-    )
-    await asyncio.sleep(random.uniform(1.2, 2.4))
-
-    if random.random() < 0.25 and dept != "lobby":
+    _demo_active.add(name)
+    try:
+        emit(source="demo", type_="started", agent_name=name, department=dept, sim=True)
+        await asyncio.sleep(random.uniform(0.8, 1.6))
         emit(
             source="demo",
             type_="output",
@@ -222,22 +214,39 @@ async def _demo_burst():
             department=dept,
             sim=True,
         )
-        await asyncio.sleep(random.uniform(1.0, 2.0))
+        await asyncio.sleep(random.uniform(1.2, 2.4))
 
-    emit(source="demo", type_="done", agent_name=name, department=dept, sim=True)
+        if random.random() < 0.25 and dept != "lobby":
+            emit(
+                source="demo",
+                type_="output",
+                text=random.choice(actions),
+                agent_name=name,
+                department=dept,
+                sim=True,
+            )
+            await asyncio.sleep(random.uniform(1.0, 2.0))
+
+        emit(source="demo", type_="done", agent_name=name, department=dept, sim=True)
+    finally:
+        _demo_active.discard(name)
 
 
 async def _demo_loop():
-    await asyncio.sleep(3.0)
+    # Keep the stage alive for reviews: up to 3 overlapping bursts so two or
+    # three agents are usually mid-task somewhere. Still sim=1 throughout.
+    await asyncio.sleep(2.0)
     while True:
         try:
-            await _demo_burst()
+            if len(_demo_active) < 3:
+                task = asyncio.create_task(_demo_burst())
+                _bg_tasks.add(task)
+                task.add_done_callback(_bg_tasks.discard)
         except asyncio.CancelledError:
             raise
         except Exception:
-            await asyncio.sleep(5.0)
-            continue
-        await asyncio.sleep(random.uniform(6.0, 12.0))
+            pass
+        await asyncio.sleep(random.uniform(2.0, 5.0))
 
 
 def start_demo():

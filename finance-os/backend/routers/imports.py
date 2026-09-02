@@ -48,8 +48,11 @@ async def import_groww_csv(background_tasks: BackgroundTasks, file: UploadFile =
 async def import_cas(file: UploadFile = File(...), pan: str | None = None):
     result = parse_cas(await file.read(), pan)
     rows = result.get("rows", [])
+    lots = result.get("lots", [])
+    as_of = result.get("as_of", "")
     with connect() as db:
         acc_id = _account(db, "CAS", "demat")
+        ids: dict[str, int] = {}
         for r in rows:
             symbol = r.get("amfi_code") or r.get("isin")
             if not symbol:
@@ -57,17 +60,40 @@ async def import_cas(file: UploadFile = File(...), pan: str | None = None):
             units = r.get("units") or 0
             invested = r.get("invested")
             cpu = (invested / units) if (invested and units and r.get("full_cost_coverage")) else None
-            upsert_holding(acc_id, symbol, name=r.get("name"),
-                           type="mutual_fund", units=units,
-                           cost_per_unit=cpu,
-                           mode="set_snapshot", conn=db)
+            hid = upsert_holding(acc_id, symbol, name=r.get("name"),
+                                 type="mutual_fund", units=units,
+                                 cost_per_unit=cpu,
+                                 mode="set_snapshot", conn=db)
+            ids[symbol] = hid
+            if r.get("folio"):
+                db.execute("UPDATE holdings SET folio = ? WHERE id = ?",
+                           (r["folio"], hid))
+        # purchase lots from the CAS's own transaction history (a demat
+        # CAS carries none — the count below says so honestly)
+        lots_written = 0
+        for lot in lots:
+            hid = ids.get(lot["key"])
+            if hid is None:
+                continue
+            cur = db.execute(
+                "INSERT OR IGNORE INTO lots(holding_id, purchase_date, units, "
+                "cost_per_unit, source) VALUES (?,?,?,?, 'cas')",
+                (hid, lot["purchase_date"], lot["units"], lot["cost_per_unit"]))
+            lots_written += cur.rowcount or 0
+        if as_of:
+            db.execute(
+                "UPDATE data_health SET cas_last_import = ? WHERE id = 1",
+                (as_of,))
         db.commit()
     return {
         "state": "ok",
         "holdings": len(rows),
-        "as_of": result.get("as_of", ""),
+        "lots_written": lots_written,
+        "transactions_in_statement": len(lots),
+        "as_of": as_of,
         "skipped_stale": len(result.get("skipped_stale", [])),
         "unmatched": len(result.get("unmatched", [])),
+        "note": result.get("note"),
     }
 
 

@@ -1,4 +1,4 @@
-// Pixel-art tile + sprite kit for the AGENT DECK office (D15).
+// Pixel-art tile + sprite kit for the AGENT DECK office (D15, warm rebuild D16).
 //
 // Everything here is code-drawn: a palette, string-matrix sprites, and painter
 // functions that write 1x1 rects into a small buffer. The buffer is blitted to
@@ -9,82 +9,84 @@ export type Ctx = CanvasRenderingContext2D;
 export type Palette = Record<string, string | null | undefined>;
 
 // --- palette -------------------------------------------------------------
-// Warm 16-bit set: wood + brick + bone, with cool metal for the server room
-// and a rose/blue lounge. Keys are single chars used by the sprite matrices.
+// D16.1 warm set: paper, sand, oak and honey grounds, terracotta / mustard /
+// sage / dusty-rose accents, warm-brown ink. No near-black anywhere — even the
+// outlines are walnut ink. Keys are single chars used by the sprite matrices
+// and are unchanged from D15, so every matrix keeps working.
 export const P: Palette = {
   " ": null,
   ".": null,
 
-  "0": "#2a1c12", // outline / deep brown-black
-  "1": "#8a6a42", // wood
-  "2": "#7a5b38",
-  "3": "#9c7a4e",
-  "4": "#5d4327",
-  "5": "#6b4e2f",
+  "0": "#4A3527", // outline / walnut ink
+  "1": "#B9804E", // oak wood
+  "2": "#A56D3F",
+  "3": "#C89563",
+  "4": "#8A5F36",
+  "5": "#96683B",
 
-  "6": "#7c5142", // brick
-  "7": "#8f6153",
-  "8": "#5c3a30",
+  "6": "#C98A6B", // warm brick
+  "7": "#D89A7B",
+  "8": "#A96A50",
 
-  "9": "#efe9da", // bone / paper / stone
-  "-": "#dcd4c1",
-  "=": "#c7bea6",
+  "9": "#FBF3E2", // cream / paper / bone
+  "-": "#EFE3C8",
+  "=": "#DFCDA8",
 
-  a: "#464e58", // metal
-  b: "#69737e",
-  c: "#b7c0c9",
-  d: "#7fd7e1", // screen cyan
-  e: "#2f6a72",
+  a: "#9B8B76", // warm greige metal
+  b: "#B3A48D",
+  c: "#D9CDB4",
+  d: "#F2DCA8", // pale-amber screen
+  e: "#C9AE72",
 
-  f: "#c74b3b", // spines / cards
-  g: "#3f7fb0",
-  h: "#4f9e5a",
-  i: "#e0a63c",
-  j: "#7b5aa6",
-  k: "#d98a3c",
+  f: "#C96F4A", // terracotta spine / card
+  g: "#7E9BAA", // dusty teal spine
+  h: "#9AA86B", // olive spine
+  i: "#E5B44A", // mustard spine
+  j: "#C77B9E", // rose spine
+  k: "#DBA768", // honey spine
 
-  l: "#3f7b3a", // plant
-  m: "#5aa04d",
-  n: "#294f27",
-  o: "#b5623a", // terracotta
-  p: "#8a4526",
+  l: "#7E9463", // sage deep
+  m: "#ADBE93", // sage
+  n: "#5F7A4A", // sage shadow
+  o: "#C96F4A", // terracotta pot
+  p: "#9A5636",
 
-  q: "#c56680", // sofa rose
-  r: "#a2506a",
-  s: "#e08aa0",
-  S: "#f0b3c4",
+  q: "#DCA98F", // dusty rose sofa
+  r: "#C08D74",
+  s: "#E8BBA4",
+  S: "#F2CDBB",
 
-  t: "#e9b78d", // skin
-  v: "#cd9468",
-  u: "#3a2a1c", // hair
-  U: "#553a24",
+  t: "#F2C9A0", // skin
+  v: "#DBA97F",
+  u: "#4A3527", // hair
+  U: "#6B4A2F",
 
-  w: "#e8892b", // copper
-  x: "#e0403a", // alert
-  y: "#40c197", // jade
+  w: "#E8A13C", // amber
+  x: "#D95F43", // coral — act-now only (D13.1 rule carries over)
+  y: "#8FAF7E", // sage success
 
-  z: "#1f232a", // server dark
-  A: "#333b44",
-  B: "#0f1418",
-  C: "#8fd0d8", // led on
-  D: "#2b5f66", // led off
+  z: "#6B5138", // rack body walnut
+  A: "#7A5E42", // rack unit
+  B: "#4A3527", // rack dark
+  C: "#FFD98E", // LED on (warm amber)
+  D: "#A98C5F", // LED off (dim amber)
 
-  W: "#c9c4b4", // marble
-  V: "#b3ab98",
-  L: "#4e6f98", // lounge floor
-  M: "#5c7fa8",
-  N: "#3f5c80",
-  T: "#1b1917", // checker dark
-  G: "#c9c4b4", // checker light
+  W: "#EFE3C8", // cream stone
+  V: "#DCCBAA",
+  L: "#E7B9C4", // rose lounge tile
+  M: "#EFC2CF",
+  N: "#D89FAF",
+  T: "#B9804E", // checker oak
+  G: "#FBF3E2", // checker cream
 
   // character keys (kept separate so furniture and people never collide)
-  "#": "#3f6b7a", // shirt
-  "%": "#5b8b9a", // shirt highlight
-  "@": "#3a2a1c", // hair
-  "+": "#e9b78d", // skin
-  "~": "#cd9468", // skin shade
-  "!": "#241a12", // eye
-  "&": "#33302c", // trousers
+  "#": "#6F8B7E", // shirt (recoloured per department at draw time)
+  "%": "#8AA694", // shirt highlight
+  "@": "#4A3527", // hair
+  "+": "#F2C9A0", // skin
+  "~": "#DBA97F", // skin shade
+  "!": "#4A3527", // eye
+  "&": "#7A5E42", // trousers
 };
 
 // --- colour helpers ------------------------------------------------------
@@ -138,6 +140,21 @@ export function px(ctx: Ctx, matrix: string[], ox: number, oy: number, pal?: Pal
   }
 }
 
+/** Paint a sprite mirrored horizontally (for the cat and left-walkers). */
+export function pxFlipX(ctx: Ctx, matrix: string[], ox: number, oy: number, pal?: Palette) {
+  const map = pal ?? P;
+  for (let y = 0; y < matrix.length; y++) {
+    const row = matrix[y];
+    const w = row.length;
+    for (let x = 0; x < w; x++) {
+      const color = map[row[x]];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(ox + (w - 1 - x), oy + y, 1, 1);
+    }
+  }
+}
+
 export function spriteW(matrix: string[]) {
   let w = 0;
   for (const row of matrix) w = Math.max(w, row.length);
@@ -152,19 +169,33 @@ function grain(x: number, y: number, seed: number) {
 
 // --- floors --------------------------------------------------------------
 
-export function floorWood(ctx: Ctx, x: number, y: number, w: number, h: number) {
-  fill(ctx, x, y, w, h, P["1"] as string);
+/** Honey walkway planks — the one connected path loop (D16.2). */
+export function floorPath(ctx: Ctx, x: number, y: number, w: number, h: number) {
+  fill(ctx, x, y, w, h, "#DBA768");
   const plank = 6;
   for (let py = 0; py < h; py += plank) {
     const band = (py / plank) % 2;
-    fill(ctx, x, y + py, w, plank - 1, (band ? P["2"] : P["3"]) as string);
-    fill(ctx, x, y + py + plank - 1, w, 1, P["4"] as string);
-    // staggered plank breaks + knots
-    for (let bx = band * 15; bx < w; bx += 30) {
-      fill(ctx, x + bx, y + py, 1, plank - 1, P["4"] as string);
-      if (grain(bx, py, 3) > 0.62) {
-        fill(ctx, x + Math.min(bx + 7, w - 3), y + py + 2, 2, 1, P["5"] as string);
+    fill(ctx, x, y + py, w, plank - 1, band ? "#D19C5C" : "#E2B173");
+    fill(ctx, x, y + py + plank - 1, w, 1, "#C08A52");
+    for (let bx = band * 14; bx < w; bx += 28) {
+      fill(ctx, x + bx, y + py, 1, plank - 1, "#C08A52");
+      if (grain(bx, py, 3) > 0.7) {
+        fill(ctx, x + Math.min(bx + 8, w - 3), y + py + 2, 2, 1, "#C89563");
       }
+    }
+  }
+}
+
+/** Warm sand planks — the default zone ground. */
+export function floorSand(ctx: Ctx, x: number, y: number, w: number, h: number) {
+  fill(ctx, x, y, w, h, "#E7D3AC");
+  const plank = 7;
+  for (let py = 0; py < h; py += plank) {
+    const band = (py / plank) % 2;
+    fill(ctx, x, y + py, w, plank - 1, band ? "#E0C99E" : "#EAD6B4");
+    fill(ctx, x, y + py + plank - 1, w, 1, "#CBAD82");
+    for (let bx = band * 16; bx < w; bx += 32) {
+      fill(ctx, x + bx, y + py, 1, plank - 1, "#CBAD82");
     }
   }
 }
@@ -199,31 +230,31 @@ export function floorTile(
   for (let pxx = 0; pxx <= w; pxx += cell) ctx.fillRect(x + pxx, y, 1, h);
 }
 
-/** Raised server-room floor: bolted metal panels. */
+/** Model room floor: warm walnut access panels with amber bolts. */
 export function floorRaised(ctx: Ctx, x: number, y: number, w: number, h: number) {
-  fill(ctx, x, y, w, h, P["z"] as string);
+  fill(ctx, x, y, w, h, "#C4A374");
   const cell = 12;
   for (let py = 0; py < h; py += cell) {
     for (let pxx = 0; pxx < w; pxx += cell) {
       const cw = Math.min(cell - 2, w - pxx - 1);
       const ch = Math.min(cell - 2, h - py - 1);
       if (cw <= 0 || ch <= 0) continue;
-      fill(ctx, x + pxx + 1, y + py + 1, cw, ch, P["A"] as string);
-      fill(ctx, x + pxx, y + py, Math.min(cell, w - pxx), 1, P["B"] as string);
-      fill(ctx, x + pxx, y + py, 1, Math.min(cell, h - py), P["B"] as string);
-      fill(ctx, x + pxx + 2, y + py + 2, 1, 1, P["D"] as string);
-      fill(ctx, x + pxx + cell - 3, y + py + cell - 3, 1, 1, P["D"] as string);
+      fill(ctx, x + pxx + 1, y + py + 1, cw, ch, "#CDAD7E");
+      fill(ctx, x + pxx, y + py, Math.min(cell, w - pxx), 1, "#B08F60");
+      fill(ctx, x + pxx, y + py, 1, Math.min(cell, h - py), "#B08F60");
+      fill(ctx, x + pxx + 2, y + py + 2, 1, 1, "#A98C5F");
+      fill(ctx, x + pxx + cell - 3, y + py + cell - 3, 1, 1, "#A98C5F");
     }
   }
 }
 
-/** Deck war-room floor: sealed concrete with a faint copper grid. */
-export function floorConcrete(ctx: Ctx, x: number, y: number, w: number, h: number) {
-  fill(ctx, x, y, w, h, "#2a221a");
+/** Deck war-room floor: sealed warm concrete with a faint terracotta grid. */
+export function floorSealed(ctx: Ctx, x: number, y: number, w: number, h: number) {
+  fill(ctx, x, y, w, h, "#E3CFA5");
   const cell = 10;
   for (let py = 0; py < h; py += cell) {
     for (let pxx = 0; pxx < w; pxx += cell) {
-      const tone = grain(pxx, py, 9) > 0.5 ? "#332a20" : "#302719";
+      const tone = grain(pxx, py, 9) > 0.5 ? "#E9D7B0" : "#E0CBA0";
       fill(
         ctx,
         x + pxx + 1,
@@ -234,7 +265,7 @@ export function floorConcrete(ctx: Ctx, x: number, y: number, w: number, h: numb
       );
     }
   }
-  ctx.fillStyle = "rgba(232,137,43,0.10)";
+  ctx.fillStyle = "rgba(201,111,74,0.14)";
   for (let py = 0; py <= h; py += cell) ctx.fillRect(x, y + py, w, 1);
   for (let pxx = 0; pxx <= w; pxx += cell) ctx.fillRect(x + pxx, y, 1, h);
 }
@@ -262,7 +293,7 @@ export function rug(
   }
 }
 
-/** The reference image's black/bone checker strip. */
+/** The café checker strip: oak / cream, warm. */
 export function checkerStrip(ctx: Ctx, x: number, y: number, w: number, cell = 5) {
   for (let i = 0; i < w; i += cell) {
     fill(ctx, x + i, y, Math.min(cell, w - i), cell, (i / cell) % 2 ? (P["T"] as string) : (P["G"] as string));
@@ -271,31 +302,9 @@ export function checkerStrip(ctx: Ctx, x: number, y: number, w: number, cell = 5
   fill(ctx, x, y + cell - 1, w, 1, P["0"] as string);
 }
 
-// --- walls ---------------------------------------------------------------
-
-export function brickWall(ctx: Ctx, x: number, y: number, w: number, h: number) {
-  fill(ctx, x, y, w, h, P["8"] as string);
-  for (let ry = 1; ry < h - 2; ry += 3) {
-    const off = ((ry - 1) / 3) % 2 ? 6 : 0;
-    for (let rx = -12; rx < w; rx += 12) {
-      const bx = x + rx + off + 1;
-      const bw = Math.min(10, x + w - bx);
-      if (bw <= 0 || bx < x) continue;
-      fill(ctx, bx, y + ry, bw, 2, grain(rx, ry, 5) > 0.66 ? (P["7"] as string) : (P["6"] as string));
-    }
-  }
-  fill(ctx, x, y, w, 1, "rgba(255,255,255,0.06)");
-  fill(ctx, x, y + h - 2, w, 2, P["0"] as string);
-}
-
-export function panelWall(ctx: Ctx, x: number, y: number, w: number, h: number, tint: string) {
-  fill(ctx, x, y, w, h, tint);
-  fill(ctx, x, y, w, 1, shade(tint, 1.4));
-  for (let sx = 10; sx < w; sx += 20) fill(ctx, x + sx, y + 1, 1, h - 3, shade(tint, 0.72));
-  fill(ctx, x, y + h - 2, w, 2, P["0"] as string);
-}
-
-// --- wall fixtures (each room's signature back-wall piece) ---------------
+// --- freestanding boards -------------------------------------------------
+// With no walls (D16.2) each zone's signature fixture is a board on legs;
+// drawPlan adds the legs + ground shadow around whatever these fill.
 
 const BOOK_COLORS = ["f", "g", "h", "i", "j", "k"].map((c) => P[c] as string);
 
@@ -313,7 +322,7 @@ export function ledWall(ctx: Ctx, x: number, y: number, w: number, h: number, ac
 export function tickerBoard(ctx: Ctx, x: number, y: number, w: number, h: number, accent: string) {
   fill(ctx, x, y, w, h, P["0"] as string);
   fill(ctx, x + 1, y + 1, w - 2, h - 2, P["B"] as string);
-  // running bars: jade up-ticks, one amber down-tick (red stays act-now only)
+  // running bars: sage up-ticks, one honey down-tick (coral stays act-now only)
   let cursor = x + 3;
   let step = 0;
   while (cursor < x + w - 4) {
@@ -343,19 +352,40 @@ export function whiteboard(ctx: Ctx, x: number, y: number, w: number, h: number,
 
 export function kanbanBoard(ctx: Ctx, x: number, y: number, w: number, h: number, accent: string) {
   fill(ctx, x, y, w, h, P["0"] as string);
-  fill(ctx, x + 1, y + 1, w - 2, h - 2, "#3a2f24");
+  fill(ctx, x + 1, y + 1, w - 2, h - 2, "#EFE3C8");
   const cols = 5;
   const cw = Math.floor((w - 4) / cols);
   for (let c = 0; c < cols; c++) {
     const cxp = x + 2 + c * cw;
-    fill(ctx, cxp, y + 2, cw - 2, h - 4, "#4a3d2e");
-    fill(ctx, cxp, y + 2, cw - 2, 1, "#5d4c39");
+    fill(ctx, cxp, y + 2, cw - 2, h - 4, "#E5D5AE");
+    fill(ctx, cxp, y + 2, cw - 2, 1, "#D8C4A0");
     for (let r = 0; r < 3; r++) {
       const cy = y + 5 + r * 4;
       if (cy + 3 > y + h - 3) break;
       const card = c === 2 && r === 0 ? accent : BOOK_COLORS[(c + r * 2) % BOOK_COLORS.length];
       fill(ctx, cxp + 1, cy, cw - 4, 3, card);
       fill(ctx, cxp + 1, cy, cw - 4, 1, shade(card, 1.25));
+    }
+  }
+}
+
+/** Cork ENH pinboard with pinned notes. */
+export function pinboard(ctx: Ctx, x: number, y: number, w: number, h: number, accent: string) {
+  fill(ctx, x, y, w, h, P["0"] as string);
+  fill(ctx, x + 1, y + 1, w - 2, h - 2, P["k"] as string);
+  for (let gy = y + 1; gy < y + h - 1; gy += 3) {
+    for (let gx = x + 1; gx < x + w - 1; gx += 3) {
+      if (grain(gx, gy, 11) > 0.72) fill(ctx, gx, gy, 1, 1, shade(P["k"] as string, 0.88));
+    }
+  }
+  let n = 0;
+  for (let ny = y + 3; ny + 4 <= y + h - 2; ny += 5) {
+    for (let nx = x + 3; nx + 4 <= x + w - 2; nx += 6) {
+      const card = n === 2 ? accent : BOOK_COLORS[(n * 3 + 1) % BOOK_COLORS.length];
+      fill(ctx, nx, ny, 4, 3, card);
+      fill(ctx, nx, ny + 3, 4, 1, shade(card, 0.72));
+      fill(ctx, nx + 1, ny - 1, 1, 1, P["c"] as string);
+      n++;
     }
   }
 }
@@ -449,6 +479,38 @@ export function sofa(
   fill(ctx, x + 1, y + h - 2, w - 2, 1, P["0"] as string);
 }
 
+export function cushion(ctx: Ctx, x: number, y: number, base: string) {
+  fill(ctx, x + 1, y, 7, 1, P["0"] as string);
+  fill(ctx, x, y + 1, 9, 4, P["0"] as string);
+  fill(ctx, x + 1, y + 1, 7, 3, base);
+  fill(ctx, x + 2, y + 1, 5, 1, shade(base, 1.22));
+  fill(ctx, x + 1, y + 5, 7, 1, P["0"] as string);
+}
+
+/** Round war-room table with stools around it. */
+export function roundTable(ctx: Ctx, cx: number, cy: number, r = 13) {
+  for (let dy = -r; dy <= r; dy++) {
+    const half = Math.round(Math.sqrt(Math.max(0, r * r - dy * dy)) * 0.92);
+    if (half <= 0) continue;
+    fill(ctx, cx - half, cy + dy, half * 2, 1, dy < -r + 2 ? (P["0"] as string) : (P["0"] as string));
+  }
+  for (let dy = -r + 2; dy <= r - 2; dy++) {
+    const half = Math.round(Math.sqrt(Math.max(0, (r - 2) * (r - 2) - dy * dy)) * 0.92);
+    if (half <= 0) continue;
+    fill(ctx, cx - half, cy + dy, half * 2, 1, dy < 0 ? (P["3"] as string) : (P["1"] as string));
+  }
+  // highlight sheen + a mug and papers
+  fill(ctx, cx - 5, cy - 6, 8, 1, P["3"] as string);
+  fill(ctx, cx + 2, cy - 2, 5, 4, P["-"] as string);
+  fill(ctx, cx + 3, cy - 1, 3, 1, P["="] as string);
+  fill(ctx, cx - 7, cy + 1, 3, 3, P["9"] as string);
+  fill(ctx, cx - 7, cy + 1, 3, 1, P["c"] as string);
+  // stools at three sides
+  px(ctx, STOOL, cx - 3, cy + r + 1);
+  px(ctx, STOOL, cx - r - 7, cy - 3);
+  px(ctx, STOOL, cx + r + 1, cy - 3);
+}
+
 export function confTable(ctx: Ctx, x: number, y: number, w: number, h: number) {
   // chairs along the long sides
   for (let cx = x + 6; cx + 8 <= x + w - 2; cx += 14) {
@@ -498,6 +560,26 @@ export function bench(ctx: Ctx, x: number, y: number, w: number, h: number) {
   fill(ctx, x + 1, y + 1, w - 2, h - 2, P["5"] as string);
   for (let sx = x + 2; sx < x + w - 2; sx += 4) fill(ctx, sx, y + 1, 2, h - 2, P["3"] as string);
   fill(ctx, x + 1, y + h - 2, w - 2, 1, P["4"] as string);
+}
+
+/** Floor lamp: mustard shade on an oak pole (library light pools). */
+export function floorLamp(ctx: Ctx, x: number, y: number) {
+  fill(ctx, x, y, 9, 2, P["0"] as string);
+  fill(ctx, x + 1, y + 1, 7, 4, P["i"] as string);
+  fill(ctx, x + 2, y + 2, 5, 2, shade(P["i"] as string, 1.18));
+  fill(ctx, x + 4, y + 5, 1, 12, P["4"] as string);
+  fill(ctx, x + 2, y + 17, 5, 2, P["0"] as string);
+}
+
+/** Striped welcome mat. */
+export function welcomeMat(ctx: Ctx, x: number, y: number) {
+  for (let i = 0; i < 3; i++) {
+    fill(ctx, x + i * 6, y, 6, 7, i % 2 ? (P["9"] as string) : (P["o"] as string));
+  }
+  fill(ctx, x, y, 18, 1, P["0"] as string);
+  fill(ctx, x, y + 6, 18, 1, P["0"] as string);
+  fill(ctx, x, y, 1, 7, P["0"] as string);
+  fill(ctx, x + 17, y, 1, 7, P["0"] as string);
 }
 
 // --- sprite matrices -----------------------------------------------------
@@ -628,6 +710,53 @@ export const CABLE_TRAY = [
   "0000000000000000",
 ];
 
+/** Espresso machine on its cabinet — the lobby café corner. */
+export const ESPRESSO = [
+  ".00000000.",
+  "0aaaaaaaa0",
+  "0abbbbbb0",
+  "0abppppb0",
+  "0abp99pb0",
+  "0aaaaaaaa0",
+  "0aaa00aaa0",
+  "0aaa00aaa0",
+  "0aaaaaaaa0",
+  ".00000000.",
+  "..044490..",
+  "..099990..",
+  "..000000..",
+];
+
+/** Wooden CRT TV for the anime lounge. */
+export const CRT_TV = [
+  "..0.......0........",
+  "...0.....0.........",
+  "....0...0..........",
+  "0000000000000000000",
+  "0111111111111111110",
+  "01ddddddddddddddd10",
+  "01dd=dddddd=dddd=10",
+  "01ddddddddddddddd10",
+  "01d=dddd=ddddddd=10",
+  "01ddddddddddddddd10",
+  "0111111111111111110",
+  "0a0a0a0a0a0a0a0a0a0",
+  "0000000000000000000",
+  "..04...........04..",
+  "..040.........040..",
+];
+
+/** The office cat, walking right (mirrored for left). */
+export const CAT = [
+  ".0...0.....",
+  ".00.00.....",
+  ".0mmm0.....",
+  ".0m!m0..0..",
+  ".0mmm00000.",
+  "0mmmmmmmmm0",
+  ".00.0..0.0.",
+];
+
 /** Alert glyph floated over a stuck agent. */
 export const ALERT = [
   "..0..",
@@ -679,6 +808,25 @@ export const POSE_TYPING = [
   "............",
 ];
 
+export const POSE_WALK = [
+  "....0000....",
+  "...0@@@@0...",
+  "..0@@@@@@0..",
+  "..0@++++@0..",
+  "..0+!++!+0..",
+  "..0++~~++0..",
+  "...0++++0...",
+  "...0####0...",
+  "..0######0..",
+  ".0##%##%##0.",
+  ".0########0.",
+  "..0######0..",
+  ".0&&0..0&&0.",
+  "0&&......&&0",
+  "000......000",
+  "............",
+];
+
 export const CHAR_W = 12;
 export const CHAR_H = 16;
 
@@ -693,8 +841,8 @@ export function charPalette(shirt: string, hair: string): Palette {
 }
 
 export function shadowBlob(ctx: Ctx, x: number, y: number, w: number) {
-  fill(ctx, x + 1, y, w - 2, 1, "rgba(0,0,0,0.26)");
-  fill(ctx, x + 2, y + 1, w - 4, 1, "rgba(0,0,0,0.18)");
+  fill(ctx, x + 1, y, w - 2, 1, "rgba(74,53,39,0.30)");
+  fill(ctx, x + 2, y + 1, w - 4, 1, "rgba(74,53,39,0.20)");
 }
 
 /** Soft status halo under a character — an ellipse of 1px marks, not a stroke. */
@@ -704,4 +852,34 @@ export function halo(ctx: Ctx, cx: number, cy: number, rx: number, ry: number, c
     const t = (a / 32) * Math.PI * 2;
     ctx.fillRect(Math.round(cx + Math.cos(t) * rx), Math.round(cy + Math.sin(t) * ry), 1, 1);
   }
+}
+
+/** Spawn sparkle: rays that fly outward then fade (D16.4 materialize). */
+export function sparkle(ctx: Ctx, cx: number, cy: number, progress: number, color: string) {
+  const rays = 8;
+  for (let k = 0; k < rays; k++) {
+    const t = (k / rays) * Math.PI * 2;
+    const r1 = 2 + progress * 10;
+    const r0 = Math.max(1, r1 - 2.5);
+    ctx.fillStyle = k % 2 ? color : "#FFE9AE";
+    for (let r = r0; r <= r1; r++) {
+      ctx.fillRect(Math.round(cx + Math.cos(t) * r), Math.round(cy + Math.sin(t) * r * 0.7), 1, 1);
+    }
+  }
+  if (progress < 0.5) {
+    ctx.fillStyle = "#FFE9AE";
+    ctx.fillRect(Math.round(cx - 1), Math.round(cy - 1), 3, 3);
+  }
+}
+
+/** Puff ring for the leave animation — a quick expanding outline. */
+export function puff(ctx: Ctx, cx: number, cy: number, progress: number, color: string) {
+  const r = 2 + progress * 9;
+  ctx.globalAlpha = 1 - progress;
+  ctx.fillStyle = color;
+  for (let a = 0; a < 20; a++) {
+    const t = (a / 20) * Math.PI * 2;
+    ctx.fillRect(Math.round(cx + Math.cos(t) * r), Math.round(cy + Math.sin(t) * r * 0.6), 1, 1);
+  }
+  ctx.globalAlpha = 1;
 }

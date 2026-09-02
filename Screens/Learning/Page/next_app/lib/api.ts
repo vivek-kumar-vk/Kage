@@ -2,106 +2,66 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-const API_BASE = "";
+export async function api<T = unknown>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+  });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json();
+      detail = body.detail ?? detail;
+    } catch { /* not json */ }
+    throw new Error(detail);
+  }
+  return res.json() as Promise<T>;
+}
 
-export function useResource<T>(path: string) {
+export function post<T = unknown>(path: string, body?: unknown): Promise<T> {
+  return api<T>(path, { method: "POST", body: body ? JSON.stringify(body) : undefined });
+}
+
+export const put = <T = unknown,>(path: string, body?: unknown): Promise<T> =>
+  api<T>(path, { method: "PUT", body: body ? JSON.stringify(body) : undefined });
+
+export const del = <T = unknown,>(path: string): Promise<T> =>
+  api<T>(path, { method: "DELETE" });
+
+/** Fetch-on-mount with loading / error / refetch. */
+export function useResource<T>(path: string | null) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const res = await fetch(`${API_BASE}${path}`);
-        const text = await res.text();
-
-        let parsed: T | null = null;
-        if (text) {
-          try {
-            parsed = JSON.parse(text) as T;
-          } catch {
-            parsed = null;
-          }
-        }
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        if (!cancelled) {
-          setData(parsed);
-          setError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setData(null);
-          setError(err instanceof Error ? err.message : String(err));
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    load();
-
+    let alive = true;
+    if (!path) return;
+    setLoading(true);
+    api<T>(path)
+      .then((d) => {
+        if (!alive) return;
+        setData(d);
+        setError(null);
+      })
+      .catch((e) => alive && setError(String(e.message ?? e)))
+      .finally(() => alive && setLoading(false));
     return () => {
-      cancelled = true;
+      alive = false;
     };
-  }, [path]);
+  }, [path, tick]);
 
-  return { data, error, loading };
+  const refetch = useCallback(() => setTick((t) => t + 1), []);
+  return { data, error, loading, refetch };
 }
 
-export function useSubmit<T>(
-  path: string,
-  method: "POST" | "PUT" | "DELETE" = "POST"
-) {
-  const [submitting, setSubmitting] = useState(false);
-
-  const submit = useCallback(
-    async (body?: unknown): Promise<{ data: T | null; error: string | null }> => {
-      setSubmitting(true);
-
-      try {
-        const res = await fetch(`${API_BASE}${path}`, {
-          method,
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: body === undefined ? undefined : JSON.stringify(body),
-        });
-
-        const text = await res.text();
-
-        let parsed: T | null = null;
-        if (text) {
-          try {
-            parsed = JSON.parse(text) as T;
-          } catch {
-            parsed = null;
-          }
-        }
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        return { data: parsed, error: null };
-      } catch (err) {
-        return {
-          data: null,
-          error: err instanceof Error ? err.message : String(err),
-        };
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [path, method]
-  );
-
-  return { submit, submitting };
+export function fmtDate(iso: string): string {
+  try {
+    return new Date(iso + (iso.length === 10 ? "T00:00:00" : "")).toLocaleDateString(
+      "en-GB", { weekday: "long", day: "numeric", month: "long" },
+    );
+  } catch {
+    return iso;
+  }
 }

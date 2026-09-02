@@ -42,7 +42,7 @@ HOST = "127.0.0.1"          # local means local
 # Overridable by env for the phone host later.
 import os
 
-GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://127.0.0.1:8003")
+GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://localhost:8003")
 
 # The gateway's admin/list endpoints may need an API key. It lives in
 # the repo-root .env (gitignored). This screen stays independent - it

@@ -140,6 +140,41 @@ export function useLiveEvents() {
   return { events, status };
 }
 
+const HANDOVER_MS = 30000;
+
+/**
+ * D16.4 — an agent whose task was handed over by an agent from another zone
+ * walks in from the Lobby instead of materializing at its desk.
+ */
+export function deriveWalkIns(events: OfficeEvent[]): Set<string> {
+  const out = new Set<string>();
+
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    if (event.type !== "started" || !event.agent_name) continue;
+    const at = event._at ?? 0;
+
+    for (let j = i - 1; j >= 0; j--) {
+      const prev = events[j];
+      const prevAt = prev._at ?? 0;
+      if (at && prevAt && at - prevAt > HANDOVER_MS) break;
+      if (
+        prev.agent_name &&
+        prev.agent_name !== event.agent_name &&
+        prev.department &&
+        event.department &&
+        prev.department !== event.department &&
+        (prev.type === "started" || prev.type === "output")
+      ) {
+        out.add(event.agent_name);
+        break;
+      }
+    }
+  }
+
+  return out;
+}
+
 export function deriveAgentStates(events: OfficeEvent[]): Map<string, AgentView> {
   const map = new Map<string, AgentView>();
 

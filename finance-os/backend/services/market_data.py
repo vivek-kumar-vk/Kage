@@ -210,6 +210,16 @@ def get_last_cached_price(symbol: str) -> dict | None:
     return None
 
 
+def _yahoo_symbol(symbol: str) -> str:
+    """Yahoo lists NSE equities under '<SYMBOL>.NS'. A bare ticker only
+    resolves for indices (^NSEI) and FX pairs (USDINR=X), which carry
+    their own prefixes — leave those untouched."""
+    sym = normalize_symbol(symbol)
+    if "." in sym or sym.startswith("^") or sym.endswith("=X"):
+        return sym
+    return f"{sym}.NS"
+
+
 def get_stock_price(symbol: str) -> dict:
     try:
         import yfinance
@@ -222,7 +232,16 @@ def get_stock_price(symbol: str) -> dict:
 
     cached = get_last_cached_price(symbol)
     try:
-        info = yfinance.Ticker(symbol).info or {}
+        info = None
+        for cand in (_yahoo_symbol(symbol), normalize_symbol(symbol)):
+            try:
+                info = yfinance.Ticker(cand).info or {}
+            except Exception:  # noqa: BLE001
+                info = None
+            if info and (info.get("regularMarketPrice") or info.get("previousClose")):
+                break
+        if not info:
+            info = {}
         price = info.get("regularMarketPrice") or info.get("previousClose")
         if price is None:
             if cached:
@@ -262,7 +281,7 @@ def stock_history(symbol: str, days: int = 90) -> dict:
             "note": "yfinance not installed",
         }
     try:
-        hist = yfinance.Ticker(symbol).history(period=f"{days}d")
+        hist = yfinance.Ticker(_yahoo_symbol(symbol)).history(period=f"{days}d")
         if hist.empty:
             return {
                 "has_data": False,
@@ -381,6 +400,29 @@ _ISIN_RE = re.compile(r"^INF[0-9A-Z]{9}$")
 
 def is_isin(symbol: str) -> bool:
     return bool(_ISIN_RE.match(normalize_symbol(symbol)))
+
+
+def backfill_benchmark(symbol: str = "^NSEI", years: int = 5) -> dict:
+    """Pull a benchmark index's daily closes into price_history so every
+    portfolio-vs-benchmark draw reads the local ledger, never a live call."""
+    res = stock_history(symbol, years * 366)
+    if not res.get("has_data"):
+        return {"state": "pending", "note": res.get("note")}
+    with connect() as db:
+        for p in res["points"]:
+            db.execute(
+                "INSERT OR IGNORE INTO price_history "
+                "(symbol, date, price, source, currency) VALUES (?, ?, ?, ?, ?)",
+                (normalize_symbol(symbol), p["date"], p["price"],
+                 "yfinance", "INR"),
+            )
+        db.commit()
+    return {"state": "ok", "symbol": symbol, "rows": len(res["points"])}
+
+
+def usd_inr() -> dict:
+    """The rupee's dollar price — the one FX rate the global planner needs."""
+    return get_stock_price("USDINR=X")
 
 
 def _amfi_row_by_isin(isin: str, today: date | None = None) -> dict | None:

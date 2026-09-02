@@ -72,3 +72,37 @@ writes nothing; the gap refresh inserts the feed's real points past `MAX(date)`.
 with no published NAV simply has no row. Where a series is too sparse to mean anything,
 the card says so rather than drawing a curve (the Portfolio Pulse sparkline does this
 while `lots` is empty).
+
+## FD7 — Investments end-to-end: Analyse drawer, Analysis tab, Trade Desk
+
+Shipped 2026-09-02 (repo-wide record: `AGENTS.md` D20). The Investments tab wears
+Aurum with ONE Analyse action per holding (archive/delete are gone; soft-archive
+stays available via the accounts API). The Analyse drawer is an independent window
+inside the tab, portalled to `document.body` so the page chrome can never paint
+over it. The Analysis tab computes the whole-portfolio review; the Trade Desk adds
+watchlist, the swing journal, the IPO calendar and the LRS/TCS planner.
+
+Number sources, so every figure can be traced:
+
+- Fund facts + published portfolios: Groww public pages via
+  `services/fund_reference.py`, one fetch per fund per month, persisted to
+  `fund_facts` / `fund_portfolios`. Slug resolution order and the
+  scheme_code-must-match discard rule are in D20.1. Unresolved pages show
+  `pending` with the reason — NAV maths is unaffected.
+- Risk ratios: `services/calculations/ratios.py`, the ported pure-math house
+  file. Benchmark ^NSEI (NIFTY 50) from the local ledger, refreshed only when
+  older than 7 days.
+- Look-through / overlap / drift / observations:
+  `services/calculations/analysis.py` using the thresholds in
+  `services/reference/fund_analysis_settings.json` — still
+  `verified_by_a_person: false`, so the UI shows [UNVERIFIED] beside them.
+- Tax: `services/reference/india_income_tax_rules.json` (STCG 20%, LTCG 12.5%
+  above ₹1.25L, 12-month line; gold ETF 24 months).
+- Portfolio value series: last-known-NAV ride-forward IN MEMORY ONLY (D20.3) —
+  `price_history` still holds published rows exclusively (FD6).
+
+Residue, deliberately open: the two funds whose Groww pages could not be resolved
+(100900 HDFC Children's, 120760 UTI Multi Asset) report `pending`; market-cap
+splits need per-stock facts and are not shown rather than guessed; the CAS PDF
+re-import (Investments → IMPORT CAS PDF) is the user's step that fills lots,
+XIRR and the tax buckets.

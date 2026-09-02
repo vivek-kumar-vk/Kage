@@ -352,7 +352,7 @@ export default function BoardRoom({
                 <p className="num text-xs text-deck-dim">{column.items.length}</p>
               </header>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto p-2">
+              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden p-2">
                 {column.items.length === 0 ? (
                   <p className="text-xs text-deck-dim">No ideas in this column.</p>
                 ) : null}

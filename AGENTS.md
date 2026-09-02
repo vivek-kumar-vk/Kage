@@ -37,7 +37,7 @@ Read this first, every session. Standing rules for this repo; the plan list is
 [`PLAN.md`](PLAN.md) is the single backlog — the ordered map, the numbered items with
 status and detail, and the `## Active order` / `## Dropped` sections. One workstream at
 a time. Active now: item 1, Finance data migration (user-led) ∥ item 2, Google Drive
-storage layer (Qwen-led). Shipped items are deleted from `PLAN.md` — git history and the
+storage layer (Qwen-led) ∥ item 12, Learning OS v3 real-life pass (D17). Shipped items are deleted from `PLAN.md` — git history and the
 decisions below are the record.
 
 ## Design decisions (Rule 8)
@@ -227,4 +227,192 @@ decisions below are the record.
   - **D15.4 — One bubble at a time.** With a busy event stream every desk would shout
     at once; the stage speaks for the selected agent, else the hovered one, else
     whoever was tasked most recently. Dormant subs show no name plate.
+    *(superseded by D18.5 — up to 3 clouds now)*
+- **D16 — Learning OS rebuild (Screens/Learning/; 2026-09-02).** The Learning screen
+  is rebuilt into a personal, agent-driven learning platform that teaches
+  TryHackMe-style (track → module → room → 4-beat steps: explain / real-world /
+  lab / checkpoint → auto-minted recall cards) in an **Ember Studio** design system
+  (warm near-black, bone text, single ember `#E8A851` accent, Fraunces display
+  numerals; jade = success, violet = AI-authored, red stays act-now only). Five tabs:
+  TODAY (focus cockpit + Focus Session) / PATH (fully dynamic tracks, modules, rooms —
+  no A/B enum, archive-not-delete) / RECALL (SM-2 + Card Studio) / INSIGHTS
+  (retention curve, mastery map, weak spots, confidence-vs-reality, rhythm, coverage,
+  append-only ledger) / CREW (six agents on an OmniRoute seam copied from the Agents
+  screen: Planner, Tutor, Quizmaster, Librarian, Guardian, Auditor — every output is
+  an Approve-card; ~~no agent fetches internet content~~ *(superseded by D17.3)*).
+  Plan + milestones: `.scratch/learning-redesign/PLAN.md`, `PLAN.md` item 12.
+  Supersedes D8's terminal/CLI theme for this screen; D8's two-surface split still
+  stands.
+- **D17 — Learning OS v3 "real-life pass" (Screens/Learning/ + Screens/Office/;
+  2026-09-02).** The owner's pasted corpus (14-week plan, Master Context, resume)
+  enters the system and the OS starts tracking his real life: honest zero, two
+  ground-up tracks, a daily TryHackMe lab habit, a job-hunt Office screen, and a
+  live agent crew. Plan: `.scratch/learning-redesign/PLAN_V3.md` (`PLAN.md` item 12
+  v3). Everything in D16 stands except its fetch ban (D17.3 below).
+  - **D17.1 — Honest zero.** All demo history (sessions, attempts, reviews, cards,
+    notes, ledger, proposals, agent_runs) is wiped; rooms re-seed as **empty
+    skeletons** ("planned, not taught" is a visible state). Standing rule, his
+    words: **nothing records work that has not happened.** His PII corpus stores
+    verbatim under gitignored `Screens/Learning/Context/`, served only by a
+    localhost allowlisted read router; never committed.
+  - **D17.2 — Two tracks from ground 0; the detection track dissolves.** Track 1
+    "Project → DevOps" (goal: forward-deployment engineer; KAGE is the lab):
+    Git/GitHub + Linux + networking basics → AI agenting (incl. Hermes agent,
+    DeepSeek harness) → multi-model routing (OmniRoute) → RAG (Storage D11.3, then
+    a finance-data RAG) → containers/CI-CD → Arize. Track 2 "Observability
+    (job-driven)": networking + Linux ground 0 → Splunk SPL/ES → Dynatrace
+    migration story incl. **DQL/DPL** (his differentiator) → real observability →
+    Prometheus/Grafana/OTel/Bindplane labs built ON KAGE. Old detection rooms
+    redistribute into both tracks where they pay; leftovers park archived in a
+    visible Track 2 module — nothing deleted, nothing hidden.
+  - **D17.3 — Agents may fetch; everything starts UNVERIFIED (supersedes D16's fetch
+    ban).** Services fetch whitelisted sources (GitHub AI, Anthropic/OpenAI news,
+    Chinese-AI channels, TryHackMe catalog — editable `Context/SOURCES.md`); the
+    LLM only digests what the service fetched; every fetched/authored item is
+    UNVERIFIED (violet) until his one-click approve. Agents that touch PII
+    (resume, employers, contact) route to **local models only**.
+  - **D17.4 — Office is its own screen (:8008).** The menu's hard `MAX_TABS = 5`
+    bars a sixth Learning tab (ADR-067 precedent: cross-domain = own screen). Tabs:
+    Overview / Applications / Interview Prep / Work Log / Resume Readiness; own
+    FastAPI + SQLite; reads Learning over HTTP. Job-hunt agents prep (tailoring,
+    interview packs, funnel reports); the owner still clicks Apply — **no portal
+    automation, ever**.
+  - **D17.5 — Resume-defensible by machine.** A skill (room `skill_tag`) is
+    resume-ready only at ≥2 Good/Easy recall ratings (his Week-14 rule); the Office
+    RESUME READINESS tab enforces his no-skills-inflation rule mechanically.
+  - **D17.6 — Activity-rebalanced timetable, no dated grid.** The 14-week dated grid
+    is not restored. A settings day-template (his real windows: morning drip,
+    evening core, THM slot, apply block) + weekly Planner rebalance from the ledger
+    (what actually happened). Interview day preempts learning (2–3 h prep insert).
+  - **D17.7 — SIGNAL lives in CREW.** Researcher+Curator digests + his verification
+    queue are a Crew-tab section (agent output pending approve — Crew's existing
+    pattern), not a new tab.
+  - **D17.8 — TryHackMe is the standing lab.** Every track's LAB beat may link a THM
+    room; sessions carry a `source` tag; Today shows a THM streak line + a daily
+    Scout pick (plan-matched THM rooms, honest login-wall fallback with remembered
+    manual mapping). The OS never submits or fakes anything on THM — his streak is
+    his own real activity.
+- **D18 — Pix-Agents: the warm rebuild (Screens/Agents/; 2026-09-02).** The D15 stage
+  and the whole Agents chrome leave the dark theme for warm paper / honey / sand
+  (`pixelArt.ts` palette remapped 1:1 — same char keys, so every sprite matrix
+  survived; `globals.css` tokens re-valued). No near-black anywhere — even outlines
+  are walnut ink `#4A3527`; coral `#D95F43` stays act-now only.
+  - **D18.1 — One open floor, no walls.** Walls, doorways and the outer shell are
+    deleted; six 140×128 zones (plan 476×296 — sized so an integer 3× blit covers a
+    1440×900 viewport; fixed sizing superseded by D18.7) are separated by tinted rugs, floor tone and furniture, linked
+    by one honey walkway loop (apron ring + two vertical corridors + one horizontal).
+    The page backdrop is the same honey as the walkway, so fit-all reads full-bleed;
+    fit-all rounds up to the next integer scale when within 15% (a small apron
+    overflow is invisible). Room plates are clickable to focus the camera; Follow is
+    opt-in, off by default.
+  - **D18.2 — Six identities.** Model = warm server garden (racks, amber LEDs) ·
+    Finance = trading floor (brass ticker) · Learning = library loft (shelves, lamp
+    pools) · Agent Deck = war room (round table, ENH pinboard) · Anime = lounge (CRT,
+    sofas) · Lobby = café reception (espresso, welcome mat). Desks stay
+    registry-generated — D15.2 carries over.
+  - **D18.3 — Spawn → work → leave.** Agents exist only while working: `started` →
+    materialize with a sparkle at their own desk, or **walk in from the Lobby along
+    the honey paths** when `deriveWalkIns()` sees a cross-department handover within
+    30 s (owner chose "Both") → work loops → `done` → stretch-fade + puff with a 6 s
+    linger, then the desk sits empty. Heads follow the same lifecycle — D15's
+    always-awake heads are gone.
+  - **D18.4 — Ambient life.** Coffee steam, dust motes in the lamp pools, amber LED
+    flicker, CRT scanline, lamp-pool pulse, and a cat patrolling the bottom walkway.
+    All of it freezes under prefers-reduced-motion.
+  - **D18.5 — Up to 3 clouds (supersedes D15.4).** Most-recent tasked agents win the
+    bubbles; SIM-tagged when sim=1.
+  - **D18.6 — Livelier demo for review.** The demo generator runs up to three
+    overlapping sim bursts (was one every 6–12 s, which left the stage empty most of
+    the time). Still sim=1 and still `AGENTS_DEMO_EVENTS` opt-in — D12.2 holds.
+  - **D18.7 — Responsive floor (2026-09-02; supersedes D18.1's fixed 476×296
+    plan sizing, keeps its open-floor design).** `buildLayout(vw, vh)` rebuilds
+    the plan per viewport: the six 140×128 zones stay fixed while the
+    walkways/aprons flex to absorb the viewport aspect, so the plan buffer is
+    exactly `ceil(viewport / scale)` and always fills the frame — nothing
+    scrolls and the honey never shows beyond the floor (zoom is floored at the
+    cover scale, pan clamped to the plan; a ResizeObserver re-layouts). Scale
+    is round-to-nearest integer with a feasibility floor (buffer ≥ 434×264,
+    aprons squeeze to 1 px before dropping a step, min 2×). Owner verified on
+    1920×1080-class browser viewports and accepted the current rendering;
+    further responsive polish is his to drive later (ENH-19, PLAN.md item 4).
+- **D19 — Agent Deck tab: Slack workflow, pixel skin (Screens/Agents/ /workspace;
+  2026-09-02).** The D9 three-pane workspace becomes the **AGENT DECK** tab next to
+  **PIX-AGENTS** (`/` ↔ `/workspace` tabs in the header; the floor-tab strip and the
+  floating DeskChat are deleted — chat lives in the deck now; RoomTabs / Navigator /
+  AgentCard deleted, Rule 5). Same pixel language as the office — not a flat Slack
+  clone — while chat bodies stay human-readable.
+  - **D19.1 — Pixel UI kit.** `.px-panel/.px-btn/.px-input/.px-tab/.px-chip` +
+    pixel-corner bubbles (edge-bar box-shadows, not borders) on D18's warm tokens;
+    BoardRoom / IdeaDetail / RunsStub re-skin unchanged through the tokens.
+  - **D19.2 — Fonts.** Pixelify Sans (next/font) carries the chrome — wordmark, tabs,
+    rail, section labels, buttons, profile rows; chat bodies and card copy stay IBM
+    Plex. Font stacks live in a plain `:root` block with the next/font variables on
+    `<html>`: `@theme inline` does not emit custom properties, so plain CSS var()
+    references need the real declarations.
+  - **D19.3 — Layout.** Left rail: search + rooms (# board-room, # runs) + the roster
+    grouped by department with SSE presence dots. Center: 1:1 chat per agent (day
+    chips, terracotta user bubbles right, typing indicator while a run is live) or the
+    board/runs room. Right: profile drawer opens on agent click; ✕ or Esc closes.
+  - **D19.4 — Agent files, view + edit.** The profile drawer's FILES tab lists the
+    agent's real files under `AI_Agents/<name>/`, opens any in a monospace editor, and
+    Save writes back. Routes `GET/PUT /agents/{name}/files[/{file}]`; filenames must
+    match `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\.(md|txt|json)$` (no separators — the
+    path can never leave the profile folder), 100 KB cap; missing canonical
+    identity.md / context.md / memory.md are one-click creatable.
+  - **D19.5 — Chat persistence.** `POST /agents/{name}/messages` finally writes the
+    messages table (nothing wrote it before) and emits a `source=ui` note event, so a
+    DM shows up as a cloud on the stage. Replies stay the honest pending stub
+    (D12.1); live wiring is PLAN.md item 4 V2.
 
+
+- **D20 — Investments end-to-end: Analyse drawer, Analysis tab, Trade Desk
+  (finance-os/; 2026-09-02).** The Investments tab is rebuilt on Aurum (hero +
+  value ridge fed by the smoothed portfolio series, holdings table with ONE
+  Analyse action — archive/delete buttons are gone — SIP-rhythm strip from
+  lots, day's leaders), the per-holding ANALYSE drawer (an independent in-tab
+  window: published portfolio with weights/sectors, facts, returns, risk
+  ratios vs NIFTY 50, peers, pros/cons, plain-English explainer + Varsity
+  links), a dedicated Analysis tab (look-through X-ray + HHI, pair-overlap
+  heatmap, behaviour vs the index, allocation vs targets + drift, cost & tax,
+  fact-based observations), and a Trade Desk tab (WATCHLIST / JOURNAL / IPO /
+  GLOBAL). Backend: routers `analysis.py` + `tradedesk.py`; services
+  `fund_reference.py`, `ipo_calendar.py`, `calculations/ratios.py`,
+  `calculations/analysis.py`. The finance-os Learning tab is removed (D8's
+  two-surface split stands; the standalone D16 screen is untouched).
+  - **D20.1 — Fund reference = Groww public pages.** The page's
+    `__NEXT_DATA__` → `mfServerSideData` is fetched once per fund per month
+    into `fund_facts`/`fund_portfolios` (through `ref_cache`). Slug
+    resolution: manual overrides → name-slugified candidates → AMC-page
+    enumeration → mfapi `fund_house`; a page whose `scheme_code` differs from
+    the requested AMFI code is DISCARDED. Unresolved pages (100900, 120760)
+    show honest `pending` — NAV maths still works. mfdata.in was down
+    (2026-09-02) and stays out.
+  - **D20.2 — Advisory-neutral analysis.** Observations are FACTS + the named
+    threshold (pair overlap 40% watch, sector 30%, single fund 25%, top-10
+    25/40, blended TER 1.0%, drift ±5pp — the house
+    `build_the_portfolio_review.py` values); no buy/sell verb appears
+    anywhere. Ratio maths is the ported pure-math `compute_the_ratios.py`.
+    Targets and the risk-free rate carry the settings file's
+    `verified_by_a_person: false` into the UI as [UNVERIFIED].
+  - **D20.3 — The portfolio value series rides each fund's last-known NAV in
+    memory between publications; nothing is written back** (FD6/D13.3
+    intact). The old same-date-only sum made the whole portfolio dive on any
+    day one fund's NAV lagged — fake drawdowns, portfolio volatility read
+    32.4% instead of the real 10.5%.
+  - **D20.4 — Trade Desk rules.** The journal is delivery-only capital
+    gains: a trade closes once and is never rewritten; per-trade STCG/LTCG
+    buckets come from the tax rulebook file. The IPO calendar source is
+    groww.in/ipo's `__NEXT_DATA__` (Chittorgarh dropped), cached 24 h;
+    applying is a user checkbox, never advice. GLOBAL is LRS/TCS math with
+    sources named and an unverified tag; TCS is surfaced as creditable, not
+    lost.
+  - **D20.5 — Market-data MCP server.** `Start_Inky/run_market_mcp.py`
+    (official `mcp` SDK pinned `<2`, Streamable HTTP `127.0.0.1:3101/mcp`,
+    idempotent, chained into `Start_Everything.bat`) proxies the finance
+    backend — the one tool seam for the Agent Deck research agents (V2 ask
+    wiring rides item 3/4). Tool output is bounded structurally (lists
+    capped with a marked `_truncated` row), never string-sliced into invalid
+    JSON.
+  - **D20.6 — `backfill_price_history` writes real points only.** The old
+    straight-line synthetic fill is gone; when no source answers, nothing is
+    written and the UI keeps its honest empty state.

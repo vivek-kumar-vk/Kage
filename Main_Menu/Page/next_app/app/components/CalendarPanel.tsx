@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 
-/** Left column, middle module - "CALENDAR" from the reference. The big
-    clock is the one live bit kept (it ticks); everything else - the
-    week label, the timezone row, the quarter grid, WHAT'S NEXT - is
-    static, an exact copy of the reference image. */
+/** Left column, top module - "CALENDAR" from the reference. The big clock
+    and the date stamp moved to the TopBar (owner layout, 2026-09-02), and
+    the world-clock row now ticks for real (it was static reference text).
+    The quarter grid and WHAT'S NEXT stay an exact copy of the reference. */
 
 const ZONES = [
-  { label: "USA PT", time: "09:32 pm", day: "WED" },
-  { label: "USA ET", time: "12:32 am", day: "THU" },
-  { label: "LONDON", time: "05:32 am", day: "THU" },
+  { label: "USA PT", tz: "America/Los_Angeles" },
+  { label: "USA ET", tz: "America/New_York" },
+  { label: "LONDON", tz: "Europe/London" },
 ];
 
 const WHATS_NEXT = [
@@ -42,16 +42,20 @@ function useClock() {
 
 export function CalendarPanel() {
   const now = useClock();
-  const clock = now
-    ? now
-        .toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        })
-        .toLowerCase()
-    : "--:--:-- --";
+
+  const zoneTime = (tz: string) =>
+    now
+      ? now
+          .toLocaleTimeString("en-US", {
+            timeZone: tz,
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          })
+          .toLowerCase()
+      : "--:-- --";
+  const zoneDay = (tz: string) =>
+    now ? now.toLocaleDateString("en-US", { timeZone: tz, weekday: "short" }).toUpperCase() : "--";
 
   return (
     <section aria-label="Calendar" className="rubric-panel p-4">
@@ -69,19 +73,12 @@ export function CalendarPanel() {
         </div>
       </header>
 
-      <p className="mb-1 text-[11px]">
-        <span className="rubric-accent num font-semibold">Wk34</span>
-        <span className="text-dim"> | Aug 20 2026 (Thu)</span>
-      </p>
-      <p className="num rubric-accent text-[28px] font-semibold leading-tight">{clock}</p>
-      <p className="rubric-sub mb-3 text-[9px]">AEST &middot; SYDNEY</p>
-
       <div className="mb-3 grid grid-cols-3 gap-2 border-y border-[#232323] py-2">
         {ZONES.map((z) => (
           <div key={z.label}>
             <p className="rubric-sub text-[8px]">{z.label}</p>
-            <p className="num text-[11px] text-white">{z.time}</p>
-            <p className="num text-[8px] text-dim">({z.day})</p>
+            <p className="num text-[11px] text-white">{zoneTime(z.tz)}</p>
+            <p className="num text-[8px] text-dim">({zoneDay(z.tz)})</p>
           </div>
         ))}
       </div>

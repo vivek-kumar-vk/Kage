@@ -1,4 +1,4 @@
-import { NavPanel } from "./components/NavPanel";
+import { TopBar } from "./components/TopBar";
 import { CalendarPanel } from "./components/CalendarPanel";
 import { YouTubeStudioPanel } from "./components/YouTubeStudioPanel";
 import { CenterCore } from "./components/CenterCore";
@@ -13,24 +13,27 @@ import { RoutinesPanel } from "./components/RoutinesPanel";
     with its own content (AGENTS.md rule 4) - this shell only places
     them on the grid.
 
-    The reference's top-left "MICRO APPS" panel is where the real
-    navigation lives (NavPanel), wearing that panel's design. */
+    Owner layout (2026-09-02): the navigation lives in the TopBar - name
+    left, screens centre, live date/clock right - so the left column is
+    panels only, pushed all the way up. */
 export default function Home() {
   return (
-    <div className="home-grid mx-auto grid w-full max-w-[1512px] flex-1 gap-6 p-6">
-      <div className="flex min-w-0 flex-col gap-5">
-        <NavPanel />
-        <CalendarPanel />
-        <YouTubeStudioPanel />
-      </div>
+    <>
+      <TopBar />
+      <div className="home-grid mx-auto grid w-full max-w-[1512px] flex-1 gap-6 p-6">
+        <div className="flex min-w-0 flex-col gap-5">
+          <CalendarPanel />
+          <YouTubeStudioPanel />
+        </div>
 
-      <CenterCore />
+        <CenterCore />
 
-      <div className="flex min-w-0 flex-col gap-5">
-        <EmailPanel />
-        <SkillsDeckPanel />
-        <RoutinesPanel />
+        <div className="flex min-w-0 flex-col gap-5">
+          <EmailPanel />
+          <SkillsDeckPanel />
+          <RoutinesPanel />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

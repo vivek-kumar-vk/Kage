@@ -1,231 +1,201 @@
 "use client";
 
-import TopNav from "@/components/TopNav";
-import RecallCard from "@/components/RecallCard";
-import { useResource, useSubmit } from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { post, useResource } from "@/lib/api";
 
-interface Card {
-  review_id: number;
-  id: number;
-  front: string;
-  parts: string[];
-  tag: string;
-  tether?: string | null;
-}
+type Card = {
+  review_id: number | null; card_id: number; front: string; parts: (string | null)[];
+  tag: string; tether: string | null; ease: number; due: string | null;
+};
+type RecallData = {
+  due_count: number; current: Card | null; queue: number; done_today: number;
+  forecast: { day: string; due: number }[];
+  accuracy: number | null; ease_avg: number | null;
+  leeches: { front: string; ease: number; review_id: number }[];
+  studio: Card[];
+};
 
-interface RecallResponse {
-  counts: {
-    today: number;
-    pending: number;
-    all: number;
-  };
-  queues: {
-    today: Card[];
-    pending: Card[];
-    all: Card[];
-  };
-}
+const GRADES = [
+  { key: "again", label: "Again", next: "TODAY", cls: "danger" },
+  { key: "hard", label: "Hard", next: "+1 DAY", cls: "" },
+  { key: "good", label: "Good", next: "+3 DAYS", cls: "" },
+  { key: "easy", label: "Easy", next: "+7 DAYS", cls: "" },
+];
 
-type Grade = "again" | "hard" | "good" | "easy";
+// His 5-part recall format (Master Context): (1) elevator answer,
+// (2) likely follow-up, (3) trap follow-up, (4) real-world example,
+// (5) resume connection.
+const PART_LABELS = ["ELEVATOR", "FOLLOW-UP", "TRAP", "REAL WORLD", "RESUME"];
 
 export default function RecallPage() {
-  const { data, error, loading } = useResource<RecallResponse>("/api/learning/recall");
+  const { data, error, loading, refetch } = useResource<RecallData>("/api/learning/recall");
+  const [revealed, setRevealed] = useState(0);
+  const [grading, setGrading] = useState(false);
 
-  const [recall, setRecall] = useState<RecallResponse | null>(null);
-  const [revealed, setRevealed] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [refreshError, setRefreshError] = useState<string | null>(null);
+  if (loading) return <div className="state-loading">shuffling the queue…</div>;
+  if (error) return <div className="state-error">{error}</div>;
+  if (!data) return null;
 
-  useEffect(() => {
-    if (data) {
-      setRecall(data);
-    }
-  }, [data]);
+  const card = data.current;
+  const maxForecast = Math.max(1, ...data.forecast.map((f) => f.due));
 
-  const currentCard =
-    recall && recall.queues.today.length > 0
-      ? recall.queues.today[0]
-      : recall && recall.queues.pending.length > 0
-        ? recall.queues.pending[0]
-        : null;
-
-  const gradePath = currentCard
-    ? `/api/learning/reviews/${currentCard.review_id}/grade`
-    : "/api/learning/ask";
-
-  const { submit, submitting } = useSubmit<{ state: string }>(gradePath, "POST");
-
-  useEffect(() => {
-    setRevealed(false);
-  }, [currentCard?.review_id]);
-
-  async function refresh() {
+  async function grade(g: string) {
+    if (!card?.review_id) return;
+    setGrading(true);
     try {
-      const res = await fetch("/api/learning/recall");
-      const json = (await res.json()) as RecallResponse;
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-
-      setRecall(json);
-      setRefreshError(null);
-    } catch (err) {
-      setRefreshError(err instanceof Error ? err.message : String(err));
+      await post(`/api/learning/review/${card.review_id}/grade`, { grade: g });
+      setRevealed(0);
+      refetch();
+    } finally {
+      setGrading(false);
     }
-  }
-
-  async function grade(gradeValue: Grade) {
-    if (!currentCard || submitting) {
-      return;
-    }
-
-    const result = await submit({ grade: gradeValue });
-
-    if (result.error) {
-      setActionError(result.error);
-      return;
-    }
-
-    setActionError(null);
-    setRevealed(false);
-    await refresh();
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        <TopNav />
-        <main className="p-6 max-w-5xl mx-auto">
-          <div className="text-term-dim animate-pulse motion-reduce:animate-none">
-            Loading recall...
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen">
-        <TopNav />
-        <main className="p-6 max-w-5xl mx-auto">
-          <div className="text-term-red border border-term-red rounded p-4">
-            Error: {error}
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!recall) {
-    return (
-      <div className="min-h-screen">
-        <TopNav />
-        <main className="p-6 max-w-5xl mx-auto">
-          <div className="text-term-dim border border-term-border rounded p-4">
-            No recall data available.
-          </div>
-        </main>
-      </div>
-    );
   }
 
   return (
-    <div className="min-h-screen">
-      <TopNav />
-
-      <main className="p-6 max-w-5xl mx-auto space-y-6">
-        <h1 className="text-term-green text-2xl">&gt; RECALL</h1>
-
-        <section className="grid md:grid-cols-3 gap-4">
-          <div className="border border-term-border rounded p-4">
-            <div className="text-term-dim text-sm mb-2">Due today</div>
-            <div className="text-3xl text-term-green">{recall.counts.today}</div>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
+      <div className="page-head">
+        <div>
+          <div className="kicker">Active recall · retrieval beats re-reading</div>
+          <h1 className="display">Recall</h1>
+        </div>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 34 }}>
+            {data.forecast.map((f) => (
+              <div key={f.day} title={`${f.day}: ${f.due} due`} style={{
+                width: 13, borderRadius: "3px 3px 0 0",
+                height: `${20 + 80 * (f.due / maxForecast)}%`,
+                background: f.due > 0 ? "var(--ember)" : "#241f19",
+                opacity: f.due > 0 ? 0.85 : 1,
+              }} />
+            ))}
           </div>
+          <div className="mono-micro">next<br />7 days<br />load</div>
+          {data.studio.length > 0 && <span className="chip violet">card studio · {data.studio.length} waiting</span>}
+        </div>
+      </div>
 
-          <div className="border border-term-border rounded p-4">
-            <div className="text-term-dim text-sm mb-2">Pending</div>
-            <div className="text-3xl text-term-amber">{recall.counts.pending}</div>
-          </div>
-
-          <div className="border border-term-border rounded p-4">
-            <div className="text-term-dim text-sm mb-2">All</div>
-            <div className="text-3xl text-term-cyan">{recall.counts.all}</div>
-          </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 270px", gap: 20, flex: 1, alignItems: "start" }}>
+        <section className="panel raised" style={{
+          display: "flex", flexDirection: "column", padding: "34px 44px",
+          background: "linear-gradient(160deg, #1b1712, #141110 70%)",
+          minHeight: 480,
+        }}>
+          {card ? (
+            <>
+              <div style={{ display: "flex", gap: 8 }}>
+                <span className="chip ghost">{card.tether || "card"}</span>
+                <span className="chip ghost">
+                  {data.done_today + 1} of {data.due_count + data.done_today}
+                </span>
+                {card.ease < 2 && <span className="chip amber">leech · ease {card.ease}</span>}
+              </div>
+              <div style={{
+                fontFamily: "var(--font-fraunces), serif", fontWeight: 420,
+                fontSize: 32, lineHeight: 1.3, margin: "22px 0 8px", maxWidth: 720,
+              }}>
+                {card.front}
+              </div>
+              <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
+                {card.parts.map((part, i) => (
+                  <div key={i} style={{ display: "flex", gap: 12, alignItems: "baseline", fontSize: 14 }}>
+                    <span style={{
+                      fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--faint)",
+                      width: 86, flex: "none", letterSpacing: "0.12em",
+                    }}>{PART_LABELS[i] ?? `PART ${i + 1}`}</span>
+                    {i < revealed ? (
+                      <span style={{ color: "var(--dim)" }}>{part}</span>
+                    ) : (
+                      <span style={{ color: "var(--faint)", fontSize: 12.5, cursor: "pointer" }}
+                        onClick={() => setRevealed(i + 1)}>
+                        reveal next →
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{
+                marginTop: "auto", display: "flex", gap: 10, paddingTop: 24,
+              }}>
+                {GRADES.map((g) => (
+                  <button key={g.key} disabled={grading}
+                    onClick={() => grade(g.key)}
+                    className={g.key === "good" ? "btn primary" : "btn quiet"}
+                    style={{ flex: 1, flexDirection: "column", gap: 2, padding: "11px 0" }}>
+                    <span style={{ fontSize: 13.5 }}>{g.label}</span>
+                    <span className="mono-micro" style={{ fontSize: 9 }}>{g.next}</span>
+                  </button>
+                ))}
+              </div>
+              {revealed < card.parts.length && (
+                <div style={{ color: "var(--faint)", fontSize: 11.5, marginTop: 10 }}>
+                  say it out loud before revealing — that struggle is the learning
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ margin: "auto", textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--font-fraunces), serif", fontSize: 28, marginBottom: 8 }}>
+                Queue clear.
+              </div>
+              <div style={{ color: "var(--dim)", fontSize: 13.5 }}>
+                {data.due_count === 0
+                  ? "Nothing is due. Next cards arrive as rooms get finished."
+                  : "All caught up."}
+              </div>
+            </div>
+          )}
         </section>
 
-        {actionError ? (
-          <div className="text-term-red border border-term-red rounded p-4">
-            Error: {actionError}
+        <aside style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="panel" style={{ padding: "15px 17px" }}>
+            <div className="panel-label">Today&apos;s sweep</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9, marginTop: 10, fontSize: 12.5, color: "var(--dim)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span>due</span><b style={{ color: "var(--bone)" }}>{data.due_count} cards</b></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span>done today</span><b style={{ color: "var(--bone)" }}>{data.done_today}</b></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span>accuracy (30d)</span><b style={{ color: "var(--bone)" }}>{data.accuracy !== null ? `${data.accuracy}%` : "—"}</b></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span>avg ease</span><b style={{ color: "var(--bone)" }}>{data.ease_avg ?? "—"}</b></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}><span>leeches</span>
+                <b style={{ color: data.leeches.length ? "var(--amber)" : "var(--bone)" }}>
+                  {data.leeches.length}
+                </b></div>
+            </div>
           </div>
-        ) : null}
 
-        {refreshError ? (
-          <div className="text-term-amber border border-term-amber rounded p-4">
-            Refresh warning: {refreshError}
-          </div>
-        ) : null}
-
-        {currentCard ? (
-          <section className="border border-term-border rounded p-4 space-y-4">
-            <RecallCard
-              front={currentCard.front}
-              parts={revealed ? currentCard.parts : []}
-              tag={currentCard.tag}
-              tether={currentCard.tether}
-            />
-
-            {!revealed ? (
-              <button
-                onClick={() => setRevealed(true)}
-                className="border border-term-cyan text-term-cyan rounded px-4 py-2 hover:bg-term-cyan hover:text-black motion-reduce:transition-none"
-              >
-                Reveal
-              </button>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button
-                  onClick={() => grade("again")}
-                  disabled={submitting}
-                  className="border border-term-red text-term-red rounded px-4 py-2 hover:bg-term-red hover:text-black motion-reduce:transition-none disabled:opacity-50"
-                >
-                  Again
-                </button>
-
-                <button
-                  onClick={() => grade("hard")}
-                  disabled={submitting}
-                  className="border border-term-amber text-term-amber rounded px-4 py-2 hover:bg-term-amber hover:text-black motion-reduce:transition-none disabled:opacity-50"
-                >
-                  Hard
-                </button>
-
-                <button
-                  onClick={() => grade("good")}
-                  disabled={submitting}
-                  className="border border-term-green text-term-green rounded px-4 py-2 hover:bg-term-green hover:text-black motion-reduce:transition-none disabled:opacity-50"
-                >
-                  Good
-                </button>
-
-                <button
-                  onClick={() => grade("easy")}
-                  disabled={submitting}
-                  className="border border-term-cyan text-term-cyan rounded px-4 py-2 hover:bg-term-cyan hover:text-black motion-reduce:transition-none disabled:opacity-50"
-                >
-                  Easy
-                </button>
+          <div className="panel" style={{ padding: "15px 17px" }}>
+            <div className="panel-head" style={{ padding: 0 }}>
+              <div className="panel-label">Card studio</div>
+              {data.studio.length > 0 && <span className="chip jade">{data.studio.length} new</span>}
+            </div>
+            {data.studio.length === 0 && (
+              <div style={{ color: "var(--faint)", fontSize: 12, padding: "10px 0" }}>
+                nothing waiting — cards appear as quizmaster mints them
               </div>
             )}
-          </section>
-        ) : (
-          <section className="border border-term-border rounded p-4">
-            <div className="text-term-dim">No cards due right now</div>
-          </section>
-        )}
-      </main>
+            {data.studio.map((c) => (
+              <div key={c.card_id} style={{ borderTop: "1px solid var(--hairline)", padding: "11px 0" }}>
+                <div style={{ color: "var(--bone)", fontSize: 12.5, fontWeight: 500 }}>{c.front}</div>
+                <div style={{ color: "var(--faint)", fontSize: 11, marginTop: 2 }}>
+                  {c.parts.filter(Boolean).length} parts · waiting for your accept
+                </div>
+                <div style={{ display: "flex", gap: 6, marginTop: 7 }}>
+                  <span className="chip jade clickable" onClick={async () => {
+                    await post(`/api/learning/studio/${c.card_id}/accept`);
+                    refetch();
+                  }}>accept</span>
+                  <span className="chip clickable" onClick={async () => {
+                    await post(`/api/learning/studio/${c.card_id}/discard`);
+                    refetch();
+                  }}>discard</span>
+                </div>
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 9, marginTop: 10, fontSize: 11.5, color: "var(--dim)", alignItems: "flex-start" }}>
+              <span className="track-dot violet" style={{ width: 6, height: 6, marginTop: 5 }} />
+              <span>quizmaster drafts cards from rooms you finished — nothing enters your queue until you accept it.</span>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -1,255 +1,228 @@
-import json
-from datetime import datetime, timezone, timedelta
+"""Seeds the Learning OS v3 board (D17 — honest zero).
 
-import settings_for_learning as cfg
+Order of duty, every server start:
+  1. d17_zero()  — one-time (guarded by the 'd17_zero_done' settings marker):
+                   every demo row is wiped and the board is re-seeded as the
+                   two D17 tracks — real titles, EMPTY steps. A room with no
+                   steps is "planned, not taught" and says so; nothing records
+                   work that has not happened. Back up learning.db out of band
+                   before removing the marker.
+  2. board()     — fresh installs (no tracks at all): the same D17 board.
+
+There is no dummy lesson content and no fake history in this module — D17.1.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+
 from db import connect
 
 IST = timezone(timedelta(hours=5, minutes=30))
-TODAY = datetime.now(IST).strftime("%Y-%m-%d")
 
-GENERIC = {
-    "topics": [
-        {
-            "name": "Learn Docker networking",
-            "stack_area": "core",
-            "track": "A",
-            "status": "learning",
-            "position": 1,
-            "progress": 0.3,
-            "target_date": "@today",
-            "source_doc": None,
-            "group": "core"
-        },
-        {
-            "name": "Kubernetes probes",
-            "stack_area": "drip",
-            "track": "A",
-            "status": "todo",
-            "position": 2,
-            "progress": 0.0,
-            "target_date": None,
-            "source_doc": None,
-            "group": "drip"
-        },
-        {
-            "name": "Rust ownership",
-            "stack_area": "capture",
-            "track": "B",
-            "status": "todo",
-            "position": 1,
-            "progress": 0.0,
-            "target_date": None,
-            "source_doc": None,
-            "group": "capture"
-        }
-    ],
-    "week_plans": [
-        {
-            "week_start": "@today",
-            "focus_a": "Docker networking basics",
-            "focus_b": "Rust syntax",
-            "note": "Keep sessions under 45 mins"
-        }
-    ],
-    "cards": [
-        {
-            "topic_index": 1,
-            "front": "What is the default Docker network driver?",
-            "part1": "bridge",
-            "part2": "host",
-            "part3": "none",
-            "part4": "overlay",
-            "part5": "macvlan",
-            "tag": "core",
-            "tether": "docker-net"
-        },
-        {
-            "topic_index": 2,
-            "front": "What are Kubernetes liveness probes for?",
-            "part1": "Detect deadlocks",
-            "part2": "Restart failing containers",
-            "part3": "Do not fix slow startup",
-            "part4": "Different from readiness",
-            "part5": "Configure initialDelaySeconds",
-            "tag": "drip",
-            "tether": "k8s-probes"
-        },
-        {
-            "topic_index": 3,
-            "front": "What does Rust ownership prevent?",
-            "part1": "Data races",
-            "part2": "Use-after-free",
-            "part3": "Double free",
-            "part4": "Iterator invalidation",
-            "part5": "Memory leaks are still possible",
-            "tag": "capture",
-            "tether": "rust-ownership"
-        }
-    ],
-    "reviews": [
-        {
-            "card_index": 1,
-            "due_date": "@today",
-            "ease": 2.5,
-            "status": "active"
-        },
-        {
-            "card_index": 2,
-            "due_date": "@today",
-            "ease": 2.5,
-            "status": "active"
-        },
-        {
-            "card_index": 3,
-            "due_date": "@today",
-            "ease": 2.5,
-            "status": "active"
-        }
-    ]
-}
+DEFAULT_SETTINGS = (
+    ("weekly_budget_minutes", "450"),
+    ("default_session_minutes", "25"),
+    ("grace_days", "1"),
+)
 
+# ---------------------------------------------------------------- the board
+# Two tracks (D17.2), each opening at ground 0. Detection engineering does not
+# get its own track: job-currency pieces live where they pay, the rest parks
+# archived inside Track 2. Nothing deleted, nothing hidden.
 
-def _date(value, default=None):
-    if value == "@today":
-        return TODAY
-    if value is None or value == "":
-        return default
-    return str(value)
-
-
-def _int(value, default=0):
-    try:
-        return int(value)
-    except Exception:
-        return default
-
-
-def _float(value, default=0.0):
-    try:
-        return float(value)
-    except Exception:
-        return default
+TRACKS = [
+    {
+        "name": "Project → DevOps",
+        "color": "ember",
+        "modules": [
+            ("Ground Zero (project)", 0, [
+                "Git & GitHub from basics",
+                "Linux shell from basics",
+                "Networking the project uses (DNS, HTTP, ports, localhost)",
+            ]),
+            ("AI agenting", 0, [
+                "Agent anatomy — registry, roster, profiles",
+                "Event-driven agents — SSE streams + append-only events",
+                "Proposals & approve-gates — agents that never act unilaterally",
+                "MCP — Model Context Protocol (dt-agent pattern)",
+                "Hermes agent",
+                "DeepSeek harness",
+            ]),
+            ("Multi-model routing", 0, [
+                "Local vs open vs cloud vs paid — trade-offs",
+                "OmniRoute — one gateway seam, keys, health",
+                "Cost routing — cheap by default, escalate on demand",
+            ]),
+            ("RAG architecture", 0, [
+                "Chunking & overlap",
+                "Embeddings & cosine (nomic-embed-text)",
+                "RAG on the Storage seam (D11.3 pattern)",
+                "Finance-data RAG — Drive + SQLite → RAG → agent",
+            ]),
+            ("DevOps", 0, [
+                "Containers — Dockerize a KAGE screen",
+                "CI/CD for this repo",
+                "Cloud concepts, early",
+            ]),
+            ("LLM observability", 0, [
+                "Arize — tracing your own agents",
+            ]),
+        ],
+    },
+    {
+        "name": "Observability (job-driven)",
+        "color": "jade",
+        "modules": [
+            ("Ground Zero (observability)", 0, [
+                "Networking from ground 0 (TCP/IP, ports & protocols)",
+                "Linux from ground 0 (filesystem, processes, services, logs)",
+            ]),
+            ("Splunk (the hunt)", 0, [
+                "Architecture + component roles (SH, Indexer, UF, HF, DS, CM, LM)",
+                "Data ingestion & log onboarding (UF vs HF, inputs.conf, HEC/syslog)",
+                "Parsing → indexing pipeline (line breaking, timestamps, sourcetype)",
+                "Configuration precedence + btool",
+                "Buckets & retention (hot/warm/cold/frozen/thawed)",
+                "User management — roles, capabilities, auth, permissions",
+                "SPL fundamentals",
+                "Knowledge objects (searches, alerts, dashboards, macros, lookups)",
+                "Deployment basics — deployment server, forwarder management",
+                "Troubleshooting playbook",
+                "Configuration files reference",
+                "Clustering (indexer + SHC, captain, replication/search factor)",
+                "SmartStore",
+                "ACS",
+                "Monitoring Console (aware)",
+                "Splunk Cloud basics (aware)",
+                "Victoria experience (aware)",
+                "Upgrade process (aware)",
+                "Splunk 10.x currency (aware)",
+                "Enterprise Security (studied last)",
+            ]),
+            ("Dynatrace (the differentiator)", 0, [
+                "DQL — the query language",
+                "DPL — the pattern language",
+                "OneAgent — deployment & host groups",
+                "OpenPipeline → Grail (ingestion, parsing, bucket routing)",
+                "The migration story — SPL↔DQL parity validation",
+                "Bindplane (day job)",
+                "Davis AI & problem detection (aware)",
+            ]),
+            ("Real observability", 0, [
+                "Signals — logs, metrics, traces",
+                "SLOs & error budgets",
+                "Alert design & on-call hygiene",
+                "AWS identity + logging (IAM, CloudTrail/GuardDuty/CloudWatch)",
+            ]),
+            ("Open-source stack labs (on KAGE)", 0, [
+                "Prometheus — scrape KAGE's screens",
+                "Grafana — dashboards over real data",
+                "OpenTelemetry — instrument a FastAPI service",
+                "Bindplane on KAGE — pipeline telemetry",
+            ]),
+            ("Deferred (after hired)", 0, [
+                "ITSI",
+                "DSP, KV Store, REST API, Python SDK, indexer tuning",
+            ]),
+            # Dissolved Track B: visible, reviewable, never scheduled (D17.2).
+            ("Detection (parked)", 1, [
+                "Linux security telemetry (auditd, journald, syslog, PAM, FIM)",
+                "Windows telemetry (Sysmon, Event Logs, PowerShell logging)",
+                "MITRE ATT&CK literacy",
+                "Sigma end-to-end (pySigma, sigma-cli, SPL + KQL backends)",
+                "Emulate → detect loop (Atomic Red Team, detection lifecycle)",
+                "Cloud attack/detect labs (flaws.cloud, CloudGoat, Stratus Red Team)",
+                "Cloud-native + identity depth (K8s/Docker security, OAuth2/JWT/SAML, CI/CD)",
+                "AWS Security Specialty (aware)",
+                "Artifacts (detection-rules repo, security-telemetry capstone)",
+            ]),
+        ],
+    },
+]
 
 
-def _load_seed_data():
-    path = cfg.HERE / "seed_local.json"
-    if path.exists():
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                return data
-        except Exception:
-            pass
-    return GENERIC
+def ist_now() -> str:
+    return datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S")
 
 
-def _insert_topics(c, topics):
-    topic_ids = []
-    for t in topics:
-        cur = c.execute(
-            'INSERT INTO topics (name, stack_area, status, track, position, progress, target_date, source_doc, "group") '
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                t.get("name"),
-                t.get("stack_area", "core"),
-                t.get("status", "todo"),
-                t.get("track", "A"),
-                _int(t.get("position"), 0),
-                _float(t.get("progress"), 0.0),
-                _date(t.get("target_date"), None),
-                t.get("source_doc"),
-                t.get("group"),
-            ),
+def _insert_board(cur) -> None:
+    for t_pos, track in enumerate(TRACKS):
+        cur.execute(
+            "INSERT INTO tracks (name, color, position) VALUES (?,?,?)",
+            (track["name"], track["color"], t_pos),
         )
-        topic_ids.append(cur.lastrowid)
-    return topic_ids
+        track_id = cur.lastrowid
+        for m_pos, (module_name, archived, rooms) in enumerate(track["modules"]):
+            cur.execute(
+                "INSERT INTO modules (track_id, name, position, archived) VALUES (?,?,?,?)",
+                (track_id, module_name, m_pos, archived),
+            )
+            module_id = cur.lastrowid
+            for r_pos, room_name in enumerate(rooms):
+                cur.execute(
+                    "INSERT INTO rooms (module_id, name, position) VALUES (?,?,?)",
+                    (module_id, room_name, r_pos),
+                )
 
 
-def _insert_week_plans(c, plans):
-    for p in plans:
-        c.execute(
-            "INSERT INTO week_plans (week_start, focus_a, focus_b, note) VALUES (?, ?, ?, ?)",
-            (
-                _date(p.get("week_start"), TODAY),
-                p.get("focus_a"),
-                p.get("focus_b"),
-                p.get("note"),
-            ),
-        )
+def board(cur) -> bool:
+    """Fresh installs: create the D17 board when no tracks exist."""
+    if cur.execute("SELECT COUNT(*) c FROM tracks").fetchone()["c"]:
+        return False
+    _insert_board(cur)
+    rooms = cur.execute("SELECT COUNT(*) c FROM rooms").fetchone()["c"]
+    cur.execute(
+        "INSERT INTO ledger (ts, kind, ref, text) VALUES (?,?,?,?)",
+        (ist_now(), "system", None,
+         f"D17 board created — {len(TRACKS)} tracks, {rooms} rooms, no lessons written yet"),
+    )
+    return True
 
 
-def _insert_cards(c, cards, topic_ids):
-    card_ids = []
-    for card in cards:
-        topic_id = card.get("topic_id")
-        if not topic_id and card.get("topic_index"):
-            idx = _int(card.get("topic_index"), 1) - 1
-            if 0 <= idx < len(topic_ids):
-                topic_id = topic_ids[idx]
-
-        cur = c.execute(
-            "INSERT INTO cards (topic_id, front, part1, part2, part3, part4, part5, tag, tether) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                topic_id,
-                card.get("front"),
-                card.get("part1", ""),
-                card.get("part2", ""),
-                card.get("part3", ""),
-                card.get("part4", ""),
-                card.get("part5", ""),
-                card.get("tag", "core"),
-                card.get("tether"),
-            ),
-        )
-        card_ids.append(cur.lastrowid)
-    return card_ids
+HISTORY_TABLES = ("reviews", "cards", "attempts", "checkpoints", "steps",
+                  "sessions", "notes", "proposals", "agent_runs", "ledger")
 
 
-def _insert_reviews(c, reviews, card_ids):
-    for r in reviews:
-        card_id = r.get("card_id")
-        if not card_id and r.get("card_index"):
-            idx = _int(r.get("card_index"), 1) - 1
-            if 0 <= idx < len(card_ids):
-                card_id = card_ids[idx]
+def d17_zero(cur) -> bool:
+    """One-time cutover to the honest zero (D17.1): wipe every demo row, reset
+    settings, drop the old board, seed the D17 board with empty rooms."""
+    done = cur.execute(
+        "SELECT value FROM settings WHERE key='d17_zero_done'"
+    ).fetchone()
+    if done:
+        return False
 
-        if card_id is None:
-            continue
+    for t in ("rooms", "modules", "tracks"):     # board (children first is
+        cur.execute(f"DELETE FROM {t}")          # handled by CASCADE; explicit anyway)
+    for t in HISTORY_TABLES:                     # every record of work done
+        cur.execute(f"DELETE FROM {t}")
+    cur.execute("DELETE FROM settings")          # demo budgets go too
 
-        c.execute(
-            "INSERT INTO reviews (card_id, due_date, ease, status) VALUES (?, ?, ?, ?)",
-            (
-                card_id,
-                _date(r.get("due_date"), TODAY),
-                _float(r.get("ease"), 2.5),
-                r.get("status", "active"),
-            ),
-        )
+    _insert_board(cur)
+    rooms = cur.execute("SELECT COUNT(*) c FROM rooms").fetchone()["c"]
+    for key, value in DEFAULT_SETTINGS:
+        cur.execute(
+            "INSERT INTO settings (key, value) VALUES (?,?)", (key, value))
+    cur.execute(
+        "INSERT INTO settings (key, value) VALUES ('d17_zero_done','1')")
+    cur.execute(
+        "INSERT INTO ledger (ts, kind, ref, text) VALUES (?,?,?,?)",
+        (ist_now(), "system", None,
+         "D17 honest zero — demo history wiped, settings reset; board re-seeded "
+         f"as two ground-0 tracks ({rooms} rooms, no lessons written yet)"),
+    )
+    return True
 
 
-def run():
-    data = _load_seed_data()
-
+def run() -> None:
     with connect() as conn:
-        c = conn.cursor()
+        cur = conn.cursor()
+        d17_zero(cur)
+        board(cur)
+        conn.commit()
 
-        c.execute("SELECT COUNT(*) FROM topics")
-        if c.fetchone()[0] == 0:
-            topic_ids = _insert_topics(c, data.get("topics", []))
-        else:
-            topic_ids = [row["id"] for row in c.execute("SELECT id FROM topics ORDER BY id").fetchall()]
 
-        c.execute("SELECT COUNT(*) FROM week_plans")
-        if c.fetchone()[0] == 0:
-            _insert_week_plans(c, data.get("week_plans", []))
-
-        c.execute("SELECT COUNT(*) FROM cards")
-        if c.fetchone()[0] == 0:
-            card_ids = _insert_cards(c, data.get("cards", []), topic_ids)
-        else:
-            card_ids = [row["id"] for row in c.execute("SELECT id FROM cards ORDER BY id").fetchall()]
-
-        c.execute("SELECT COUNT(*) FROM reviews")
-        if c.fetchone()[0] == 0:
-            _insert_reviews(c, data.get("reviews", []), card_ids)
+if __name__ == "__main__":
+    run()
+    print("seed ok")
