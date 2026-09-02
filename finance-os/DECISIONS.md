@@ -35,7 +35,7 @@ on every connection; the only `sqlite3.connect(` in `backend/` is in `services/d
 
 `.env` (gitignored) holds API keys and paths. No keys committed, no keys hard-coded.
 LLM access for the finance agents routes through the OmniRoute gateway
-(`127.0.0.1:8003`) — see `PLANNED_WORK.md` P11 — so model/provider choice is a gateway
+(`127.0.0.1:8003`) — see `PLAN.md` item 3 — so model/provider choice is a gateway
 routing decision, not finance-os code.
 
 ## FD4 — Deletion model: soft-delete by default

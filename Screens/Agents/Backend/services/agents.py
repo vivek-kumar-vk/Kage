@@ -221,7 +221,7 @@ async def list_agent_messages(name: str):
 
 @router.post(cfg.API_PREFIX + "/agents/{name}/ask")
 async def ask_agent(name: str, payload: Optional[AskBody] = Body(default=None)):
-    # Live OmniRoute wiring is deferred to WAYFINDER item 3 (LLM last). Until
+    # Live OmniRoute wiring is deferred to PLAN.md item 3 (LLM last). Until
     # then this stays a stub — the Pixel Office shell + SSE run without it.
     _ = payload
 
@@ -236,7 +236,7 @@ async def ask_agent(name: str, payload: Optional[AskBody] = Body(default=None)):
     return {
         "state": "pending",
         "reply": None,
-        "note": "agent wiring lands in WAYFINDER item 3",
+        "note": "agent wiring lands in PLAN.md item 3",
     }
 
 

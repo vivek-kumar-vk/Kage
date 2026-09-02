@@ -9,7 +9,7 @@ import { BucketBlock } from "./overview/BucketBlock";
 import { GoalsList } from "./overview/GoalsList";
 
 /** Tab 1 — Ferrari livery. Seed-data blocks, one visualization each
-    (PLANNED_WORK.md P8 wires them live). The live-endpoint blocks
+    (dropped — finance-os owns Finance wiring). The live-endpoint blocks
     (gates G1–G4, health score, surplus formula) are deferred to P8 —
     they have no seed equivalent. */
 export function OverviewPanel() {

@@ -8,12 +8,12 @@ Kage is the public code for the **Inky** dashboard (the module names you'll
 see throughout are `inky`). It ships **code only** — no personal data, no
 private notes, no agent memory. Screens that normally show saved data start
 empty; you supply your own. Real data is meant to live outside this repo
-(Google Drive) — see [`immediate_plan.md`](immediate_plan.md) for the roadmap.
+(Google Drive) — see [`PLAN.md`](PLAN.md) for the roadmap.
 
 Target stack (`AGENTS.md` Rule 3): **frontend** React 19 + Tailwind + Next.js
 (+ Three.js where it earns it); **backend** Node.js + Express. New and rewritten
 code uses only these. The screens land there one at a time — see
-[`PLANNED_WORK.md`](PLANNED_WORK.md) P4.
+[`PLAN.md`](PLAN.md) item 9.
 
 - **Frontend.** Finance (`finance-os/`), Learning and the Model screen are
   React 19 / Next.js (`output: "export"`, static). Main Menu and Enhancement
@@ -29,7 +29,7 @@ code uses only these. The screens land there one at a time — see
   `Screens/Model/GATEWAY_CONFIG.md`.
 - **Launcher.** Plain Python scripts in `Start_Inky/`.
 - **Storage.** Local flat files + **SQLite** today; moving to a Google
-  Drive–backed layer ([`PLANNED_WORK.md`](PLANNED_WORK.md) P7). Nothing personal
+  Drive–backed layer ([`PLAN.md`](PLAN.md) item 2). Nothing personal
   is committed here.
 - Agents are described only (`Agents/<name>/description.txt`); their code,
   memory and the optional local-LLM path are not included.
@@ -66,7 +66,7 @@ The backend picks up `next_app\out` on its next start.
 ## Status
 
 Active. This is v2 of a private project, rebuilt in the open. See
-[`immediate_plan.md`](immediate_plan.md) for what's being worked on next —
+[`PLAN.md`](PLAN.md) for what's being worked on next —
 principally moving all private data into Google Drive behind a smart
 retrieval layer.
 

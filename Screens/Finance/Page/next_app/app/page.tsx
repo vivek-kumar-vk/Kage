@@ -23,7 +23,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
 /** The Finance rebuild — real money, legibility over flourish. A paddock
     shell (nav + header) carries a per-tab team accent: Ferrari livery on
     Overview, Red Bull livery on Investments; the others inherit. Seed data
-    for now — PLANNED_WORK.md P8. */
+    for now — superseded by finance-os. */
 export default function Home() {
   const [tab, setTab] = useState<Tab>("overview");
   const livery = tab === "investments" ? "liv-rb" : "liv-ferrari";

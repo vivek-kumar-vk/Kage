@@ -5,7 +5,7 @@
     emergency-fund calculator defaults. Everything tagged `SEED` is a
     placeholder demo value so the panels render and animate before the
     live wiring lands — each carries the endpoint it should read from.
-    Tracked in PLANNED_WORK.md (P8). No panel invents a figure past this
+    Superseded by finance-os. No panel invents a figure past this
     file. */
 
 export const BLUEPRINT_SEED = {

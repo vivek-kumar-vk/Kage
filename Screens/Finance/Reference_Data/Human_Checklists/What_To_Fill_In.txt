@@ -47,5 +47,5 @@ See all_current_numbers.md for the full list, grouped by area.
 --------------------------------------------------------------------------------
 PRIVATE DATA
 --------------------------------------------------------------------------------
-Real figures live outside this repo (Google Drive — see immediate_plan.md).
+Real figures live outside this repo (Google Drive — see PLAN.md item 2).
 This worksheet ships with no personal values in it on purpose.

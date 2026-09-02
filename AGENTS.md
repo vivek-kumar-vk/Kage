@@ -1,7 +1,7 @@
 # AGENTS.md — Kage
 
 Read this first, every session. Standing rules for this repo; the plan list is
-[`PLANNED_WORK.md`](PLANNED_WORK.md).
+[`PLAN.md`](PLAN.md).
 
 ## Rules
 
@@ -15,17 +15,17 @@ Read this first, every session. Standing rules for this repo; the plan list is
      context lean.
 3. **Stack.** Frontend: React 19, Tailwind CSS, Next.js, Three.js. Backend:
    Node.js + Express. New and rewritten code uses only these; the current
-   Python/FastAPI backends migrate screen by screen (`PLANNED_WORK.md` P4).
+   Python/FastAPI backends migrate screen by screen (`PLAN.md` item 9).
 4. **Modular to the block.** Every page, tab, and block within a page runs
    independently and calls its dependencies directly, never through a shared
    directory.
 5. **Shrink the shared folders.** When you work near `Shared_By_All_Agents/` or
    `Shared_By_All_Screens/`, move logic into its one caller and delete the shared
    file. These folders trend to empty.
-6. **Track future work.** Anything named as "later" goes to `PLANNED_WORK.md` and
+6. **Track future work.** Anything named as "later" goes to `PLAN.md` and
    a card in the Enhancement tab.
 7. **Log every instruction as a numbered item** — a Rule, a Plan
-   (`PLANNED_WORK.md`), or a Task. New topic gets a new number. A change to item
+   (`PLAN.md`), or a Task. New topic gets a new number. A change to item
    _N_ is filed as _N.1_, _N.2_, …; the highest sub-number is the one in force
    and the parent stays as history. Before adding, diff against what is already
    here and keep only what is new.
@@ -34,10 +34,11 @@ Read this first, every session. Standing rules for this repo; the plan list is
 
 ## Plans
 
-[`WAYFINDER.md`](WAYFINDER.md) is the ordered map — one workstream at a time.
-[`PLANNED_WORK.md`](PLANNED_WORK.md) holds the numbered list with status and detail
-(and a `## Active order` + `## Dropped` section). Active now: Finance data migration
-(user-led) ∥ Google Drive storage layer (P7, Qwen-led).
+[`PLAN.md`](PLAN.md) is the single backlog — the ordered map, the numbered items with
+status and detail, and the `## Active order` / `## Dropped` sections. One workstream at
+a time. Active now: item 1, Finance data migration (user-led) ∥ item 2, Google Drive
+storage layer (Qwen-led). Shipped items are deleted from `PLAN.md` — git history and the
+decisions below are the record.
 
 ## Design decisions (Rule 8)
 
@@ -63,7 +64,7 @@ Read this first, every session. Standing rules for this repo; the plan list is
   model; Claude orchestrated + validated.
 - **D2 — Seed data for the telemetry panels v1.** New Finance panels read
   `app/lib/blueprintSeed.ts` (blueprint numbers real, rest `SEED`-tagged), not
-  live endpoints. Live wiring is `PLANNED_WORK.md` P8.
+  live endpoints. Live wiring was dropped — finance-os owns it (`PLAN.md` ## Dropped).
 - **D3 — CSS/SVG + framer-motion for the telemetry motion.** ~~No Three.js added
   to the Finance app~~ *(superseded by D3.1)*.
 - **D3.1 — Three.js welcomed on Finance (2026-08-29, supersedes D3).** Use
@@ -89,7 +90,7 @@ Read this first, every session. Standing rules for this repo; the plan list is
   Model screen reads it live: health `/api/monitoring/health` + `/v1/models`
   with `GATEWAY_API_KEY` from `.env` (env var wins). Gateway secrets are
   generated into `.env` by the launcher and never committed. Detail:
-  PLANNED_WORK P10.
+  `Screens/Model/GATEWAY_CONFIG.md` (gateway config shipped 2026-08-30).
   - **D6.1 — Gateway process ownership.** `Start_Inky/run_omniroute.py` owns
     starting/stopping the gateway (idempotent: an already-running one is left
     alone); `Start_Everything.bat` starts it in its own window before the
@@ -180,7 +181,7 @@ Read this first, every session. Standing rules for this repo; the plan list is
   moved to `/workspace`.
   - **D12.1 — LLM still last.** `omni.py` (OmniRoute client, the one LLM seam) is in
     the tree but `POST /agents/{name}/ask` stays the V1 `{"state":"pending"}` stub.
-    Live agent asks are WAYFINDER item 3, after all data wiring.
+    Live agent asks are `PLAN.md` item 3, after all data wiring.
   - **D12.2 — Demo events opt-in.** Ambient simulated activity is `AGENTS_DEMO_EVENTS`
     off by default (public repo); every generated event carries `sim=1` and is
     labeled simulated client-side. Never presented as real work.
