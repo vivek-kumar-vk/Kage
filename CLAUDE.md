@@ -43,10 +43,14 @@ One screen, one port. Nothing else may take these.
 | 8004 | **Agent Deck** | `Screens/Agents/Backend/settings_for_agents.py` |
 | 8005 | **Model** — reports on the gateway | `Screens/Model/Backend/settings_for_model.py` |
 | 8006 | **Anime** — Node, gitignored, local-only | `Screens/Anime/Backend/settings_for_anime.py` |
+| 8007 | **Deepseek** — reports on the DeepSeek Harness | `Screens/Deepseek/Backend/settings_for_deepseek.py` |
+| 8008 | **Hermes** — reports on the Hermes profile fleet | `Screens/Hermes/Backend/settings_for_hermes.py` |
+| 3080 | DeepSeek Harness (`dsh web`) — a service, not a screen | `Start_Inky/run_dsh_web.py`; dsh's own default, `DSH_BASE_URL` overrides |
+| 9119 | Hermes dashboard (`hermes dashboard`) — a service, not a screen | `Start_Inky/run_hermes_dashboard.py`; Hermes's own default, `HERMES_DASHBOARD_URL` overrides |
 | 3100 | Drive MCP server | `Start_Inky/run_drive_mcp.py` |
 | 3101 | Market-data MCP server | `Start_Inky/run_market_mcp.py` |
-| 8007 | *reserved* — Storage screen (D11), not built | — |
-| 8008 | *reserved* — Office screen (D17.4), not built | — |
+| 8009 | *reserved* — Storage screen (D11.1), not built | — |
+| 8010 | *reserved* — Office screen (D17.5), not built | — |
 | 8080 / 8081 | *reserved* — local llama.cpp models | — |
 | 9000 | one-port proxy, only for phone / ngrok | `Start_Inky/serve_everything_on_one_port.py` |
 
@@ -57,7 +61,7 @@ menu appeared to vanish. It now reads the Finance screen's own port (8001).
 ## Running it
 
 ```
-.venv\Scripts\python Start_Inky\start_every_screen.py     # all screens, Ctrl+C stops all
+.venv\Scripts\python Start_Inky\start_every_screen.py     # gateways + all screens, Ctrl+C stops all
 Start_Inky\Start_Everything.bat                            # venv + install + gateways + screens
 ```
 

@@ -29,6 +29,7 @@ Status: `queued` | `in progress` | `parked`.
 | 11 | dsh local-model observability | parked |
 | 12 | Learning OS rebuild (D16): Ember Studio UI + agent crew | **in progress** |
 | 13 | Investments end-to-end (Analyse / Analysis / Trade Desk / market MCP) | **shipped 2026-09-02** — residue tracked below |
+| 14 | Calendar card (D23): Google Calendar + agent + WakaTime | **in progress** |
 
 Items 1, 2 and 12 run in parallel . Everything else is sequential.
 
@@ -273,11 +274,29 @@ card, not the screen.
 
 ---
 
-## 11 — dsh local-model observability  *(parked)*
+## 11 — Repoint the Hermes fleet off the dead local endpoint
 
-Run the local coder model inside DeepSeek Harness for a step-by-step web UI.
-Plan: `.scratch/dsh-local-model/PLAN.md`. Blocked on: no local adapter. The resume
-trigger ("after the finance redesign") is now met — unpark when items 1–2 clear.
+*(Supersedes "dsh local-model observability", parked 2026-08-29. Unparked and
+mostly shipped 2026-09-03 — decisions D24, D25. The blocker it was parked on,
+"no local adapter", was never real: `dsh-llm-pi-ai` takes hand-declared
+OpenAI-compatible providers, so the harness reaches the gateway with no adapter
+written. `.scratch/dsh-local-model/PLAN.md` is now history, not a plan.)*
+
+What shipped: the Deepseek screen (8007) over `dsh`, the Hermes screen (8008)
+over the profile fleet, and an `omniroute` provider declared in both tools'
+configs pointing at the gateway on 8003.
+
+What is left: **all 15 Hermes profiles still name `local-model-a` @
+`localhost:8080`** — a llama-server that is not running and, per the user, not
+coming back. Each profile's `model:` block needs repointing to
+`provider: omniroute`. Deliberately not done in bulk: repointing fifteen agents
+changes what every one of them costs and how it behaves, so it is a decision per
+profile, not a side effect of wiring (D25.1).
+
+Also open: only three DeepSeek routes on the gateway actually answer
+(`cfp/deepseek-ai/…`); the `-free` route reports "Model is unavailable" upstream
+and the `opencode/` ones return 402. If that changes, the model lists in both
+`install_*_provider.py` scripts want revisiting.
 
 ---
 

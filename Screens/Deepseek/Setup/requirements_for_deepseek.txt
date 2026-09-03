@@ -1,0 +1,23 @@
+# What the Deepseek screen needs installed.
+#
+# Every screen keeps its own list, so one screen can be installed and run
+# on its own without dragging in the others. Start_Everything.bat installs
+# every one of these files it can find.
+#
+# Install just this one:
+#   cd <repo root>
+#   python -m pip install -r Screens\Deepseek\Setup\requirements_for_deepseek.txt
+
+# The small web server behind this screen.
+fastapi>=0.110
+uvicorn[standard]>=0.27
+
+# dsh's settings and profile overlays are YAML; this screen reads them to
+# report how the harness is wired.
+PyYAML>=6.0
+
+# NOT installed here: DeepSeek Harness itself. It is a Node package with
+# its own release cycle and its own home directory, installed once with
+#   npm install -g @deepseek-ai/dsh
+# and started in its own window with `dsh web`. Kage reports on it; Kage
+# never spawns it (CLAUDE.md Rule 20).

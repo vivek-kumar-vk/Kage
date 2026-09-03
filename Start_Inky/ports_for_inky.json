@@ -24,11 +24,25 @@
       "settings_file": "Screens\\Anime\\Backend\\settings_for_anime.py"
     },
     {
+      "name": "Deepseek",
+      "label": "Deepseek",
+      "host": "127.0.0.1",
+      "port": 8007,
+      "settings_file": "Screens\\Deepseek\\Backend\\settings_for_deepseek.py"
+    },
+    {
       "name": "Finance",
       "label": "Finance",
       "host": "127.0.0.1",
       "port": 8001,
       "settings_file": "Screens\\Finance\\Backend\\settings_for_finance.py"
+    },
+    {
+      "name": "Hermes",
+      "label": "Hermes",
+      "host": "127.0.0.1",
+      "port": 8008,
+      "settings_file": "Screens\\Hermes\\Backend\\settings_for_hermes.py"
     },
     {
       "name": "Learning",

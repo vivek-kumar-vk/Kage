@@ -109,3 +109,15 @@ Sync/
 # --- Finance app build artifacts (mirrored by Screens/Finance/Backend/build.py) ---
 Screens/Finance/Backend/app/static/
 Screens/Finance/Backend/app/.serve.*
+
+# --- Email card (D22): local mailbox cache + OAuth secrets ----------
+Main_Menu/Backend/Email_Data/
+
+# The Calendar card (D23) - Google Calendar tokens, the local store and
+# the WakaTime key all live here. Same rule as Email_Data: nothing
+# personal in git (CLAUDE.md Rule 7).
+Main_Menu/Backend/Calendar_Data/
+
+# Scratch downloads, logs and saved pages. Never committed - this is a
+# public repo (Rule 7).
+tmp/

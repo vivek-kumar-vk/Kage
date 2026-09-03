@@ -1,0 +1,136 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deepseek — Kage</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#12161b; --line:#232a33; --ink:#dfe6ee;
+          --dim:#8b98a8; --ok:#57d9a3; --bad:#ff6b6b; }
+  * { box-sizing:border-box; }
+  html,body { height:100%; margin:0; background:var(--bg); color:var(--ink);
+              font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  header { display:flex; align-items:center; gap:12px; padding:10px 16px;
+           border-bottom:1px solid var(--line); background:var(--panel); }
+  header b { letter-spacing:.14em; font-weight:600; }
+  a { color:var(--dim); text-decoration:none; }
+  a:hover { color:var(--ink); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--dim); }
+  .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
+  #state { color:var(--dim); }
+  .spacer { flex:1; }
+  #frame { width:100%; height:calc(100vh - 45px); border:0; display:none; }
+  #down { display:none; max-width:720px; margin:8vh auto; padding:24px;
+          border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+  #down h2 { margin:0 0 10px; font-size:15px; }
+  #down p { color:var(--dim); }
+  code { background:#0b0d10; border:1px solid var(--line); border-radius:4px;
+         padding:2px 6px; display:inline-block; }
+  ul { padding-left:18px; } li { margin:6px 0; }
+  .wiring { margin-top:20px; border-top:1px solid var(--line); padding-top:16px; }
+  .wiring h3 { font-size:12px; letter-spacing:.12em; color:var(--dim);
+               margin:0 0 10px; font-weight:600; }
+  .row { display:flex; gap:10px; padding:3px 0; }
+  .row span:first-child { color:var(--dim); min-width:150px; }
+  .miss { color:var(--bad); }
+</style>
+
+<header>
+  <b>DEEPSEEK</b>
+  <span class="dot" id="dot"></span>
+  <span id="state">checking the harness…</span>
+  <span class="spacer"></span>
+  <a id="open" href="#" target="_blank" style="display:none">open in a tab ↗</a>
+  <a href="http://127.0.0.1:8000/">← Main Menu</a>
+</header>
+
+<iframe id="frame" title="DeepSeek Harness"></iframe>
+
+<section id="down">
+  <h2>DeepSeek Harness is not running.</h2>
+  <p id="why"></p>
+  <p>This screen only <em>reports on</em> the harness — it does not run it.
+     Start it in its own window, then reload:</p>
+  <ul>
+    <li><code id="cmd">dsh web</code></li>
+    <li>the traces — every prompt, tool call and file write — appear here
+        once it is listening.</li>
+  </ul>
+  <div class="wiring" id="wiring"></div>
+</section>
+
+<script>
+// Ask our own backend, never dsh directly: the backend already knows the
+// harness address and reads its settings file, and a fetch straight at
+// dsh from this page would be a cross-origin request.
+function row(label, value, missing) {
+  return `<div class="row"><span>${label}</span>` +
+         `<span class="${missing ? 'miss' : ''}">${value}</span></div>`;
+}
+
+function wiring(info) {
+  const w = info.wiring || {};
+  const providers = w.providers || {};
+  const mine = providers[info.expected_provider];
+  const gw = info.gateway || {};
+  let html = '<h3>WIRING</h3>';
+  html += row('dsh home', info.dsh_home);
+  html += row('profiles', (info.profiles || []).join(', ') || '(none)',
+              !(info.profiles || []).length);
+  if (w.state !== 'ok') {
+    html += row('settings.yaml', `${w.state} — ${w.path || ''}`, true);
+  } else if (mine) {
+    html += row(`provider "${info.expected_provider}"`, mine.baseURL);
+    html += row('models declared', (mine.models || []).join(', ') || '(none)',
+                !(mine.models || []).length);
+  } else {
+    html += row(`provider "${info.expected_provider}"`,
+                'not declared — run Setup/install_dsh_provider.py', true);
+  }
+  html += row('gateway', gw.state === 'ok'
+    ? `${gw.base_url} · ${(gw.deepseek || []).length} deepseek model(s)`
+    : `${gw.base_url} — ${gw.state}`, gw.state !== 'ok');
+  if (gw.state === 'ok' && (gw.deepseek || []).length) {
+    html += row('offering', gw.deepseek.join(', '));
+  }
+  return html;
+}
+
+async function check() {
+  const dot = document.getElementById('dot');
+  const state = document.getElementById('state');
+  let info;
+  try {
+    info = await (await fetch('/api/deepseek/overview')).json();
+  } catch (e) {
+    info = { harness: 'unreachable', why: String(e) };
+  }
+  document.getElementById('wiring').innerHTML = wiring(info);
+  const openLink = document.getElementById('open');
+  if (info.harness === 'ok') {
+    dot.className = 'dot ok';
+    state.textContent = info.base_url;
+    const frame = document.getElementById('frame');
+    // Only ever assign a DIFFERENT src. Re-assigning the same URL
+    // reloads the iframe, and this runs every 10s - which would throw
+    // away whatever was typed into the harness mid-sentence.
+    if (frame.dataset.src !== info.base_url) {
+      frame.dataset.src = info.base_url;
+      frame.src = info.base_url;
+    }
+    frame.style.display = 'block';
+    // dsh may refuse to be framed; the tab link is always the way out.
+    openLink.href = info.base_url;
+    openLink.style.display = 'inline';
+    document.getElementById('down').style.display = 'none';
+  } else {
+    dot.className = 'dot bad';
+    state.textContent = info.harness;
+    document.getElementById('why').textContent = info.why || '';
+    if (info.start_command) document.getElementById('cmd').textContent = info.start_command;
+    openLink.style.display = 'none';
+    document.getElementById('frame').style.display = 'none';
+    document.getElementById('down').style.display = 'block';
+  }
+}
+check();
+setInterval(check, 10000);   // it comes back up without a reload
+</script>

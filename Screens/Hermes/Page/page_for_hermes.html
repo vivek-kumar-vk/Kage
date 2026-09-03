@@ -1,0 +1,234 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hermes — Kage</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#12161b; --line:#232a33; --ink:#dfe6ee;
+          --dim:#8b98a8; --ok:#57d9a3; --bad:#ff6b6b; }
+  * { box-sizing:border-box; }
+  html,body { min-height:100%; margin:0; background:var(--bg); color:var(--ink);
+              font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  header { display:flex; align-items:center; gap:12px; padding:10px 16px;
+           border-bottom:1px solid var(--line); background:var(--panel);
+           position:sticky; top:0; z-index:2; }
+  header b { letter-spacing:.14em; font-weight:600; }
+  a { color:var(--dim); text-decoration:none; }
+  a:hover { color:var(--ink); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--dim); }
+  .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
+  #state { color:var(--dim); }
+  .spacer { flex:1; }
+  /* The two views this screen can show. Hermes has a real web UI, so the
+     screen leads with it - the fleet report stays one click away rather
+     than being the only thing here. */
+  .tabs { display:flex; border:1px solid var(--line); border-radius:6px;
+          overflow:hidden; }
+  .tabs button { background:transparent; border:0; color:var(--dim);
+                 font:inherit; font-size:12px; letter-spacing:.08em;
+                 padding:3px 10px; cursor:pointer; }
+  .tabs button[aria-selected="true"] { background:#1b222b; color:var(--ink); }
+  #frame { width:100%; height:calc(100vh - 45px); border:0; display:none; }
+  main { max-width:1000px; margin:0 auto; padding:20px 16px 60px; }
+  h3 { font-size:12px; letter-spacing:.12em; color:var(--dim);
+       margin:24px 0 10px; font-weight:600; }
+  .card { border:1px solid var(--line); border-radius:10px;
+          background:var(--panel); padding:14px 16px; margin-bottom:10px; }
+  .row { display:flex; gap:10px; padding:2px 0; }
+  .row span:first-child { color:var(--dim); min-width:150px; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-weight:600; color:var(--dim); font-size:12px;
+       letter-spacing:.08em; padding:8px 10px; border-bottom:1px solid var(--line); }
+  td { padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td { border-bottom:0; }
+  .name { color:var(--ink); font-weight:600; }
+  .inherit { color:var(--dim); font-style:italic; }
+  code { background:#0b0d10; border:1px solid var(--line); border-radius:4px;
+         padding:2px 6px; display:inline-block; font-size:12px; }
+  .miss { color:var(--bad); }
+  .soul { color:var(--ok); } .nosoul { color:var(--dim); }
+  #down, #dashdown { display:none; max-width:640px; margin:14vh auto;
+          padding:24px; border:1px solid var(--line); border-radius:10px;
+          background:var(--panel); }
+  #down h2, #dashdown h2 { margin:0 0 10px; font-size:15px; }
+  #dashdown p { color:var(--dim); }
+  ul { padding-left:18px; } li { margin:6px 0; }
+</style>
+
+<header>
+  <b>HERMES</b>
+  <span class="dot" id="dot"></span>
+  <span id="state">reading the install…</span>
+  <div class="tabs" id="tabs" style="display:none">
+    <button id="tab-dash" aria-selected="true">Dashboard</button>
+    <button id="tab-fleet" aria-selected="false">Fleet</button>
+  </div>
+  <span class="spacer"></span>
+  <a id="open" href="#" target="_blank" style="display:none">open in a tab ↗</a>
+  <a href="http://127.0.0.1:8000/">← Main Menu</a>
+</header>
+
+<iframe id="frame" title="Hermes dashboard"></iframe>
+
+<section id="dashdown">
+  <h2>The Hermes dashboard is not running.</h2>
+  <p id="dashwhy"></p>
+  <p>This screen only <em>reports on</em> Hermes — it does not run it.
+     Start the dashboard in its own window, then it appears here:</p>
+  <ul>
+    <li><code id="dashcmd">hermes dashboard</code></li>
+    <li>or start everything at once:
+        <code>python Start_Inky\start_every_screen.py</code></li>
+  </ul>
+  <p>The <b>Fleet</b> tab above still works without it — it reads the
+     install off disk.</p>
+</section>
+
+<main id="main"></main>
+
+<section id="down">
+  <h2>Hermes is not installed.</h2>
+  <p id="why" style="color:var(--dim)"></p>
+  <p style="color:var(--dim)">This screen reports on a Hermes Agent install
+     (Nous Research). Install it, or point <code>HERMES_HOME</code> at one.</p>
+</section>
+
+<script>
+// Ask our own backend, never the filesystem: the backend owns which files
+// are read and strips every key before anything reaches this page.
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function row(label, value, missing) {
+  return `<div class="row"><span>${esc(label)}</span>` +
+         `<span class="${missing ? 'miss' : ''}">${esc(value)}</span></div>`;
+}
+
+function render(info) {
+  const c = info.config || {};
+  const gw = info.model_gateway || {};
+  let html = '<h3>INSTALL</h3><div class="card">';
+  html += row('home', info.home);
+  html += row('default model', c.default_model || '(unset)', !c.default_model);
+  html += row('default provider', c.default_provider || '(unset)', !c.default_provider);
+  const declared = (c.custom_providers || []);
+  html += row('custom providers', declared.join(', ') || '(none)', !declared.length);
+  html += row(`gateway "${gw.provider_name}"`,
+              declared.includes(gw.provider_name)
+                ? `declared → ${gw.base_url}`
+                : 'not declared — run Setup/install_hermes_provider.py',
+              !declared.includes(gw.provider_name));
+  html += '</div>';
+
+  html += `<h3>PROFILES — ${info.profile_count}</h3>`;
+  if (!(info.profiles || []).length) {
+    html += '<div class="card"><span class="miss">No profiles. ' +
+            'Create one: <code>hermes profile create &lt;name&gt;</code></span></div>';
+  } else {
+    html += '<div class="card"><table><tr><th>Profile</th><th>Model</th>' +
+            '<th>Provider</th><th>Soul</th><th>Run</th></tr>';
+    for (const p of info.profiles) {
+      const inh = v => v === '(inherited)'
+        ? '<span class="inherit">inherited</span>' : esc(v);
+      html += `<tr><td class="name">${esc(p.name)}</td>` +
+              `<td>${inh(p.model)}</td>` +
+              `<td>${inh(p.provider)}</td>` +
+              `<td class="${p.has_soul ? 'soul' : 'nosoul'}">` +
+              `${p.has_soul ? p.soul_bytes + ' B' : '—'}</td>` +
+              `<td><code>${esc(p.run_command)}</code></td></tr>`;
+    }
+    html += '</table></div>';
+    html += '<div class="card" style="color:var(--dim)">' +
+            'A profile\'s chat history <em>is</em> its memory — that is what ' +
+            'training an agent means here. Running one has a cost and changes ' +
+            'that memory, so this screen never starts one for you.</div>';
+  }
+  return html;
+}
+
+// Which tab is showing. The user's choice wins once they have made one,
+// so a poll never yanks the view out from under them.
+let tab = 'dash';
+let chosen = false;
+
+function paint(info) {
+  const dashOk = (info.dashboard || {}).state === 'ok';
+  const frame = document.getElementById('frame');
+  const showDash = tab === 'dash';
+
+  frame.style.display = showDash && dashOk ? 'block' : 'none';
+  document.getElementById('dashdown').style.display =
+    showDash && !dashOk ? 'block' : 'none';
+  document.getElementById('main').style.display = showDash ? 'none' : 'block';
+
+  if (dashOk) {
+    const url = info.dashboard.base_url;
+    // Only ever assign a DIFFERENT src. Re-assigning the same URL
+    // reloads the iframe, which would throw away whatever was typed in
+    // the dashboard every time this poll ran.
+    if (frame.dataset.src !== url) {
+      frame.dataset.src = url;
+      frame.src = url;
+    }
+  }
+}
+
+function selectTab(which) {
+  tab = which;
+  chosen = true;
+  document.getElementById('tab-dash').setAttribute('aria-selected', which === 'dash');
+  document.getElementById('tab-fleet').setAttribute('aria-selected', which === 'fleet');
+}
+
+document.getElementById('tab-dash').onclick = () => { selectTab('dash'); check(); };
+document.getElementById('tab-fleet').onclick = () => { selectTab('fleet'); check(); };
+
+async function check() {
+  const dot = document.getElementById('dot');
+  const state = document.getElementById('state');
+  let info;
+  try {
+    info = await (await fetch('/api/hermes/overview')).json();
+  } catch (e) {
+    info = { hermes: 'unreachable', why: String(e) };
+  }
+
+  if (info.hermes !== 'ok') {
+    dot.className = 'dot bad';
+    state.textContent = info.hermes;
+    document.getElementById('tabs').style.display = 'none';
+    document.getElementById('frame').style.display = 'none';
+    document.getElementById('dashdown').style.display = 'none';
+    document.getElementById('main').innerHTML = '';
+    document.getElementById('main').style.display = 'none';
+    document.getElementById('why').textContent = info.why || '';
+    document.getElementById('down').style.display = 'block';
+    return;
+  }
+
+  const dash = info.dashboard || {};
+  dot.className = 'dot ok';
+  state.textContent = `${info.profile_count} profile` +
+                      `${info.profile_count === 1 ? '' : 's'}`;
+  document.getElementById('down').style.display = 'none';
+  document.getElementById('tabs').style.display = 'flex';
+  document.getElementById('main').innerHTML = render(info);
+  document.getElementById('dashwhy').textContent = dash.why || '';
+  if (dash.start_command) {
+    document.getElementById('dashcmd').textContent = dash.start_command;
+  }
+
+  // Land on whichever view actually has something, until the user picks.
+  if (!chosen) selectTab(dash.state === 'ok' ? 'dash' : 'fleet');
+
+  const openLink = document.getElementById('open');
+  if (dash.state === 'ok') {
+    openLink.href = dash.base_url;
+    openLink.style.display = 'inline';
+  } else {
+    openLink.style.display = 'none';
+  }
+
+  paint(info);
+}
+check();
+setInterval(check, 15000);
+</script>

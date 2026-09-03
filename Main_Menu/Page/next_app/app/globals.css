@@ -123,3 +123,19 @@ body {
 .rubric-panel a[data-active] .text-white {
   color: #ff7a00;
 }
+
+/* The Calendar card's day popover (D23.2) opens in the gutter to the
+   right of the left column, where there is empty space and it never
+   covers the grid being read. Below 1100px the grid collapses to one
+   column and that gutter is gone - off-screen is worse than overlapping,
+   so on a phone it lays itself over the card instead. */
+.day-popover {
+  left: calc(100% + 12px);
+}
+@media (max-width: 1100px) {
+  .day-popover {
+    left: 8px !important;
+    right: 8px;
+    width: auto !important;
+  }
+}

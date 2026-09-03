@@ -1,9 +1,14 @@
-"""Starts every screen with one command.
+"""Starts every screen, and every gateway they report on, with one command.
 
 WHAT IT DOES
-    Finds the main menu and every screen folder, reads which port each
-    one wants, and starts them all at once. Prints a list of addresses.
+    Starts every gateway runner in this folder (run_*.py) - the model
+    gateway, the MCP servers, and the local agent harnesses - then finds
+    the main menu and every screen folder, reads which port each one
+    wants, and starts them all at once. Prints a list of addresses.
     Press Ctrl+C once and every one of them stops.
+
+    A gateway already running is left alone by its own runner, so this
+    is safe whether or not one was started by hand first.
 
 WHY IT DOES NOT LIST THE SCREENS
     Search this file for the name of any part of your life and you will
@@ -196,6 +201,63 @@ def _start_all(ready: list[dict]) -> list[tuple]:
     return processes
 
 
+def find_gateway_runners() -> list[Path]:
+    """Every `Start_Inky/run_*.py`, found by looking rather than by name.
+
+    Gateways are not screens - they are the separate services that
+    screens only report on. Kage never runs one inside a screen
+    (CLAUDE.md Rule 20); it starts them here as their own processes,
+    exactly as Start_Everything.bat used to.
+
+    They are named nowhere in this file either: each one is a run_*.py
+    beside this script, so adding a gateway means adding one file.
+
+    Found by walking, for the same reason screens are: adding a gateway
+    later means adding one file, and this function never changes.
+    """
+    return sorted(Path(__file__).resolve().parent.glob("run_*.py"))
+
+
+def _start_gateways() -> list[tuple[str, subprocess.Popen]]:
+    """Start each gateway runner as its own process.
+
+    Every runner is responsible for being safe to run twice: they check
+    their own port first and exit immediately, saying so, when something
+    already holds it. So a runner exiting straight away is the normal
+    "already running" case, not a failure - which is why these are never
+    reported as having "stopped on their own" the way a screen is.
+    """
+    runners = find_gateway_runners()
+    if not runners:
+        return []
+    print()
+    print("Starting gateways")
+    started = []
+    try:
+        for runner in runners:
+            proc = subprocess.Popen([sys.executable, str(runner)],
+                                    cwd=str(PROJECT_ROOT))
+            started.append((runner.stem, proc))
+            time.sleep(0.4)
+    except KeyboardInterrupt:
+        _stop_gateways(started)
+        raise
+    return started
+
+
+def _stop_gateways(gateways: list[tuple[str, subprocess.Popen]]) -> None:
+    for name, proc in gateways:
+        if proc.poll() is not None:
+            continue          # already exited (usually: was already running)
+        proc.terminate()
+    for name, proc in gateways:
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        print(f"  stopped {name}")
+
+
 def _print_running(processes: list[tuple]) -> None:
     print()
     print("=" * 66)
@@ -294,6 +356,11 @@ def main() -> None:
     # unrequested restart the moment this one starts.
     clear_restart_request()
 
+    # ---- the gateways first -------------------------------------------
+    # Screens report on these, so they go up before anything polls them.
+    # A gateway already running is left alone by its own runner.
+    gateways = _start_gateways()
+
     # ---- start each one as its own program ---------------------------
     # Separate programs, not threads. If one crashes the others keep
     # running, and you can restart just that one.
@@ -343,6 +410,8 @@ def main() -> None:
         print()
         print("Stopping")
         _stop_all(processes)
+        # Screens first, then the services they were reporting on.
+        _stop_gateways(gateways)
         print()
 
 

@@ -33,6 +33,7 @@ HOW TO RUN IT ON ITS OWN
 # SETUP
 # =====================================================================
 import sys
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -426,6 +427,132 @@ def local_ai():
         if m.get("name")
     ]
     return {"reachable": True, "engines": engines}
+
+
+# =====================================================================
+# EMAIL CARD (D22) - read-only Gmail -> local SQLite -> `claude -p`
+#     The pipeline (email_pipeline.py) syncs on a background loop; these
+#     endpoints only answer from the local store and switch states.
+#     Everything personal stays in Backend/Email_Data/ (gitignored).
+# =====================================================================
+import email_pipeline
+
+# The card polls this. `hours` is the window switch: 1, 4, 12, 24.
+@app.get(cfg.API_PREFIX + "/email/summary")
+def email_card_summary(hours: int = 24):
+    return email_pipeline.summary(hours)
+
+
+# Sync now (the loop still runs on its own cadence); the card keeps
+# polling summary and sees `syncing` flip back.
+@app.post(cfg.API_PREFIX + "/email/refresh")
+def email_card_refresh():
+    if email_pipeline.is_syncing():
+        return {"state": "already_syncing"}
+    email_pipeline.start_once()
+    threading.Thread(target=email_pipeline.sync_cycle, daemon=True).start()
+    return {"state": "started"}
+
+
+# The one-time OAuth consent: opens a Google tab, answers immediately.
+@app.post(cfg.API_PREFIX + "/email/connect")
+def email_card_connect():
+    return email_pipeline.connect_start()
+
+
+# Run the newsletter digest now (it also runs once a day on its own).
+@app.post(cfg.API_PREFIX + "/email/digest")
+def email_card_digest():
+    import email_digest
+    return email_digest.maybe_run(force=True)
+
+
+@app.on_event("startup")
+def _kick_email_pipeline():
+    email_pipeline.start_once()
+
+
+# =====================================================================
+# CALENDAR CARD (D23) - Google Calendar -> local SQLite -> `claude -p`
+#     Same shape as the Email card above: a background loop syncs, these
+#     endpoints only answer from the local store. The single exception
+#     is /calendar/proposals/{id}/approve, which is the one route in
+#     this screen that changes anything outside this machine - it
+#     creates a real event on a real calendar and rings a real phone,
+#     so it is never called by a sync, only by a deliberate click.
+#     Everything personal stays in Backend/Calendar_Data/ (gitignored).
+# =====================================================================
+import calendar_pipeline
+
+# The month grid. No arguments means the month we are in.
+@app.get(cfg.API_PREFIX + "/calendar/month")
+def calendar_month(year: int | None = None, month: int | None = None):
+    return calendar_pipeline.month(year, month)
+
+
+# One day, for the hover popover.
+@app.get(cfg.API_PREFIX + "/calendar/day")
+def calendar_day(day: str):
+    return calendar_pipeline.day(day)
+
+
+# The WHAT'S NEXT list under the grid.
+@app.get(cfg.API_PREFIX + "/calendar/next")
+def calendar_next(limit: int = 3):
+    return calendar_pipeline.whats_next(limit)
+
+
+# The one-time OAuth consent: opens a Google tab, answers immediately.
+@app.post(cfg.API_PREFIX + "/calendar/connect")
+def calendar_connect():
+    return calendar_pipeline.connect_start()
+
+
+# Sync now (the loop still runs on its own cadence).
+@app.post(cfg.API_PREFIX + "/calendar/refresh")
+def calendar_refresh():
+    if calendar_pipeline.is_syncing():
+        return {"state": "already_syncing"}
+    calendar_pipeline.start_once()
+    threading.Thread(target=calendar_pipeline.sync_cycle, daemon=True).start()
+    return {"state": "started"}
+
+
+# What the agent wants to add, still waiting on a decision.
+@app.get(cfg.API_PREFIX + "/calendar/proposals")
+def calendar_proposals():
+    return calendar_pipeline.pending_list()
+
+
+# Approve -> the event is created on Google. The only outward write.
+@app.post(cfg.API_PREFIX + "/calendar/proposals/{proposal_id}/approve")
+def calendar_proposal_approve(proposal_id: int):
+    return calendar_pipeline.approve(proposal_id)
+
+
+# Reject -> dropped; if it was already written, it is deleted again.
+@app.post(cfg.API_PREFIX + "/calendar/proposals/{proposal_id}/reject")
+def calendar_proposal_reject(proposal_id: int):
+    return calendar_pipeline.reject(proposal_id)
+
+
+# Run the learning agent now (it also runs once a night on its own).
+@app.post(cfg.API_PREFIX + "/calendar/agent/run")
+def calendar_agent_run(days: int = 3):
+    import calendar_agent
+    return calendar_agent.run_recent(days)
+
+
+# The other half of the card's switch.
+@app.get(cfg.API_PREFIX + "/wakatime/summary")
+def wakatime_summary():
+    return calendar_pipeline.wakatime_summary()
+
+
+@app.on_event("startup")
+def _kick_calendar_pipeline():
+    threading.Thread(target=calendar_pipeline.background_loop,
+                     daemon=True).start()
 
 
 # =====================================================================

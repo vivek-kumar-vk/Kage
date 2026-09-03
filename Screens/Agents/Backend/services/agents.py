@@ -31,6 +31,10 @@ class MessageBody(BaseModel):
     body: Optional[str] = None
 
 
+class NoteBody(BaseModel):
+    body: Optional[str] = None
+
+
 class FileBody(BaseModel):
     content: Optional[str] = None
 
@@ -314,6 +318,64 @@ async def post_agent_message(name: str, payload: Optional[MessageBody] = Body(de
         "message": message,
         "note": "queued · live replies land in PLAN.md item 4 V2",
     }
+
+
+@router.post(cfg.API_PREFIX + "/agents/{name}/notes")
+async def post_agent_note(name: str, payload: Optional[NoteBody] = Body(default=None)):
+    """Persist a note authored BY the agent itself, mirroring the D19.5
+    user-DM route above. First writer is the Email card's newsletter
+    digest (AGENTS.md D22): the menu's email pipeline summarizes new
+    newsletters and POSTs the digest here, so it lands in the agent's DM
+    room and on the office stage as a real (sim=0) agent output."""
+    body = (payload.body or "").strip() if payload else ""
+    if not body:
+        return JSONResponse(
+            status_code=422,
+            content={"state": "error", "problem": "empty note"},
+        )
+
+    conn = connect()
+    try:
+        agents = {agent["name"]: agent for agent in _agent_entries(conn)}
+        if name not in agents:
+            return JSONResponse(
+                status_code=404,
+                content={"state": "error", "problem": "unknown agent"},
+            )
+
+        room_id = agents[name]["room_id"]
+        message_id = "msg-" + uuid.uuid4().hex[:10]
+        created = _now()
+        conn.execute(
+            """
+            INSERT INTO messages (id, room_id, author, agent_name, body, created_at)
+            VALUES (?, ?, 'agent', ?, ?, ?)
+            """,
+            (message_id, room_id, name, body[:MAX_MESSAGE_CHARS], created),
+        )
+        conn.commit()
+        message = {
+            "id": message_id,
+            "room_id": room_id,
+            "author": "agent",
+            "agent_name": name,
+            "body": body[:MAX_MESSAGE_CHARS],
+            "created_at": created,
+        }
+        department = agents[name]["department"]
+    finally:
+        conn.close()
+
+    events.emit(
+        "agent",
+        "output",
+        f"note: {body[:80]}",
+        agent_name=name,
+        department=department,
+        sim=False,
+    )
+
+    return {"state": "ok", "message": message}
 
 
 def _known_agent_dir(name: str):

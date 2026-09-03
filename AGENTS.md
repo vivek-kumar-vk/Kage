@@ -467,3 +467,113 @@ highest sub-number is the one in force and the parent stays as history.
     with one line each, generated and annotated by hand. It is a snapshot, not a
     source of truth: ports live in each screen's settings file, rules in `CLAUDE.md`,
     the backlog in `PLAN.md`. Adding a screen means adding its lines here.
+
+## D23 — The Calendar card (2026-09-03)
+
+- **D23.1 — The card gained a switch and lost its decoration.** On the owner's
+  instruction the `OPEN CAL` pill became a two-way switch (`CAL` / `WAKA`), so
+  WakaTime opens *in this card* rather than another tab. The world-clock row
+  (USA PT / USA ET / LONDON) and the Q1–Q4 quarter grid both came out; a real
+  month grid replaced them. The quarter grid was gesturing at "a year's rhythm at
+  a glance" with a decorative pattern — the month grid does that job on real
+  WakaTime seconds (each cell tinted by how much was coded that day) *and* gives
+  every day a real cell to hover. `WHAT'S NEXT` is unchanged in shape and now
+  reads real events.
+- **D23.2 — Hover opens to the right, never over the grid.** A day cell carries a
+  marker only when that day actually has something: a filled amber dot for a real
+  calendar event, a hollow amber ring for a pending agent proposal, a grey dot for
+  an agent note. Hovering (or keyboard-focusing) such a cell opens a popover in
+  the empty gutter between the left column and the centre core — so it never
+  covers the grid being read, and there is room for a real list with buttons.
+  Cells with nothing do not open anything, so hovering is never a guess.
+- **D23.3 — Observations are written, intentions are not.** The nightly agent
+  produces two kinds of output and they are stored in two different tables.
+  *Notes* describe the past and their evidence is the day's real signals
+  (WakaTime seconds, this repo's commits for that day, existing events, what the
+  Email card flagged) — they are written straight to the store. *Proposals* are
+  events it wants to add; they sit as `pending` and are **never** written to
+  Google by a sync. Writing to a real calendar rings a real phone, so it takes a
+  deliberate click on *Add to calendar* in the popover. `CALENDAR_AUTO_WRITE`
+  ships off; it exists so the owner can turn it on after watching a week of
+  proposals. *Dismiss* on an already-written proposal deletes the Google event
+  again — every agent-written event carries
+  `extendedProperties.private.kage_agent = "1"` so it stays findable and undoable.
+- **D23.4 — WakaTime auth is the API key, not OAuth.** One local user reading his
+  own stats has no third party to consent; OAuth would add a redirect URI, a
+  consent tab and refresh tokens, and an app secret is one more thing to leak.
+  The key is base64 over HTTP Basic, read from the gitignored
+  `Calendar_Data/wakatime.json` or the env.
+- **D23.5 — The free plan's 7-day window is snapshotted, not worked around.**
+  WakaTime free exposes only the last week. Every sync writes those seven days
+  into `calendar.sqlite`, so history accumulates from the day the key is added
+  regardless of plan, and the week bars and the month tint read the local
+  snapshot rather than the API. A range that needs a paid plan returns 402; that
+  is reported as a sentence beside the view, and the rest keeps working.
+- **D23.6 — Two brains, one prompt.** `CALENDAR_AGENT_BACKEND=claude_cli`
+  (default) is the Email card's proven path — one `claude -p` per run, already
+  logged in, no key in `.env`. `omniroute` POSTs the same prompt to the gateway on
+  8003, which is where Hermes and DeepSeek arrive (`PLAN.md` item 3). A brain that
+  is unreachable reports `offline` and the run is skipped — it never guesses
+  something onto a real calendar.
+- **D23.7 — Google not being set up is a sentence, not an empty month.** The grid
+  still draws September because the dates are real; underneath it says "Google
+  Calendar not set up" and "Dates are real; event data is not connected", so an
+  empty row is never mistaken for a clear day (Rule 8). Setup for both
+  connections: `Main_Menu/CALENDAR_SETUP.md`.
+
+## D24 — The Deepseek screen: DeepSeek Harness, for traces (2026-09-03)
+
+- **D24 — A nav for the harness, because the point is watching.** `dsh`
+  (DeepSeek AI's agent harness, MIT) shows every prompt, tool call and file
+  write an agent makes, step by step. That is the reason this screen exists:
+  to see what the agents are actually doing rather than trust a summary. The
+  screen embeds dsh's web profile the way the Model screen embeds the
+  gateway dashboard (D10), with an "open in a tab" link beside it because a
+  page that refuses to be framed must still be reachable.
+- **D24.1 — The harness reaches models through the gateway, not DeepSeek's
+  cloud.** The parked plan recorded a blocker: dsh ships only DeepSeek-cloud
+  LLM adapters, so a local or third-party model needed a custom adapter
+  (~half a day) or a baseURL gamble. Neither was necessary.
+  `@deepseek-ai/dsh-llm-pi-ai` accepts hand-declared OpenAI-compatible
+  providers (`api: openai-completions`), and OmniRoute is exactly that. So
+  `llm-pi-ai.providers.omniroute` points at 8003 and the harness reaches
+  `deepseek-v4-*` with no adapter written and no second API key held. A
+  hand-declared route needs all three of `api`, `baseURL` and a non-empty
+  `models` list or dsh rejects it on save.
+- **D24.2 — Kage never starts the harness.** `dsh web` runs in its own
+  window (Rule 20). "not running" is a first-class state that names the
+  command, so a dead harness is never mistaken for an idle one (Rule 8).
+- **D24.3 — The installer edits text, never a YAML round-trip.** The first
+  version dumped the parsed settings back out and silently deleted the
+  comment block documenting the other provider. `install_dsh_provider.py`
+  now inserts its block as text inside the existing `providers:` mapping,
+  backs the file up first, and leaves every other byte alone. Configs are
+  read by people; a writer that eats their documentation is a broken writer.
+
+## D25 — The Hermes screen: the profile fleet (2026-09-03)
+
+- **D25 — The profile is the unit, and its history is the training.** Hermes
+  Agent (Nous Research) keeps a fleet under `%LOCALAPPDATA%\hermes\profiles`,
+  each with a `SOUL.md` persona, a model choice and its own chat history.
+  That history *is* the bot's memory — "training an agent" here means a
+  profile accumulating what it learned across sessions, not fine-tuning
+  weights. The screen reports the fleet: what each profile runs on, whether
+  it has a soul, and the command to run it.
+- **D25.1 — One gateway entry, declared for all, opted into by hand.**
+  `custom_providers.omniroute` is added to the install-wide config so any
+  profile can name it, but no profile's default model is changed. Declaring
+  is additive and reversible; repointing fifteen agents is a separate
+  decision and not one to make as a side effect of wiring.
+- **D25.2 — The screen never runs an agent.** A run costs money and mutates
+  that profile's memory. A page open in a tab must never cause one, so the
+  screen shows `hermes -p <name> chat` to copy rather than a button.
+- **D25.3 — Keys never leave the process.** Profile configs carry literal
+  `api_key` values for custom providers. The overview endpoint redacts every
+  secret-looking key recursively before serialising, so an open tab cannot
+  show one even when the config on disk holds it.
+- **D25.4 — Hermes' `custom_providers` takes a literal key, so one is
+  written.** Unlike dsh's `apiKeyEnv`, Hermes wants the value. The installer
+  copies `GATEWAY_API_KEY` out of the repo's `.env` into
+  `%LOCALAPPDATA%\hermes\config.yaml` — outside the repo and outside git
+  (Rule 7), but a real key at rest on disk, which is worth knowing rather
+  than discovering.

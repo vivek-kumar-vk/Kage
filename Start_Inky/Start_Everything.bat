@@ -88,16 +88,11 @@ if exist "%PROJECT%\Screens\Finance\Backend\app\requirements.txt" (
 
 :run
 echo.
-REM --- the model gateway, in its own window --------------------------
-REM The Model screen reports on it. Safe when already running - the
-REM launcher just says so and leaves the gateway alone.
-start "OmniRoute gateway" "%VPY%" "%PROJECT%\Start_Inky\run_omniroute.py"
-timeout /t 2 /nobreak >nul
-REM --- the market-data MCP server, in its own window -----------------
-REM Tool seam for the Agent Deck research agents (port 3101). Safe when
-REM already running - the launcher just says so and leaves it alone.
-start "Market MCP" "%VPY%" "%PROJECT%\Start_Inky\run_market_mcp.py"
-timeout /t 2 /nobreak >nul
+REM --- gateways + screens -------------------------------------------
+REM start_every_screen.py starts every Start_Inky\run_*.py gateway
+REM runner itself, then the screens. These used to be started here in
+REM their own windows; that moved so both ways in - this file, and
+REM running start_every_screen.py directly - bring up the same fleet.
 "%VPY%" "%PROJECT%\Start_Inky\start_every_screen.py"
 if errorlevel 1 goto :fail
 goto :done

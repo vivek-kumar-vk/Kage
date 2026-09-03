@@ -1,0 +1,4 @@
+# The Email card's Gmail read-only client (D22).
+# Installed by Start_Everything.bat with every screen's requirements.
+google-api-python-client>=2.100
+google-auth-oauthlib>=1.1
