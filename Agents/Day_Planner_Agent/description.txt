@@ -1,1 +1,0 @@
-Reads the day's trace ledger through the local model each night and writes tomorrow's plan - what happened, what got in the way, what to do next. Runs on this laptop, costs nothing, sends nothing out.

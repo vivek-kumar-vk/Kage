@@ -43,10 +43,6 @@ import requests
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-# The agent layer lives beside the screens layer at the root. Adding
-# its folder here is what lets this server hand work to the supervisor
-# below - it is not a reach into any screen's own code.
-sys.path.insert(0, str(PROJECT_ROOT / "Shared_By_All_Agents"))
 
 from fastapi import Body, FastAPI, Request                # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
@@ -54,11 +50,10 @@ from fastapi.staticfiles import StaticFiles               # noqa: E402
 
 import settings_for_main_menu as cfg                      # noqa: E402
 from find_every_screen import discover                    # noqa: E402
-from Shared_By_All_Agents.read_agent_cards import every_agent  # noqa: E402
 from Shared_By_All_Screens.read_screen_settings import web_address   # noqa: E402
-from Shared_By_All_Screens.read_and_write_numbers import read_state  # noqa: E402
-from Shared_By_All_Screens.format_indian_money import format_inr     # noqa: E402
-from Shared_By_All_Screens.trace_every_action import (              # noqa: E402
+from read_and_write_numbers import read_state  # noqa: E402
+from format_indian_money import format_inr     # noqa: E402
+from trace_every_action import (              # noqa: E402
     new_correlation_id, trace,
 )
 from Shared_By_All_Screens.restart_signal import request_restart     # noqa: E402
@@ -69,14 +64,14 @@ app = FastAPI(title=cfg.SCREEN_LABEL)
 
 # Liveness + dependency probe (Phase-1 W1.3) - see health_check.py.
 # The menu's own dependency is the Screens/ tree it exists to list.
-from Shared_By_All_Screens import health_check                          # noqa: E402
+import health_check                          # noqa: E402
 health_check.register(app, "main_menu",
                       screens_root=lambda: Path(__file__).resolve().parents[2] / "Screens")
 
 
 # =====================================================================
 # THE TRACE LEDGER - every served request and every page click lands in
-# Shared_By_All_Screens/Trace_Ledger/, the same pattern every screen uses.
+# Backend/Trace_Ledger/, the same pattern every screen uses.
 # =====================================================================
 @app.middleware("http")
 async def _trace_api_requests(request, call_next):
@@ -126,7 +121,7 @@ def dev_changed_since(token: str = ""):
     """Has any code file behind this page moved since it was loaded?
     An empty token only establishes the baseline and can never say
     'changed' - otherwise every fresh page would reload in a loop."""
-    from Shared_By_All_Screens.code_change_monitor import has_changed, is_enabled
+    from code_change_monitor import has_changed, is_enabled
     result = has_changed(token, cfg.MONITORED_FOLDERS)
     if not is_enabled():
         return {"changed": False, "fingerprint": result["fingerprint"],
@@ -199,53 +194,6 @@ def chat_with_inky(payload: dict = Body(...),
     })
 
 
-# The supervisor is imported on first use rather than at startup, and
-# then remembered. If the agent layer cannot boot for any reason, the
-# page and the navigation answer must keep working - losing the whole
-# menu because one optional layer failed would be the wrong trade.
-_SUPERVISOR = None
-
-_CALCULATIONS_WALKED = False
-
-
-def _make_the_agent_layer_importable() -> None:
-    """Put every screen's calculation groups on the path, once.
-
-    The agent layer's router lives inside one of those group folders,
-    and the supervisor imports it by bare module name - which only
-    resolves if the groups are already on the path. Tests get that
-    from their conftest and each screen's own server does it for its
-    own maths; nobody had done it for this one until an endpoint here
-    needed to wake an agent. Discovery again, never a list: a new
-    screen's calculations become importable the moment its folder
-    exists, and no screen is named anywhere below.
-    """
-    global _CALCULATIONS_WALKED
-    if _CALCULATIONS_WALKED:
-        return
-    for screen_folder in sorted((PROJECT_ROOT / "Screens").iterdir()):
-        calculations = screen_folder / "Calculations"
-        if not calculations.is_dir():
-            continue
-        for group in sorted(calculations.iterdir()):
-            if group.is_dir() and not group.name.startswith(("_", ".")) \
-                    and group.name != "__pycache__":
-                if str(group) not in sys.path:
-                    sys.path.insert(0, str(group))
-        if str(calculations) not in sys.path:
-            sys.path.insert(0, str(calculations))
-    _CALCULATIONS_WALKED = True
-
-
-def _hand_this_to_someone(*args, **kwargs):
-    global _SUPERVISOR
-    if _SUPERVISOR is None:
-        _make_the_agent_layer_importable()
-        from the_supervisor import hand_this_to_someone
-        _SUPERVISOR = hand_this_to_someone
-    return _SUPERVISOR(*args, **kwargs)
-
-
 def _usd(amount) -> str:
     """None -> '—'. Otherwise '$1,234.56', signed if negative.
 
@@ -278,14 +226,6 @@ def page():
     # honest beats broken.
     if getattr(cfg, "USE_NEXT_UI", False):
         index = getattr(cfg, "NEXT_DIST", None)
-        if index is not None and (index / "index.html").exists():
-            return FileResponse(index / "index.html")
-    # The Svelte pilot (U1): only when the flag is on AND the build is
-    # actually present does the app take over the root route. A flag on
-    # with no dist/ falls back to the ordinary page instead of a blank
-    # screen - honest beats broken.
-    if getattr(cfg, "USE_SVELTE", False):
-        index = getattr(cfg, "SVELTE_DIST", None)
         if index is not None and (index / "index.html").exists():
             return FileResponse(index / "index.html")
     if cfg.PAGE.exists():
@@ -439,190 +379,13 @@ def restart_inky():
 
 
 # =====================================================================
-# AGENTS - the fleet, grouped the way the home page draws it
-# =====================================================================
-@app.get(cfg.API_PREFIX + "/agents/fleet")
-def agents_fleet():
-    """Every agent, sorted into one accordion per navigation tab.
-
-    Two discoveries meet here and neither is hardcoded: screen
-    discovery says which tabs exist, and the agent cards say which
-    tabs they belong to (an optional HOME_SECTIONS list on a card -
-    there is no registration list anywhere). An agent that claims no
-    tab, or claims one discovery has never heard of, is not hidden:
-    it lands in EVERYWHERE ELSE, because an agent you cannot see is
-    an agent nobody would notice going wrong.
-
-    A tab with no agents still gets its accordion, empty - an empty
-    section drawn honestly beats a section invented to look busy.
-    """
-    built, not_built = discover()
-    sections: dict = {}
-
-    def open_section(key: str, label: str) -> dict:
-        if key not in sections:
-            sections[key] = {"key": key, "label": label, "agents": []}
-        return sections[key]
-
-    # The same keys the navigation payload uses, in the same order.
-    for m in built:
-        open_section(m.SCREEN_NAME.lower(), m.MENU_LABEL)
-    for name in not_built:
-        open_section(name.lower(), name.replace("_", " ").upper())
-    elsewhere = open_section("elsewhere", "EVERYWHERE ELSE")
-
-    for agent in every_agent():
-        entry = {
-            "name": agent["agent_name"],
-            "what_i_am_for": agent["what_i_am_for"],
-            "state": agent["state"],
-        }
-        claimed = agent.get("home_sections") or []
-        placed = False
-        for key in claimed:
-            section = sections.get(key)
-            if section is not None and section is not elsewhere:
-                section["agents"].append(entry)
-                placed = True
-        if not placed:
-            elsewhere["agents"].append(entry)
-
-    return {"sections": list(sections.values())}
-
-
-# =====================================================================
-# HOME BLOCKS - refreshed by an agent, never computed here
-# =====================================================================
-@app.post(cfg.API_PREFIX + "/agents/home_blocks/refresh")
-def refresh_home_blocks():
-    """Hand the block refresh to whichever agent claims the shape.
-
-    This file does no arithmetic of its own and never reads another
-    box's figures directly. It asks the supervisor; an agent reads
-    the noticeboard and answers. Rupee blocks arrive already
-    formatted; dollar costs and token counts arrive as raw numbers
-    and are formatted HERE, with the same two formatters the brief
-    endpoint uses, so a number is written the same way no matter
-    which endpoint carried it.
-
-    A non-finished job still answers 200 with its state and a why.
-    The page renders that honestly as "the refresh did not happen" -
-    a 500 would claim the server broke, when what actually happened
-    is a refusal, a queue or a stop, all of which are ordinary.
-    """
-    try:
-        went = _hand_this_to_someone(
-            "refresh_the_home_blocks",
-            goal="read the current block figures off the noticeboard",
-        )
-    except Exception as trouble:                                     # noqa: BLE001
-        return JSONResponse(
-            {"state": "error", "blocks": None,
-             "why": f"the agent layer could not be reached: {trouble}"},
-            status_code=500,
-        )
-
-    blocks = None
-    if went.state == "finished" and isinstance(went.answer, dict):
-        blocks = went.answer.get("blocks")
-        if isinstance(blocks, dict):
-            for usage_block in ("inky_usage", "claude_code_usage"):
-                raw = blocks.get(usage_block) or {}
-                blocks[usage_block] = {
-                    "cost_display": _usd(raw.get("cost_usd")),
-                    "input_display": _count(raw.get("input_tokens")),
-                    "output_display": _count(raw.get("output_tokens")),
-                }
-    return {"state": went.state, "blocks": blocks, "why": went.why}
-
-
-# =====================================================================
-# CALENDAR - shown and grown by an agent, through the supervisor
-# =====================================================================
-@app.get(cfg.API_PREFIX + "/calendar/events")
-def calendar_events():
-    """The dated events the calendar agent keeps on file.
-
-    Like the blocks above, this endpoint stores nothing and knows
-    nothing about where events live. It asks the supervisor, and the
-    agent answers out of its own memory. No events on file comes
-    back as an empty list, which is the truth, not a failure.
-    """
-    try:
-        went = _hand_this_to_someone(
-            "show_the_home_calendar",
-            goal="read the calendar events currently on file",
-        )
-    except Exception as trouble:                                     # noqa: BLE001
-        return JSONResponse(
-            {"state": "error", "events": None,
-             "why": f"the agent layer could not be reached: {trouble}"},
-            status_code=500,
-        )
-
-    answer = went.answer if went.state == "finished" and isinstance(went.answer, dict) else {}
-    return {"state": went.state,
-            "summary": answer.get("summary"),
-            "events": answer.get("events"),
-            "why": went.why}
-
-
-@app.post(cfg.API_PREFIX + "/calendar/events")
-def add_calendar_event(payload: dict = Body(...)):
-    """Add one dated event, through the same agent that shows them.
-
-    The shape checks here are deliberately shallow - is this even a
-    date, is this even words? - so obvious rubbish gets a 400 before
-    any agent wakes up. The agent re-checks both fields itself,
-    because a check that exists only at the door is not a rule, it is
-    a hope. Two checks, two layers, same shapes.
-    """
-    date = str(payload.get("date", "")).strip()
-    title = str(payload.get("title", "")).strip()
-
-    problems = []
-    try:
-        datetime.strptime(date, "%Y-%m-%d")
-    except ValueError:
-        problems.append("date must be shaped YYYY-MM-DD")
-    if not title:
-        problems.append("title must not be empty")
-    elif len(title) > 200:
-        problems.append("title must be 200 characters or fewer")
-    if problems:
-        return JSONResponse({"detail": "; ".join(problems)}, status_code=400)
-
-    try:
-        went = _hand_this_to_someone(
-            "add_a_calendar_event",
-            goal=f"add the event '{title[:80]}' on {date}",
-            expectation={"date": date, "title": title},
-        )
-    except Exception as trouble:                                     # noqa: BLE001
-        return JSONResponse(
-            {"state": "error", "events": None,
-             "why": f"the agent layer could not be reached: {trouble}"},
-            status_code=500,
-        )
-
-    answer = went.answer if went.state == "finished" and isinstance(went.answer, dict) else {}
-    return {"state": went.state,
-            "summary": answer.get("summary"),
-            "events": answer.get("events"),
-            "why": went.why}
-
-
-# =====================================================================
 # LIVE SSE + GOVERNOR STATUS (Phase 12.3 - strictly additive)
 #     GET /api/main_menu/live streams this screen's own trace-ledger
 #     rows as they land, exactly the way every FastAPI screen got one
 #     in Phase 12.2 - the menu was the one screen without its own.
-#     GET /api/main_menu/governor answers what the Resource Governor
-#     sees right now, per model - read from Shared_By_All_Agents over
-#     import like read_agent_cards above, never from another screen.
 # =====================================================================
 from fastapi.responses import StreamingResponse                          # noqa: E402
-from Shared_By_All_Screens.tail_the_trace_ledger import (                # noqa: E402
+from tail_the_trace_ledger import (                # noqa: E402
     stream_screen_events,
 )
 
@@ -638,7 +401,7 @@ async def stream_live_events():
 def local_ai():
     """The real local Ollama engines on this laptop, read live from
     Ollama's own /api/tags - never hardcoded, never a guessed name
-    (Rule 4: no name is ever typed in). Fully local, same class of
+    (CLAUDE.md Rule 17: no name is ever typed in). Fully local, same class of
     access call_the_local_model.py already uses directly - not a cloud
     call, nothing leaves the laptop (C1). Ollama not running is an
     honest empty state, not an error dressed up as one.
@@ -665,59 +428,6 @@ def local_ai():
     return {"reachable": True, "engines": engines}
 
 
-@app.get(cfg.API_PREFIX + "/agents/{name}/files")
-def agent_files(name: str):
-    """The real files under one agent's own folder, for the ring's
-    click-through file graph. A plain directory walk, Tier 0, no model
-    call - the same 'discovered, never configured' rule agents/fleet
-    above already follows, one level deeper. Never another agent's
-    folder: the name is stripped down to what an agent folder can
-    actually be named before it touches disk.
-    """
-    safe = "".join(c for c in name if c.isalnum() or c == "_")
-    folder = PROJECT_ROOT / "Agents" / safe
-    if not safe or not folder.is_dir():
-        return JSONResponse(
-            {"has_data": False, "files": [], "reason": "no such agent folder"},
-            status_code=404)
-    files = []
-    for path in sorted(folder.rglob("*")):
-        if path.is_dir() or "__pycache__" in path.parts:
-            continue
-        rel = path.relative_to(folder)
-        files.append({
-            "path": str(rel).replace("\\", "/"),
-            "kind": rel.parts[0] if len(rel.parts) > 1 else "root",
-            "size_bytes": path.stat().st_size,
-        })
-    return {"has_data": True, "agent": safe, "files": files}
-
-
-@app.get(cfg.API_PREFIX + "/governor")
-def governor_status():
-    """What the Resource Governor sees right now, never merged or guessed.
-
-    A governor that cannot be asked is a governor nobody trusts, so this
-    hands back its own honest answer verbatim. If the governor module
-    itself will not load, that failure is the answer - an unavailable
-    status is never dressed up as an idle one.
-    """
-    try:
-        from the_resource_governor import status as status_now
-    except Exception as trouble:                       # pragma: no cover
-        return JSONResponse(
-            {"has_data": False,
-             "reason": f"resource governor could not be loaded: {trouble}"},
-            status_code=503)
-    try:
-        return JSONResponse(status_now())
-    except Exception as trouble:
-        return JSONResponse(
-            {"has_data": False,
-             "reason": f"resource governor status failed: {trouble}"},
-            status_code=502)
-
-
 # =====================================================================
 # STATIC FILES - the shared look
 # =====================================================================
@@ -742,19 +452,6 @@ if getattr(cfg, "USE_NEXT_UI", False):
     if _next_dist is not None and (_next_dist / "index.html").exists():
         app.mount("/", StaticFiles(directory=_next_dist, html=True),
                   name="next_ui")
-
-
-# The Svelte pilot's built assets (U1). Mounted last and only when the
-# flag is on with a real build present: routes registered above it - every
-# /api route included - are matched first, so this can only ever catch
-# what the pilot itself asks for (its hashed /assets files). Flag off or
-# no dist/ means this block never runs and nothing about the screen
-# changes.
-if getattr(cfg, "USE_SVELTE", False):
-    _svelte_dist = getattr(cfg, "SVELTE_DIST", None)
-    if _svelte_dist is not None and _svelte_dist.is_dir():
-        app.mount("/", StaticFiles(directory=_svelte_dist, html=True),
-                  name="svelte_pilot")
 
 
 # =====================================================================

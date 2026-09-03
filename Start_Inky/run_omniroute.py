@@ -59,7 +59,7 @@ SECRET_VARS = {
 def read_env_file() -> dict[str, str]:
     """The repo-root .env as a plain dict. Same line format the Model
     screen's settings parser reads - one small copy, not a shared
-    module (AGENTS.md rule 4)."""
+    module (CLAUDE.md Rule 5)."""
     values: dict[str, str] = {}
     if ENV_FILE.exists():
         for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
@@ -117,7 +117,7 @@ def gateway_command() -> list[str]:
 def _disable_dashboard_login(env_vars: dict[str, str]) -> None:
     """After OmniRoute boots, log in and disable the requireLogin setting
     so the Model screen's iframe (D10) loads the dashboard directly without
-    prompting for a password. Self-contained - no shared module (Rule 4).
+    prompting for a password. Self-contained - no shared module (CLAUDE.md Rule 5).
     """
     import json
     import time

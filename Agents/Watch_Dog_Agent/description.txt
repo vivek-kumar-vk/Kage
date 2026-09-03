@@ -1,1 +1,0 @@
-Walks INKY's health on a schedule - screens up, local models up, trace-ledger size, disk free, backups present, teacher-index staleness, QA's recent outcomes - and reports one honest verdict per check. Alerts; never fixes.

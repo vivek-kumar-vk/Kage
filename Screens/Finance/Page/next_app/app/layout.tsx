@@ -1,56 +1,33 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
+import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
+// next/font hashes the family name, so every face is exposed as a CSS variable
+// and referenced through it (globals.css + tailwind.config.ts). Naming the
+// family literally would silently fall back to Georgia / ui-monospace.
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-serif",
+});
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+});
+
 export const metadata: Metadata = {
-  title: "INKY - Finance",
-  description:
-    "Real money, honestly stated - surplus, the four gates, the health score, holdings, debt and portfolio structure. No recommendation is ever computed here (C5).",
+  title: "Finance OS",
+  description: "Personal finance operating system",
 };
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  viewportFit: "cover",
-};
-
-const RESPONSIVE_CONTRACT = `
-@media (max-width: 1100px) {
-  .grid-main { grid-template-columns: 1fr; }
-  .speedo-nav { width: 100% !important; height: auto !important; }
-  .speedo-nav svg { width: 100%; height: 64px; }
-}
-@media (max-width: 820px) {
-  .rail { flex-direction: row; flex-wrap: wrap; }
-  .rail > * { flex: 1 1 260px; }
-  .tab-strip { justify-content: space-between; }
-  .sub-tab-strip { justify-content: flex-start; }
-}
-@media (max-width: 560px) {
-  .page-title { font-size: 1.1rem; }
-  .stats-strip { grid-template-columns: repeat(2, 1fr); }
-  .tab-strip { gap: 6px; }
-  .tab-strip button { flex: 1 1 auto; padding-left: 10px; padding-right: 10px; }
-  .gate-row { flex-direction: column; align-items: flex-start; gap: 4px; }
-}
-@media (max-width: 420px) {
-  .header-pad { padding-left: 12px; padding-right: 12px; }
-}
-@media (orientation: landscape) and (max-height: 560px) {
-  .page-header { position: static; }
-  .page-main { padding-top: 8px; }
-}
-`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">
-        {/* The shared look, published by this screen's own server at
-            /shared exactly as it is for every other INKY page - the
-            palette cannot drift between the old page and this one. */}
-        <link rel="stylesheet" href="/shared/colours_and_fonts.css" />
-        <link rel="stylesheet" href="/shared/responsive_layout.css" />
-        <style>{RESPONSIVE_CONTRACT}</style>
+    <html lang="en">
+      <body
+        className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable} font-sans bg-carbon-dark text-gray-200`}
+      >
         {children}
       </body>
     </html>

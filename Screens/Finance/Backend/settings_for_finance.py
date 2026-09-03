@@ -1,4 +1,4 @@
-﻿"""Settings for the Finance screen.
+"""Settings for the Finance screen.
 
 Everything adjustable lives here, so you never go hunting through the
 server file to change a port or a folder name.
@@ -29,12 +29,17 @@ PORT = 8001
 HOST = "127.0.0.1"      # 127.0.0.1, not 0.0.0.0 - nothing else on the
                         # network can reach this. Local means local.
 
-# The page this screen serves. Not written yet - until it is, the server
-# hands over a plain "not built yet" page instead.
-PAGE = SCREEN / "Page" / "page_for_finance.html"
+# The page this screen serves: the Next static export, mirrored into
+# Backend/app/static by Backend/build.py. server_for_finance.py mounts
+# the app, which serves that export itself; PAGE exists only so the
+# launcher can print "page ready" instead of "not built yet".
+PAGE = HERE / "app" / "static" / "index.html"
 
-# Everything this screen owns.
-CALCULATIONS = SCREEN / "Calculations"
+# The Next.js source the export is built from (`npm run build` there,
+# then Backend/build.py mirrors out/ into app/static/).
+NEXT_SOURCE = SCREEN / "Page" / "next_app"
+
+# Private records this screen still owns (gitignored).
 SAVED_RECORDS = SCREEN / "Saved_Records"
 
 # Colours, fonts and background art are shared by every screen so they
@@ -51,16 +56,6 @@ API_PREFIX = "/api/finance"
 # screen's own code plus everything shared. Data folders are excluded
 # inside code_change_monitor.py, so ordinary clicks never look
 # like code changes.
-WATCHED_FOLDERS = [SCREEN, PROJECT_ROOT / "Shared_By_All_Screens"]
+WATCHED_FOLDERS = [SCREEN, PROJECT_ROOT / "Shared_By_All_Screens"]  # the shared tree is now just Look_And_Feel + the noticeboard
 
-# ---------------------------------------------------------------------
-# NEXT.JS REBUILD FLAG (Phase 12.4) - RETIRED 2026-08-30
-# ---------------------------------------------------------------------
-# The Finance screen no longer serves anything under Screens/Finance/.
-# server_for_finance.py mounts finance-os/backend's create_app()
-# instead, which serves its own Next static export. These two settings
-# are dead; server_for_finance.py does not read them. Kept only so an
-# older tool that imports this module does not KeyError.
-USE_NEXT_UI = False
-NEXT_DIST = SCREEN / "Page" / "next_app" / "out"
 

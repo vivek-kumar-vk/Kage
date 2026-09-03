@@ -3,14 +3,18 @@
 Everything adjustable lives here, so you never go hunting through the
 server file to change a port or a folder name.
 
-This screen is a complete independent component (AGENTS.md rule 4 / D-W6):
+This screen is a complete independent component (CLAUDE.md Rule 5 / D-W6):
 it does NOT read Shared_By_All_Screens/read_screen_settings.py or any
 other shared module. The few values the launcher needs by convention -
 SCREEN_NAME, PORT, HOST - are plain module attributes it can read
 without importing anything of ours.
 
-D10.1: this screen serves no page of its own - GET / 307-redirects to
-OmniRoute's dashboard (see server_for_model.py). No PAGE / Next export.
+This screen serves its own small page (Page/page_for_model.html).
+It used to 307-redirect straight to the gateway's dashboard, which made
+the tab a dead end whenever the gateway was down - the browser left Kage
+and landed on a connection error with no way back. The page now embeds
+the dashboard when the gateway answers and explains itself when it does
+not.
 """
 
 from pathlib import Path
@@ -29,10 +33,15 @@ SCREEN_LABEL = "Model"
 # ---------------------------------------------------------------------
 # SERVING
 # ---------------------------------------------------------------------
-# Own port, so this screen can be worked on alone. 8004 is Enhancement;
-# this screen takes 8005.
+# Own port, so this screen can be worked on alone. See
+# Start_Inky/ports_for_inky.json for the whole map.
 PORT = 8005
 HOST = "127.0.0.1"          # local means local
+
+# The page this screen serves. The launcher reads this attribute to say
+# "page ready" instead of "data only" - see
+# Shared_By_All_Screens/read_screen_settings.py.
+PAGE = SCREEN / "Page" / "page_for_model.html"
 
 # ---------------------------------------------------------------------
 # THE GATEWAY IT REPORTS ON

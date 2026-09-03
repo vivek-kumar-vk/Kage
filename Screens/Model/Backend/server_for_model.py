@@ -13,7 +13,7 @@ WHAT THIS FILE DOES
 
 WHAT THIS FILE MUST NEVER DO
     Import from Shared_By_All_Screens/ or Shared_By_All_Agents/. This
-    screen is a complete independent component (AGENTS.md rule 4): its
+    screen is a complete independent component (CLAUDE.md Rule 5): its
     trace/health/settings helpers, if it ever needs them, are its own,
     not the shared folders'. It also never reaches into another screen's
     code.
@@ -36,7 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_for_model as cfg  # noqa: E402
 
 from fastapi import FastAPI  # noqa: E402
-from fastapi.responses import RedirectResponse  # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 
 app = FastAPI(title=cfg.SCREEN_LABEL)
 
@@ -46,8 +46,20 @@ app = FastAPI(title=cfg.SCREEN_LABEL)
 # =====================================================================
 @app.get("/")
 def page():
-    # Direct redirect to OmniRoute's dashboard
-    return RedirectResponse(url=cfg.GATEWAY_BASE_URL, status_code=307)
+    """This screen's own page.
+
+    NOT a redirect to the gateway. A redirect leaves Kage entirely, and
+    when the gateway is down the browser lands on a connection error
+    with no way back to the menu. The page embeds the gateway dashboard
+    when it is up and says what to start when it is not - it asks
+    /api/model/overview below to find out which.
+    """
+    if not cfg.PAGE.is_file():
+        return JSONResponse(
+            {"status": "page missing", "expected": str(cfg.PAGE)},
+            status_code=503,
+        )
+    return FileResponse(cfg.PAGE)
 
 
 # =====================================================================

@@ -10,20 +10,21 @@ private notes, no agent memory. Screens that normally show saved data start
 empty; you supply your own. Real data is meant to live outside this repo
 (Google Drive) — see [`PLAN.md`](PLAN.md) for the roadmap.
 
-Target stack (`AGENTS.md` Rule 3): **frontend** React 19 + Tailwind + Next.js
-(+ Three.js where it earns it); **backend** Node.js + Express. New and rewritten
-code uses only these. The screens land there one at a time — see
-[`PLAN.md`](PLAN.md) item 9.
+Stack (`CLAUDE.md` Rule 4): **frontend** React 19 + Tailwind + Next.js (+ Three.js
+where it earns it); the **backend runtime is chosen per service** — the seam between
+screens is HTTP, so each one uses the runtime whose libraries its work actually lives
+in, and never imports across the line.
 
-- **Frontend.** Finance (`finance-os/`), Learning and the Model screen are
+- **Frontend.** Finance, Learning and the Model screen are
   React 19 / Next.js (`output: "export"`, static). Main Menu and Enhancement
   still serve plain HTML / CSS / JS with an optional prebuilt Next.js UI
   (`Page/next_app/out`) picked up automatically if you build it. Charts:
   hand-rolled SVG / **Apache ECharts** (vendored).
-- **Backend.** Node.js + Express is the target. Today it's mixed: Finance
-  (`finance-os/backend`) and the other screens run **FastAPI + Uvicorn** on
-  their own ports (Main Menu 8000, Finance 8001, Learning 8002, Enhancement
-  8004, Model 8005), pending the P4 migration.
+- **Backend.** Mixed on purpose. **FastAPI + Uvicorn**: Main Menu `8000`,
+  Finance `8001`, Learning `8002`, Agent Deck `8004`, Model `8005`.
+  **Node + Express**: Anime `8006` (local-only) and the MCP servers. Each screen's port is written in exactly one place —
+  `Screens/<Name>/Backend/settings_for_<name>.py`; `Start_Inky/ports_for_inky.json`
+  is a regenerated snapshot of them.
 - **Model gateway.** An **OmniRoute** instance on `127.0.0.1:8003` (started by
   `Start_Inky/run_omniroute.py`); the Model screen reports on it. Config note:
   `Screens/Model/GATEWAY_CONFIG.md`.
@@ -31,8 +32,8 @@ code uses only these. The screens land there one at a time — see
 - **Storage.** Local flat files + **SQLite** today; moving to a Google
   Drive–backed layer ([`PLAN.md`](PLAN.md) item 2). Nothing personal
   is committed here.
-- Agents are described only (`Agents/<name>/description.txt`); their code,
-  memory and the optional local-LLM path are not included.
+- Agents live inside the Agent Deck screen (`Screens/Agents/AI_Agents/`). The
+  older root-level agent layer was removed in 2026-09-03 — it could not run.
 
 ## Run it
 
@@ -48,7 +49,8 @@ py -m venv .venv
 .venv\Scripts\python Start_Inky\start_every_screen.py
 ```
 
-Then open <http://127.0.0.1:8000>. Ctrl+C in that window stops everything.
+Then open <http://127.0.0.1:8000> — that address is the Main Menu and nothing else.
+Ctrl+C in that window stops everything.
 
 `Start_Inky\Start_Everything.bat` does the venv + install + launch in one
 double-click.

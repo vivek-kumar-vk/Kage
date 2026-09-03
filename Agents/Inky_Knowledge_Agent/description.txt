@@ -1,1 +1,0 @@
-Carries the complete map of this codebase - every screen, port, module, record, rule and recipe - so a change starts from knowledge instead of from a fresh scan of the whole repository.

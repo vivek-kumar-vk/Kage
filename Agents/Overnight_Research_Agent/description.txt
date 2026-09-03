@@ -1,1 +1,0 @@
-Finds real material online or in Dump/, saves it, and asks the local Ollama model to extract what matters into the shared knowledge base - no API model, no per-call cost, nothing leaves this laptop.

@@ -1,0 +1,83 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model — Kage</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#12161b; --line:#232a33; --ink:#dfe6ee;
+          --dim:#8b98a8; --ok:#57d9a3; --bad:#ff6b6b; }
+  * { box-sizing:border-box; }
+  html,body { height:100%; margin:0; background:var(--bg); color:var(--ink);
+              font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  header { display:flex; align-items:center; gap:12px; padding:10px 16px;
+           border-bottom:1px solid var(--line); background:var(--panel); }
+  header b { letter-spacing:.14em; font-weight:600; }
+  a { color:var(--dim); text-decoration:none; }
+  a:hover { color:var(--ink); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--dim); }
+  .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
+  #state { color:var(--dim); }
+  .spacer { flex:1; }
+  #frame { width:100%; height:calc(100vh - 45px); border:0; display:none; }
+  #down { display:none; max-width:640px; margin:14vh auto; padding:24px;
+          border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+  #down h2 { margin:0 0 10px; font-size:15px; }
+  #down p { color:var(--dim); }
+  code { background:#0b0d10; border:1px solid var(--line); border-radius:4px;
+         padding:2px 6px; display:inline-block; }
+  ul { padding-left:18px; } li { margin:6px 0; }
+</style>
+
+<header>
+  <b>MODEL</b>
+  <span class="dot" id="dot"></span>
+  <span id="state">checking the gateway…</span>
+  <span class="spacer"></span>
+  <a href="http://127.0.0.1:8000/">← Main Menu</a>
+</header>
+
+<iframe id="frame" title="Gateway dashboard"></iframe>
+
+<section id="down">
+  <h2>The model gateway is not answering.</h2>
+  <p id="why"></p>
+  <p>This screen only <em>reports on</em> the gateway — it does not run it.
+     Start it, then reload:</p>
+  <ul>
+    <li><code>.venv\Scripts\python Start_Inky\run_omniroute.py</code></li>
+    <li>or double-click <code>Start_Inky\Start_Everything.bat</code>, which
+        starts the gateway in its own window before the screens.</li>
+  </ul>
+</section>
+
+<script>
+// Ask our own backend, never the gateway directly: the backend already
+// knows the gateway's address and key, and a fetch straight at the
+// gateway from this page would be a cross-origin request.
+async function check() {
+  const dot = document.getElementById('dot');
+  const state = document.getElementById('state');
+  let info;
+  try {
+    info = await (await fetch('/api/model/overview')).json();
+  } catch (e) {
+    info = { gateway: 'unreachable', why: String(e) };
+  }
+  if (info.gateway === 'ok') {
+    dot.className = 'dot ok';
+    const n = (info.models || []).length;
+    state.textContent = `${info.base_url} · ${n} model${n === 1 ? '' : 's'}`;
+    const frame = document.getElementById('frame');
+    frame.src = info.base_url;
+    frame.style.display = 'block';
+    document.getElementById('down').style.display = 'none';
+  } else {
+    dot.className = 'dot bad';
+    state.textContent = info.gateway;
+    document.getElementById('why').textContent = info.why || '';
+    document.getElementById('frame').style.display = 'none';
+    document.getElementById('down').style.display = 'block';
+  }
+}
+check();
+setInterval(check, 10000);   // it comes back up without a reload
+</script>

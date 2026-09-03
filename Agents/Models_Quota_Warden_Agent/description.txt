@@ -1,1 +1,0 @@
-Watches the model call log for providers that keep answering HTTP 402/429 - quota spent - and demotes a dead provider to the back of every router chain it sits in. A config change like that is never silent: it is logged in the warden's own change ledger, traced, and flagged for a human.

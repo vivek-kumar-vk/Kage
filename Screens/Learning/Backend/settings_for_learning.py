@@ -10,4 +10,10 @@ PORT = 8002
 API_PREFIX = "/api/learning"
 NEXT_DIST = SCREEN / "Page" / "next_app" / "out"
 USE_NEXT_UI = True
+
+# The launcher reads PAGE to decide whether to print "page ready" or
+# "data only, page not written yet". This screen's page is the Next
+# export's index.html, so point at it - without this the launcher called
+# a fully working screen unbuilt on every start.
+PAGE = NEXT_DIST / "index.html"
 DB_PATH = HERE / "learning.db"

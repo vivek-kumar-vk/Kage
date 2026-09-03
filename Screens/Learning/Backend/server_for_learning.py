@@ -44,7 +44,7 @@ def root():
 
 
 # D17.1 — the owner's PII corpus (gitignored Context/, never committed),
-# served to localhost screens over HTTP (Office M7 reads it; Rule 4 — no
+# served to localhost screens over HTTP (Office M7 reads it; CLAUDE.md Rule 5 — no
 # shared folder). Filename allowlist only; nothing else under Context/ exists
 # to this API.
 CONTEXT_DIR = Path(__file__).resolve().parent.parent / "Context"

@@ -59,29 +59,12 @@ EXTERNAL_LINKS: dict[str, str] = {}
 # screen's own code plus everything shared. Data folders are excluded
 # inside code_change_monitor.py, so ordinary clicks never look
 # like code changes.
-MONITORED_FOLDERS = [SCREEN, PROJECT_ROOT / "Shared_By_All_Screens"]
-
-# ---------------------------------------------------------------------
-# SVELTE PILOT FLAG
-# ---------------------------------------------------------------------
-# False by default: the hand-drawn HTML page is served exactly as it
-# always was, and nothing else in this screen behaves one bit
-# differently. True (and the built app present) swaps the page served
-# at / for the Svelte 5 pilot under Page/svelte_app/dist - every
-# /api route keeps working either way. Rollback is flipping this to
-# False, or git checkout of the pre-main-menu-svelte commit.
-USE_SVELTE = True
-
-# Where the pilot's built output must sit for the flag to have an
-# effect. A flag turned on with no build present falls back to the
-# ordinary page rather than serving a blank screen.
-SVELTE_DIST = SCREEN / "Page" / "svelte_app" / "dist"
+MONITORED_FOLDERS = [SCREEN, PROJECT_ROOT / "Shared_By_All_Screens"]  # the shared tree is now just Look_And_Feel + the noticeboard
 
 # ---------------------------------------------------------------------
 # NEXT.JS REBUILD FLAG (Phase 12.3)
 # ---------------------------------------------------------------------
-# Same on/off pattern as USE_SVELTE above, one rung newer: False by
-# default means every existing page behaves exactly as it always did.
+# False by default means every existing page behaves exactly as it always did.
 # True (and the static export present) swaps the page served at / for
 # the Next.js rebuild under Page/next_app/out - every /api route keeps
 # working either way. Rollback is flipping this to False, or git

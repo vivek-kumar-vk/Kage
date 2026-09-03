@@ -1,10 +1,11 @@
 # PLAN
 
 The single source of truth for everything **not yet done**. One ordered backlog, one
-item at a time. Design rules live in [`AGENTS.md`](AGENTS.md); this file replaced
-`WAYFINDER.md`, `PLANNED_WORK.md`, `immediate_plan.md` and `details` (2026-09-02).
+item at a time. Rules live in [`CLAUDE.md`](CLAUDE.md), numbered decisions in
+[`AGENTS.md`](AGENTS.md). This file replaced `WAYFINDER.md`, `PLANNED_WORK.md`,
+`immediate_plan.md` and `details` (2026-09-02) and absorbed `TOMORROW.md` (2026-09-03).
 
-Rule (`AGENTS.md` Rule 6): anything named as "later" lands here **and** as a card in
+Rule (`CLAUDE.md` Rule 10): anything named as "later" lands here **and** as a card in
 the AGENT DECK board. When an item ships, delete it from this file — shipped work is
 recorded in git history and `AGENTS.md` decisions, not here.
 
@@ -22,14 +23,67 @@ Status: `queued` | `in progress` | `parked`.
 | 4 | AGENT DECK chambers (pixel V1.5) + V2 | queued |
 | 6 | finance-os Overview follow-ups | queued |
 | 7 | Observability on every tab | queued |
-| 8 | Remove `Shared_By_All_*` | queued |
+| 8 | Remove `Shared_By_All_Screens/` — mostly done 2026-09-03 | queued |
 | 9 | Python/FastAPI → Node + Express | queued |
 | 10 | Anime-removal cleanup in framework UIs | queued |
 | 11 | dsh local-model observability | parked |
 | 12 | Learning OS rebuild (D16): Ember Studio UI + agent crew | **in progress** |
 | 13 | Investments end-to-end (Analyse / Analysis / Trade Desk / market MCP) | **shipped 2026-09-02** — residue tracked below |
 
-Items 1, 2 and 12 run in parallel (different hands). Everything else is sequential.
+Items 1, 2 and 12 run in parallel . Everything else is sequential.
+
+### Next up (folded in from `TOMORROW.md`, 2026-09-03)
+
+In order. Hours are focused build hours; **you** marks a step only the owner can do.
+
+**A — Storage seam + RAG (item 2), 9-13 h.** Nothing personal on local disk.
+**you** Google setup (project, Drive API, service account key into the gitignored
+path, folder shared) ~30 min -> adopt the Node Drive MCP as its own process
+(`mcp_servers.json`; Kage never spawns one) -> the seam
+(`read_doc`/`write_doc`/`list_docs`/`delete_doc`/`search`, logical paths) -> RAG on
+top (chunk+overlap, `nomic-embed-text`, cosine, sourced Markdown) -> honest
+"Drive unreachable" everywhere -> wire into the launcher, port snapshot, menu glyph.
+Brief: `.scratch/drive-storage/QWEN_BUILD_PROMPT.md` + `map.md`; decisions D11-D11.4.
+
+**B — Finance data into Drive, pulled back live (items 1 + 13 residue), 9-13 h.**
+Depends on A; starting early writes the data twice. **you** re-import the CAS PDF
+(Investments -> IMPORT CAS PDF) -> rebuild `lots` from `my_investments.csv` units
+(root cause: `backfill_from_old_records.py` §3 calls `upsert_holding(mode="set_snapshot")`;
+only `mode="add_lot"` writes a lot — this one fix unblocks null XIRR *and* the flat
+net-worth ridge) -> move the finance corpus to Drive -> finance-os reads through the
+seam, not the filesystem -> index the corpus into RAG -> verify in a browser.
+Still owed by you: `Screens/Finance/Reference_Data/Human_Checklists/What_To_Fill_In.txt`
+(term life, EPF, Slice balance, dependants, debt ledger, expenses, brokers, tax year)
+and decisions Q10 / Q11 / Q12.
+
+**C — Repo hygiene. Done 2026-09-03.** Rules rewritten for Claude-only into
+`CLAUDE.md`, project memory written, ports fixed, ~430 MB of dead trees deleted,
+the unrunnable root agent layer removed, and the Finance app moved under its own
+screen. Decisions D21 through D21.5.
+Remaining from this block: seed the four "two runtimes, one launcher" Learning rooms
+from D21.1 (~1 h, part of item 12).
+
+### Rough hours on the rest
+
+| # | Item | Hours |
+|---|------|-------|
+| 3 | Wire finance-os agents through OmniRoute (blocked on Q10/Q12) | 2-3 |
+| 4 | AGENT DECK V2 — real agents, runs table, DM rooms, TaskBrief | 8-12 |
+| 6 | finance-os Overview follow-ups (month selector, benchmark line, SMS import) | 4-6 |
+| 7 | Observability on every tab (5 screens) | 8-12 |
+| 8 | Delete `Shared_By_All_*` entirely | 6-10 |
+| 9 | Runtime choice per service — rescoped by D21.1 | ~0 |
+| 10 | Anime-removal cleanup in the Next/Svelte menu variants | 1-2 |
+| 11 | dsh local-model observability (parked) | 4-6 |
+| 12 | Learning M6 — THM lab, day template, Planner rebalance | 6-8 |
+| 12 | Learning M7 — OFFICE screen (:8008), job hunt | 8-12 |
+| 12 | Learning M8 — crew live on OmniRoute (gated on real data) | 10-14 |
+| 12 | Room content: 101 rooms have 0 steps, 0 cards | 2-3 + your reading |
+
+Whole backlog: roughly **80-120 focused hours** (was 110-170 before D21.1 rescoped
+item 9). Estimates assume Claude writes and verifies, the owner reviews and answers
+the blocking questions; they exclude the CAS import, the owner's figures, the Google
+setup, and the hours spent actually studying the Learning rooms.
 
 ---
 
@@ -47,10 +101,10 @@ Goals still need your figures.
 
 Port the already-solved CAS parsing (`casparser`), market data (mfapi.in / AMFI /
 yfinance), tax + planning rules and ISIN↔AMFI mapping from the old `Screens/Finance`
-UI, and backfill transactions into `finance-os/backend`'s `finance.db`.
+UI, and backfill transactions into `Screens/Finance/Backend/app`'s `finance.db`.
 
 **Inputs / briefs**
-- `finance-os/finance-datamigration.md` — detail (gitignored; PII, local only).
+- `Screens/Finance/finance-datamigration.md` — detail (gitignored; PII, local only).
 - `.scratch/finance-os-port/QWEN_PORT_PROMPT.md` — the port brief.
 - `.scratch/finance-os-port/APPLY_PLAN.md`, `COLLECTED_ANSWERS.md` — decisions Q1–Q12,
   locked 2026-08-31.
@@ -138,8 +192,9 @@ D15 2D pixel-art office replaced the 3D stage 2026-09-02.
   adds a `runs` table + RUNS panel, DM rooms, per-agent model pinning via new optional
   `office.json` keys, and the leftover `TaskBrief` panel. 26 agent profiles today.
   Does **not** need Q10/Q12 — those govern the *finance-os* agents (item 3), not this
-  screen's gateway, which is already live. Ties to items 3 and 8. Repo-root `Agents/` +
-  `Shared_By_All_Agents/` still unmined.
+  screen's gateway, which is already live. Ties to items 3 and 8. (The repo-root
+  `Agents/` + `Shared_By_All_Agents/` reuse pool this used to point at was deleted
+  2026-09-03 — it could not run; see the decision log.)
 - **V3 (optional)** — board × agents: pick an `ENH-n`, ask an agent.
 - **Responsive polish (owner-led, later; ENH-19).** D18.7 made the floor
   re-layout per viewport (fixed 140×128 zones, flex walkways, camera clamped to
@@ -147,15 +202,14 @@ D15 2D pixel-art office replaced the 3D stage 2026-09-02.
   his 1920×1080 laptop and took the remaining polish himself: on short
   viewports (canvas under ~790 px tall) the integer scale drops to 2× and rooms
   read small in wide corridors; very small windows crop the plan edge.
-- **Build method:** Qwen 3-Max, one unit per turn, backend/frontend alternating, each
-  gated. Apply harness: `Stage_agents/apply_new.ps1` + `watch.ps1`.
+- **Build method:** Claude, as with everything else since 2026-09-03.
 
 ---
 
 ## 6 — finance-os Overview follow-ups
 
 The Aurum rebuild shipped 2026-09-02 (`AGENTS.md` D13/D13.1-3,
-`finance-os/DECISIONS.md` FD5+FD6). Left open:
+`Screens/Finance/DECISIONS.md` FD5+FD6). Left open:
 
 - Interactive month selector in the header — the pill is display-only today.
   **Brief written 2026-09-02:** `.scratch/glm-briefs/3_FINANCE_frontend_overview.md`.
@@ -175,14 +229,14 @@ The Aurum rebuild shipped 2026-09-02 (`AGENTS.md` D13/D13.1-3,
 
 On each tab (Finance, Learning, AGENT DECK, Model, Main Menu), pick one existing block
 and replace it with an observability feature: live health, request/latency, error feed,
-or a trace view for that screen. Each block is self-contained per Rule 4 — it reads its
+or a trace view for that screen. Each block is self-contained per `CLAUDE.md` Rule 5 — it reads its
 own screen's data directly, no shared module.
 
 ---
 
-## 8 — Remove `Shared_By_All_Agents/` and `Shared_By_All_Screens/` entirely
+## 8 — Remove `Shared_By_All_Screens/` entirely
 
-End state: both directories gone (`AGENTS.md` Rule 5). Every currently-shared function
+End state: both directories gone (`CLAUDE.md` Rule 6). Every currently-shared function
 moves into the single screen/agent that uses it; genuinely multi-consumer logic is
 duplicated per consumer, not shared.
 
@@ -196,10 +250,14 @@ Known heavy pieces: `read_and_write_numbers.py` (the noticeboard),
 
 ---
 
-## 9 — Stack migration: Python/FastAPI → Node.js + Express
+## 9 — Runtime choice per service  *(rescoped by D21.1 — no longer a migration)*
 
-Per `AGENTS.md` Rule 3. One screen at a time (Main Menu, Finance, Learning, Agents),
-keeping ports and the plain-page fallback behaviour.
+**Not a migration any more.** Per `CLAUDE.md` Rule 4 / D21.1 each service keeps the
+runtime whose libraries its work lives in: Python/FastAPI for finance-os, RAG, the
+Learning backend and the Main Menu; Node/Express for the Agent Deck's SSE fan-out,
+Anime and the MCP servers. Nothing is rewritten for the sake of its language. What is
+left of this item is only the discipline — every cross-language call stays on HTTP,
+and no service imports across the line.
 
 ---
 
@@ -294,7 +352,6 @@ re-built and served. Residue:
 |------|-----------|
 | `.scratch/drive-storage/` | Item 2 build brief + turn map (paste-ready for Qwen) |
 | `.scratch/glm-briefs/` | The four parallel GLM 5.3 briefs + per-chat context packs (2026-09-02) |
-| `.scratch/agents-chambers/` | Item 4 chambers brief — **OBSOLETE**, superseded by D15's 2D build |
 | `.scratch/finance-os-port/` | Item 1 port brief, apply plan, locked answers |
 | `.scratch/dsh-local-model/PLAN.md` | Item 11 plan |
 | `.scratch/agents-workspace/` | AGENT DECK V1 brief — shipped; kept as the house-style template |
@@ -303,16 +360,14 @@ re-built and served. Residue:
 | `.scratch/finance-telemetry/HARNESS.md` | Shared local-model run harness |
 | `.scratch/lm-ui-gaps/` | Local-model UI-gap ledger + prompt contract |
 | `.scratch/model-page-gateway/` | OmniRoute gateway wayfinder + issues — shipped |
-| `.scratch/_archive/` | Superseded passes (finance realism F1, telemetry skin, LiteLLM) |
 | `qwen_agent_port/` | Item 1 old-code extracts (gitignored) |
-| `Stage_agents/` | Qwen turn-apply harness for item 4 |
 
 ---
 
 ## Dropped
 
 - **Wire Finance telemetry panels to live endpoints** (old P8). Targeted
-  `Screens/Finance/Page/next_app/`, which `finance-os/` V1 replaced. finance-os owns
+  `Screens/Finance/Page/next_app/`, which the V1 rebuild replaced. That rebuild owns
   Finance data wiring now.
 - **Finance realism pass, F1 two-livery** (old P9). Built (`5b72750`), then superseded
   by the finance-os V1 cutover (`657774d`). See `AGENTS.md` D7.

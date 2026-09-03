@@ -1,1 +1,0 @@
-Arithmetic over records that already exist - how much of the portfolio is the same company twice, which sectors it leans into, and what return the cashflows actually produced. Reads Market_Data_Agent's refreshed NAV ledgers as files when it wants price freshness; analysis and fetching stay separate jobs.

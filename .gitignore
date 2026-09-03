@@ -19,11 +19,13 @@ node_modules/
 **/next_app/out/
 **/next_app/.next/
 **/next_app/next-env.d.ts
+*.tsbuildinfo
 **/svelte_app/build/
 **/svelte_app/.svelte-kit/
 dist/
 
 # --- OS / editor ---
+.obsidian/
 .DS_Store
 Thumbs.db
 desktop.ini
@@ -48,10 +50,10 @@ Dump/
 
 # --- Runtime-generated private data (NEVER commit) ---
 **/Saved_Records/
-Shared_By_All_Screens/Knowledge_Base/
-Shared_By_All_Screens/Trace_Ledger/
+Main_Menu/Backend/Trace_Ledger/*.jsonl
 Shared_By_All_Screens/Current_Numbers/NEEDS_HUMAN.csv
 Shared_By_All_Screens/Current_Numbers/WAITING_FOR_YOU.csv
+Main_Menu/Backend/dev_auto_refresh_toggle.json
 Shared_By_All_Agents/Lease_Board/
 Shared_By_All_Agents/*_state.json
 Shared_By_All_Agents/*_requests.json
@@ -62,9 +64,14 @@ Documentation/Daily_Notes/
 restart_requested.flag
 
 # --- Databases ---
+# The .bak-* forms matter: a hand-made backup like learning.db.bak-preD17 does
+# NOT match *.db, and two of them sat uncovered in this public repo.
 *.sqlite
 *.sqlite3
 *.db
+*.db.bak*
+*.db-*
+*.sqlite.bak*
 
 # --- Kage's project-managed Postgres cluster + gateway logs (T3/T4) ---
 Start_Inky/pgdata/
@@ -74,8 +81,7 @@ Tools/*.log
 personal-financial-blueprint.html
 Gemini_Generated_Image_*.png
 Screenshot *.png
-Screens/Finance/Page/next_app.7z
-finance-os/finance-datamigration.md
+Screens/Finance/finance-datamigration.md
 current.png
 
 # --- Claude Code session plans (ephemeral; outcomes land in PLAN.md) ---
@@ -85,7 +91,7 @@ current.png
 # --- Private finance source docs + backfill data (NEVER commit) ---
 *.pdf
 LOAN ACCOUNT*.pdf
-finance-os/backend/data/
+Screens/Finance/Backend/app/data/
 qwen_agent_port/
 
 # --- Anime screen: local-only, never on GitHub (restored from the old checkout) ---
@@ -99,3 +105,7 @@ Stage_agents/
 
 # --- LAN sync scripts (local tooling, phone address is personal) ---
 Sync/
+
+# --- Finance app build artifacts (mirrored by Screens/Finance/Backend/build.py) ---
+Screens/Finance/Backend/app/static/
+Screens/Finance/Backend/app/.serve.*

@@ -75,6 +75,17 @@ for %%R in ("%PROJECT%\Main_Menu\Setup\requirements_*.txt") do (
     if errorlevel 1 goto :fail
 )
 
+REM The Finance app keeps its requirements next to its own code rather
+REM than in a Screens\<name>\Setup folder, so the loop above never sees
+REM it. Without this a fresh clone gets a Finance screen that cannot
+REM import casparser / mftool / pdfplumber, and only says so at the
+REM first request.
+if exist "%PROJECT%\Screens\Finance\Backend\app\requirements.txt" (
+    echo   from the Finance app requirements.txt
+    "%VPY%" -m pip install -r "%PROJECT%\Screens\Finance\Backend\app\requirements.txt" --quiet
+    if errorlevel 1 goto :fail
+)
+
 :run
 echo.
 REM --- the model gateway, in its own window --------------------------

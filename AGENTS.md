@@ -1,50 +1,22 @@
 # AGENTS.md — Kage
 
-Read this first, every session. Standing rules for this repo; the plan list is
-[`PLAN.md`](PLAN.md).
+> **Rules live in [`CLAUDE.md`](CLAUDE.md), not here.** This repo is built by Claude
+> alone since 2026-09-03; the rules that used to sit in this file were collapsed to
+> one line each and moved there so there is exactly one copy of them. This file is
+> kept for the last in-flight GLM tasks and for the record below.
+>
+> - Standing rules -> [`CLAUDE.md`](CLAUDE.md)
+> - What is not done yet -> [`PLAN.md`](PLAN.md)
+> - Why a thing is the way it is -> the numbered decisions below
 
-## Rules
+## Design decisions (CLAUDE.md Rule 11)
 
-1. **Use the installed custom skills.** Check the skill list at session start and
-   invoke the matching skill before falling back to a default approach.
-2. **Optimize cloud cost** — for any cloud service, take the cheapest option that
-   still meets the requirement exactly.
-   - **2.1 (supersedes 2)** — **Optimize Claude Code (Sonnet) usage while
-     building this project.** Fewest tokens and tool calls for the outcome: batch
-     independent calls, reuse earlier findings instead of re-exploring, keep
-     context lean.
-3. **Stack.** Frontend: React 19, Tailwind CSS, Next.js, Three.js. Backend:
-   Node.js + Express. New and rewritten code uses only these; the current
-   Python/FastAPI backends migrate screen by screen (`PLAN.md` item 9).
-4. **Modular to the block.** Every page, tab, and block within a page runs
-   independently and calls its dependencies directly, never through a shared
-   directory.
-5. **Shrink the shared folders.** When you work near `Shared_By_All_Agents/` or
-   `Shared_By_All_Screens/`, move logic into its one caller and delete the shared
-   file. These folders trend to empty.
-6. **Track future work.** Anything named as "later" goes to `PLAN.md` and
-   a card in the Enhancement tab.
-7. **Log every instruction as a numbered item** — a Rule, a Plan
-   (`PLAN.md`), or a Task. New topic gets a new number. A change to item
-   _N_ is filed as _N.1_, _N.2_, …; the highest sub-number is the one in force
-   and the parent stays as history. Before adding, diff against what is already
-   here and keep only what is new.
-8. **Number every logical and design decision** the same way (`D1`, `D1.1`, …),
-   wherever it is recorded — not only rules and plans.
-
-## Plans
-
-[`PLAN.md`](PLAN.md) is the single backlog — the ordered map, the numbered items with
-status and detail, and the `## Active order` / `## Dropped` sections. One workstream at
-a time. Active now: item 1, Finance data migration (user-led) ∥ item 2, Google Drive
-storage layer (Qwen-led) ∥ item 12, Learning OS v3 real-life pass (D17). Shipped items are deleted from `PLAN.md` — git history and the
-decisions below are the record.
-
-## Design decisions (Rule 8)
+Numbered, append-only. A change to `D<n>` is filed as `D<n>.1`, `D<n>.2`, …; the
+highest sub-number is the one in force and the parent stays as history.
 
 > **D1, D1.1, D3, D3.1, D4, D5 are HISTORIC.** They governed the pre-finance-os
-> Finance frontend at `Screens/Finance/Page/next_app/`, which `finance-os/` V1
-> replaced (`657774d`). Kept as history per Rule 7 — **not to be actioned**. See D7.
+> Finance frontend at `Screens/Finance/Page/next_app/`, which the V1 rebuild
+> replaced (`657774d`). Kept as history per CLAUDE.md Rule 11 — **not to be actioned**. See D7.
 
 - **D1 — Finance telemetry skin: amber, not crimson.** The F1/"evening race"
   pass on the Finance screen (2026-08-28) uses warm amber/gold on carbon-black.
@@ -56,7 +28,7 @@ decisions below are the record.
   `#DC0000` anchor, evening charcoal-navy, yellow sparing) on the Overview tab,
   `.liv-rb` (Red Bull blue `#1E5BC6` dominant, midnight navy, red/yellow trim) on
   Investments; a shared `--f1-*` set carries the broadcast sector-colour delta
-  semantics (purple = best, green = ahead, grey = flat). **Rule 8 still holds** —
+  semantics (purple = best, green = ahead, grey = flat). **CLAUDE.md Rule 9 still holds** —
   `--f1-alert` (red) is the only "act now" colour and is never decoration; a
   monetary loss uses `--f1-flat` / `--liv-neg`, not alert-red. No Scuderia
   wordmark / shield / helmet-car icons / speedo-as-nav / AI-art. Detail:
@@ -81,7 +53,7 @@ decisions below are the record.
   (`--gold/--cyan-e/--violet-e/--mint` + `--grad-wealth`/`--grad-flow`), glass
   panels (`.glass` + `backdrop-filter`), an `AuroraBackground` (drifting blobs +
   grain), `TiltCard` pointer-tilt wrappers, gradient+glow hero numbers, a
-  `PulseCore` radar hero, and a spring page-transition. Rule 8 still holds — red
+  `PulseCore` radar hero, and a spring page-transition. CLAUDE.md Rule 9 still holds — red
   is not in the decorative set. All motion freezes under reduced-motion.
   Authored entirely by the local model; Claude orchestrated + validated.
 - **D6 — OmniRoute is the model gateway (2026-08-30).** The gateway slot on
@@ -94,7 +66,7 @@ decisions below are the record.
   - **D6.1 — Gateway process ownership.** `Start_Inky/run_omniroute.py` owns
     starting/stopping the gateway (idempotent: an already-running one is left
     alone); `Start_Everything.bat` starts it in its own window before the
-    screens. Self-contained — no shared-module imports (Rule 4).
+    screens. Self-contained — no shared-module imports (CLAUDE.md Rule 5).
   - **D6.2 — Health path.** OmniRoute's health route is
     `/api/monitoring/health`. The LiteLLM-era `/health/liveliness` 404s, and
     since a 404 counts as unreachable on the Model screen, the probe was
@@ -105,14 +77,14 @@ decisions below are the record.
   `Screens/Finance/Page/next_app/` wholesale. finance-os carries its own
   "carbon/racing" theme (`racing.red #e10600`); **this supersedes D1.1's
   two-livery scheme**. All earlier Finance-UI decisions (D1–D5) are historic.
-  finance-os keeps its decisions in `finance-os/DECISIONS.md`, its cutover note
-  in `finance-os/CUTOVER.md`, and its data-backfill plan in
-  `finance-os/finance-datamigration.md` (gitignored — contains PII).
+  finance-os keeps its decisions in `Screens/Finance/DECISIONS.md` and its
+  data-backfill plan in
+  `Screens/Finance/finance-datamigration.md` (gitignored — contains PII).
 - **D8 — Two Learning surfaces, deliberately (2026-08-30).** The standalone
   **`Screens/Learning/`** screen (terminal/CLI theme; tabs Today/Plan/Recall;
   SQLite + seed file; `/ask` stubbed) is the canonical personal-learning surface
   — spec `Screens/Learning/QWEN_BUILD_PROMPT.md`, shipped `ed833dd`. The
-  **finance-os "Learning tab"** (`finance-os/frontend/.../learning/`) is
+  **finance-os "Learning tab"** (`Screens/Finance/Page/next_app/.../learning/`) is
   finance-scoped RAG over public finance primers only; it does not duplicate the
   standalone screen and neither absorbs the other. The old
   `learning-tab-plan.md` (Model-screen theme, full Drive+FAISS) is dropped.
@@ -121,7 +93,7 @@ decisions below are the record.
   A local 3-pane agent workspace ("Deck" theme — Main-Menu DNA, not Slack). The
   kanban "ideas" board is **one room** inside it, owned by `Agent_Head`;
   board card keys stay `ENH-n`. Agent profiles live in
-  `Screens/Agents/AI_Agents/` (the screen owns its own agents — Rule 4; V1 seeds
+  `Screens/Agents/AI_Agents/` (the screen owns its own agents — CLAUDE.md Rule 5; V1 seeds
   21 role-stub profiles, `Agent_Head` first). V1 ships the shell + working board +
   profiles + honest stubs, **no LLM**. Agent
   execution (OmniRoute wiring, per-agent model sets, routing) is **V2**. Repo-root
@@ -149,7 +121,7 @@ decisions below are the record.
   `MENU_ORDER 6`, one Status tab, hand-rolled HTML status page (no Next app). Built by
   Qwen 3-Max from the house brief `.scratch/drive-storage/QWEN_BUILD_PROMPT.md`
   (map: `.scratch/drive-storage/map.md`); Node migration rides P4 (user chose FastAPI
-  for this service over Rule 3's Node letter — the seam is HTTP, consumers don't care).
+  for this service over the old Node-only stack rule — the seam is HTTP, consumers don't care).
   Nothing personal lives **only** on local disk.
   - **D11.1 — Adopted gateway.** The Drive transport is npm
     `@piotr-agier/google-drive-mcp` (MIT; service-account auth via
@@ -339,7 +311,7 @@ decisions below are the record.
   2026-09-02).** The D9 three-pane workspace becomes the **AGENT DECK** tab next to
   **PIX-AGENTS** (`/` ↔ `/workspace` tabs in the header; the floor-tab strip and the
   floating DeskChat are deleted — chat lives in the deck now; RoomTabs / Navigator /
-  AgentCard deleted, Rule 5). Same pixel language as the office — not a flat Slack
+  AgentCard deleted, CLAUDE.md Rule 6). Same pixel language as the office — not a flat Slack
   clone — while chat bodies stay human-readable.
   - **D19.1 — Pixel UI kit.** `.px-panel/.px-btn/.px-input/.px-tab/.px-chip` +
     pixel-corner bubbles (edge-bar box-shadows, not borders) on D18's warm tokens;
@@ -416,3 +388,82 @@ decisions below are the record.
   - **D20.6 — `backfill_price_history` writes real points only.** The old
     straight-line synthetic fill is gone; when no source answers, nothing is
     written and the UI keeps its honest empty state.
+
+- **D21 — Claude-only, one rules file, one port each (2026-09-03).** The multi-model
+  era (local 7B, Qwen 3-Max, GLM 5.3) ends; Claude builds this repo alone. The rules
+  that lived in this file are collapsed to one line each in
+  [`CLAUDE.md`](CLAUDE.md), which is now the single source of truth for how the repo
+  is worked on. This file keeps only the numbered decision log. `TOMORROW.md` is
+  folded into `PLAN.md` — there is no fourth planning doc.
+  - **D21.1 — Polyglot backend, runtime chosen per service (supersedes the old
+    "Backend: Node.js + Express" letter; owner's call 2026-09-02).** The seam between
+    screens is HTTP, so each screen or service picks the runtime whose libraries the
+    work actually lives in, and never imports across the line — CLAUDE.md Rule 5
+    already enforces the isolation that makes this safe. Python/FastAPI keeps
+    finance-os (casparser, yfinance, AMFI, tax math), RAG (local embeddings), the
+    Learning backend (SQLite + SM-2) and the Main Menu; Node/Express keeps the Agent
+    Deck's SSE fan-out, Anime, and the MCP servers (the ecosystem is Node-first).
+    No screen is rewritten for the sake of its language. This rescopes `PLAN.md`
+    item 9 from a 30-50 h migration to a case-by-case choice — the single biggest
+    hour saving in the backlog. Cost: two toolchains, which
+    `Start_Inky/start_every_screen.py` already handles (the Anime Python launcher
+    shim around a Node server is the proof).
+  - **D21.2 — 8000 is the Main Menu and nothing else.** `finance-os/backend/main.py`
+    hard-coded `port=8000`; running finance-os directly stood Finance up on the Main
+    Menu's address, and the menu appeared to have vanished. It now reads the Finance
+    screen's own `settings_for_finance.py` (8001), so a port is still written in
+    exactly one place. The cutover note's pre-check commands were wrong the same way;
+    that note described a migration finished months earlier and was deleted with the
+    move in D21.5.
+  - **D21.3 — The Model screen serves a page again (supersedes D10.1's redirect,
+    restoring D10's iframe).** `GET :8005/` 307-redirecting straight to the gateway
+    meant that whenever OmniRoute was down the browser left Kage entirely and landed
+    on a connection error with no way back to the menu. The screen now serves
+    `Page/page_for_model.html`: it asks its own `/api/model/overview`, embeds the
+    gateway dashboard when that answers `ok`, and otherwise shows which command
+    starts the gateway. It re-checks every 10 s, so the gateway coming up needs no
+    reload. Honest states, CLAUDE.md Rule 8.
+  - **D21.4 — The old agent layer is deleted (2026-09-03).** Repo-root `Agents/`
+    (20 folders holding one `description.txt` each, every one reporting "not built")
+    and `Shared_By_All_Agents/` were kept as a reuse pool for a future agent version.
+    They cannot run: `the_supervisor.py` imports `do_one_task`, which exists nowhere
+    in the repo, so the three Main Menu endpoints that called it
+    (`agents/home_blocks/refresh`, `calendar/events` GET and POST) returned
+    "the agent layer could not be reached" on every request, and every other file in
+    that folder existed only to serve the supervisor. Both folders are deleted, along
+    with those endpoints, `agents/fleet`, `agents/{name}/files`, `/governor`, and the
+    two plain-page scripts that read them (`home_data.js`, `home_agents_box.js`) plus
+    the agents box markup. The Next export the Main Menu actually serves never called
+    any of them. `Screens/Agents/` is the agent surface; the local-model chain the
+    deleted files implemented ended with D21.
+  - **D21.5 — Finance is one folder again (2026-09-03).** The Finance app was built
+    at the repo root as `finance-os/` while a three-file shim under
+    `Screens/Finance/` mounted it — the only screen split across two locations. It
+    now sits under its screen in the shape the Anime screen already used for its Node
+    server: `Backend/app/` (the FastAPI app + its requirements and data),
+    `Page/next_app/` (the Next source, matching every other screen), `Shared/`, with
+    `Backend/build.py` mirroring `Page/next_app/out` into `Backend/app/static`. The
+    dead pre-rebuild trees (`Screens/Finance/{Page,Calculations,Setup}`, 409 MB) are
+    deleted. `Start_Everything.bat` now installs the app's own `requirements.txt`,
+    which no loop had ever picked up — a fresh clone got a Finance screen that could
+    not import casparser, mftool or pdfplumber, and only said so at the first request.
+  - **D21.6 — `Shared_By_All_Screens/` shrunk to what is actually shared
+    (2026-09-03).** Eight of its twelve modules had exactly one caller, the Main
+    Menu — a shared file with one caller is not shared, it is misplaced. Moved into
+    `Main_Menu/Backend/` with their paths corrected: `format_indian_money`,
+    `health_check`, `read_and_write_numbers`, `trace_every_action` (with its
+    `Trace_Ledger/` and the rotate script), `tail_the_trace_ledger`, and
+    `code_change_monitor` (with its toggle file). Deleted: `mark_unverified_numbers`,
+    `show_not_built_yet` and `Column_Contracts/frozen_column_names.json`, all with no
+    reader at all. `add_and_search_the_knowledge_base.py` — the RAG implementation the
+    unbuilt Storage screen will be ported from — moved to `.scratch/drive-storage/`
+    beside the brief that cites it, since it has no caller until that screen exists.
+    What stays is what two or more trees genuinely use: `read_screen_settings` (the
+    menu + four launcher scripts), `restart_signal` and `clear_every_data_cache` (the
+    menu + the launcher), `Look_And_Feel/` (four screens), and the `Current_Numbers/`
+    noticeboard (the menu + a Finance backfill script). The folder still trends to
+    empty — `PLAN.md` item 8.
+  - **D21.7 — `TREE.md` (2026-09-03).** A root-level map of every file in the repo
+    with one line each, generated and annotated by hand. It is a snapshot, not a
+    source of truth: ports live in each screen's settings file, rules in `CLAUDE.md`,
+    the backlog in `PLAN.md`. Adding a screen means adding its lines here.

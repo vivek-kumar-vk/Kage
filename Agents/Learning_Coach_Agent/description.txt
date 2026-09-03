@@ -1,1 +1,0 @@
-Turns the Learning screen's own records into a daily coaching brief: today's targets from the weekly plan, which recall questions are due right now, and an honest score of yesterday's follow-through.
