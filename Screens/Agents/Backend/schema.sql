@@ -57,3 +57,22 @@ CREATE TABLE IF NOT EXISTS events (
     text       TEXT DEFAULT '',
     artifact   TEXT
 );
+
+-- Every ask is a run (V2). Append-only; a run is closed by UPDATE, never deleted.
+CREATE TABLE IF NOT EXISTS runs (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent_name  TEXT NOT NULL,
+    department  TEXT,
+    room_id     TEXT REFERENCES rooms(id),
+    prompt      TEXT NOT NULL,
+    reply       TEXT,
+    model       TEXT,
+    status      TEXT CHECK (status IN ('running','ok','error')) NOT NULL DEFAULT 'running',
+    problem     TEXT,
+    tokens_in   INTEGER,
+    tokens_out  INTEGER,
+    started_at  TEXT,
+    ended_at    TEXT,
+    duration_ms INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_runs_agent ON runs(agent_name, id DESC);

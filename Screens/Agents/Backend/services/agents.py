@@ -10,7 +10,8 @@ from pydantic import BaseModel
 
 import settings_for_agents as cfg
 from db import connect
-from services import events, office
+from services import events, office, runs
+from services.omni import OmniError, ask_omni_detailed, list_models as omni_list_models
 
 router = APIRouter()
 
@@ -99,6 +100,9 @@ def _agent_entries(conn):
                     "department": meta["department"],
                     "tier": meta["tier"],
                     "parent": meta.get("parent"),
+                    "model": meta.get("model"),
+                    "models": meta.get("models"),
+                    "description": description,
                 }
             )
 
@@ -238,36 +242,218 @@ async def list_agent_messages(name: str):
         conn.close()
 
 
+def _department_label(department_id):
+    for dept in office.DEPARTMENTS:
+        if dept["id"] == department_id:
+            return dept["label"]
+    return department_id
+
+
+def _build_system_prompt(agent, all_agents):
+    role = agent["role"] or "agent"
+    dept_label = _department_label(agent["department"])
+    lines = [
+        f"You are {agent['name']}, the {role} in the {dept_label} department of "
+        "AGENT DECK, the agent console of a private personal-dashboard system called Kage.",
+    ]
+
+    description = (agent.get("description") or "").strip()
+    if description:
+        lines += ["", "Your brief, in the operator's own words:", description]
+
+    tier = agent["tier"]
+    tier_line = f"You are a {tier} agent."
+    if tier == "sub" and agent.get("parent"):
+        tier_line += f" You report to {agent['parent']}."
+    elif tier == "main":
+        subs = sorted(a["name"] for a in all_agents if a.get("parent") == agent["name"])
+        if subs:
+            tier_line += f" Your sub-agents are: {', '.join(subs)}."
+    lines += ["", tier_line]
+
+    lines += [
+        "",
+        "Answer in plain text. Be concrete and brief. If you do not have the data "
+        "to answer, say exactly what is missing — never guess a number, a file "
+        "path, or a status.",
+    ]
+    return "\n".join(lines)
+
+
+def _resolve_model_pref(agent):
+    if agent.get("model"):
+        return agent["model"]
+    models = agent.get("models")
+    if models:
+        return models[0]
+    return None
+
+
+async def _run_ask(name: str, message: Optional[str]):
+    """The one ask code path — used by /agents/{name}/ask, the DM composer at
+    /agents/{name}/messages, and agent-kind rooms at /rooms/{room_id}/messages.
+    Returns (status_code, body_dict)."""
+    conn = connect()
+    try:
+        all_agents = _agent_entries(conn)
+        agents_by_name = {agent["name"]: agent for agent in all_agents}
+        if name not in agents_by_name:
+            return 404, {"state": "error", "problem": "unknown agent"}
+
+        text = (message or "").strip()
+        if not text:
+            return 422, {"state": "error", "problem": "empty message"}
+
+        agent = agents_by_name[name]
+        department = agent["department"]
+        room_id = agent["room_id"]
+
+        user_message_id = "msg-" + uuid.uuid4().hex[:10]
+        created = _now()
+        conn.execute(
+            """
+            INSERT INTO messages (id, room_id, author, agent_name, body, created_at)
+            VALUES (?, ?, 'user', ?, ?, ?)
+            """,
+            (user_message_id, room_id, name, text[:MAX_MESSAGE_CHARS], created),
+        )
+        conn.commit()
+        user_message = {
+            "id": user_message_id,
+            "room_id": room_id,
+            "author": "user",
+            "agent_name": name,
+            "body": text[:MAX_MESSAGE_CHARS],
+            "created_at": created,
+        }
+        run_id = runs.open_run(conn, name, department, room_id, text[:MAX_MESSAGE_CHARS])
+    finally:
+        conn.close()
+
+    events.emit(
+        source="run", type_="started", text=text[:120],
+        agent_name=name, department=department, sim=False,
+    )
+    events.emit(
+        source="run", type_="thinking",
+        agent_name=name, department=department, sim=False,
+    )
+
+    system = _build_system_prompt(agent, all_agents)
+    model_pref = _resolve_model_pref(agent)
+
+    try:
+        result = await ask_omni_detailed(system, text, model=model_pref)
+    except OmniError as exc:
+        problem = str(exc)
+        return _fail_run(run_id, room_id, name, department, problem, user_message)
+    except Exception as exc:  # narrated, never swallowed (Rule 8)
+        problem = f"{type(exc).__name__}: {exc}"
+        return _fail_run(run_id, room_id, name, department, problem, user_message)
+
+    reply = result["text"]
+
+    conn = connect()
+    try:
+        runs.close_run(
+            conn, run_id, status="ok", reply=reply,
+            model=result["model"], usage=result["usage"],
+        )
+        reply_message_id = "msg-" + uuid.uuid4().hex[:10]
+        reply_created = _now()
+        conn.execute(
+            """
+            INSERT INTO messages (id, room_id, author, agent_name, body, created_at)
+            VALUES (?, ?, 'agent', ?, ?, ?)
+            """,
+            (reply_message_id, room_id, name, reply[:MAX_MESSAGE_CHARS], reply_created),
+        )
+        conn.commit()
+        reply_message = {
+            "id": reply_message_id,
+            "room_id": room_id,
+            "author": "agent",
+            "agent_name": name,
+            "body": reply[:MAX_MESSAGE_CHARS],
+            "created_at": reply_created,
+        }
+    finally:
+        conn.close()
+
+    events.emit(
+        source="run", type_="output", text=reply[:160],
+        agent_name=name, department=department, sim=False,
+    )
+    events.emit(
+        source="run", type_="done",
+        agent_name=name, department=department, sim=False,
+    )
+
+    return 200, {
+        "state": "ok",
+        "reply": reply,
+        "run_id": run_id,
+        "model": result["model"],
+        "message": user_message,
+        "reply_message": reply_message,
+    }
+
+
+def _fail_run(run_id, room_id, name, department, problem, user_message):
+    conn = connect()
+    try:
+        runs.close_run(conn, run_id, status="error", problem=problem)
+        system_message_id = "msg-" + uuid.uuid4().hex[:10]
+        conn.execute(
+            """
+            INSERT INTO messages (id, room_id, author, agent_name, body, created_at)
+            VALUES (?, ?, 'system', ?, ?, ?)
+            """,
+            (system_message_id, room_id, name, problem, _now()),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    events.emit(
+        source="run", type_="error", text=problem,
+        agent_name=name, department=department, sim=False,
+    )
+
+    # HTTP 200 with state=error: the gateway's specific sentence is the payload
+    # the UI shows inline; a 5xx would surface as a generic network error and
+    # lose it (D27).
+    return 200, {
+        "state": "error",
+        "reply": None,
+        "problem": problem,
+        "run_id": run_id,
+        "message": user_message,
+    }
+
+
 @router.post(cfg.API_PREFIX + "/agents/{name}/ask")
 async def ask_agent(name: str, payload: Optional[AskBody] = Body(default=None)):
-    # Live OmniRoute wiring is deferred to PLAN.md item 3 (LLM last). Until
-    # then this stays a stub — the Pixel Office shell + SSE run without it.
-    _ = payload
-
-    known_names = {agent["name"] for agent in _get_agents()}
-
-    if name not in known_names:
-        return JSONResponse(
-            status_code=404,
-            content={"state": "error", "problem": "unknown agent"},
-        )
-
-    return {
-        "state": "pending",
-        "reply": None,
-        "note": "agent wiring lands in PLAN.md item 3",
-    }
+    status, body = await _run_ask(name, payload.message if payload else None)
+    if status == 200:
+        return body
+    return JSONResponse(status_code=status, content=body)
 
 
 @router.post(cfg.API_PREFIX + "/agents/{name}/messages")
 async def post_agent_message(name: str, payload: Optional[MessageBody] = Body(default=None)):
-    """Persist a user DM to an agent and announce it on the office stage.
+    """The DM composer's send path — same ask flow as /ask (D27), so a DM to an
+    agent gets a real reply, narrated on the office stage like any other run."""
+    status, body = await _run_ask(name, payload.body if payload else None)
+    if status == 200:
+        return body
+    return JSONResponse(status_code=status, content=body)
 
-    The reply itself stays the honest pending state (D12.1) — live agent
-    responses land with PLAN.md item 4 V2.
-    """
-    body = (payload.body or "").strip() if payload else ""
-    if not body:
+
+@router.post(cfg.API_PREFIX + "/rooms/{room_id}/messages")
+async def post_room_message(room_id: str, payload: Optional[MessageBody] = Body(default=None)):
+    text = (payload.body or "").strip() if payload else ""
+    if not text:
         return JSONResponse(
             status_code=422,
             content={"state": "error", "problem": "empty message"},
@@ -275,49 +461,65 @@ async def post_agent_message(name: str, payload: Optional[MessageBody] = Body(de
 
     conn = connect()
     try:
-        agents = {agent["name"]: agent for agent in _agent_entries(conn)}
-        if name not in agents:
-            return JSONResponse(
-                status_code=404,
-                content={"state": "error", "problem": "unknown agent"},
-            )
+        room = conn.execute(
+            "SELECT id, kind, agent_name FROM rooms WHERE id = ?", (room_id,)
+        ).fetchone()
+    finally:
+        conn.close()
 
-        room_id = agents[name]["room_id"]
+    if not room:
+        return JSONResponse(
+            status_code=404,
+            content={"state": "error", "problem": "unknown room"},
+        )
+
+    if room["kind"] == "agent" and room["agent_name"]:
+        status, body = await _run_ask(room["agent_name"], text)
+        if status == 200:
+            return body
+        return JSONResponse(status_code=status, content=body)
+
+    conn = connect()
+    try:
         message_id = "msg-" + uuid.uuid4().hex[:10]
         created = _now()
         conn.execute(
             """
-            INSERT INTO messages (id, room_id, author, agent_name, body, created_at)
-            VALUES (?, ?, 'user', ?, ?, ?)
+            INSERT INTO messages (id, room_id, author, body, created_at)
+            VALUES (?, ?, 'user', ?, ?)
             """,
-            (message_id, room_id, name, body[:MAX_MESSAGE_CHARS], created),
+            (message_id, room_id, text[:MAX_MESSAGE_CHARS], created),
         )
         conn.commit()
-        message = {
-            "id": message_id,
-            "room_id": room_id,
-            "author": "user",
-            "agent_name": name,
-            "body": body[:MAX_MESSAGE_CHARS],
-            "created_at": created,
-        }
     finally:
         conn.close()
 
-    events.emit(
-        "ui",
-        "note",
-        f"DM: {body[:80]}",
-        agent_name=name,
-        department=agents[name]["department"],
-        sim=False,
-    )
-
     return {
-        "state": "queued",
-        "message": message,
-        "note": "queued · live replies land in PLAN.md item 4 V2",
+        "state": "ok",
+        "message": {
+            "id": message_id,
+            "room_id": room_id,
+            "author": "user",
+            "agent_name": None,
+            "body": text[:MAX_MESSAGE_CHARS],
+            "created_at": created,
+        },
+        "note": "stored — only agent rooms think",
     }
+
+
+@router.get(cfg.API_PREFIX + "/models")
+async def get_models():
+    try:
+        models = await omni_list_models()
+        return {"state": "ok", "models": models, "gateway": cfg.OMNIROUTE_URL}
+    except OmniError as exc:
+        return {
+            "state": "error",
+            "models": [],
+            "gateway": cfg.OMNIROUTE_URL,
+            "problem": str(exc),
+        }
 
 
 @router.post(cfg.API_PREFIX + "/agents/{name}/notes")

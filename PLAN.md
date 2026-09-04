@@ -31,6 +31,7 @@ Status: `queued` | `in progress` | `parked`.
 | 13 | Investments end-to-end (Analyse / Analysis / Trade Desk / market MCP) | **shipped 2026-09-02** — residue tracked below |
 | 14 | Calendar card (D23): Google Calendar + agent + WakaTime | **in progress** |
 | 15 | Day Plan card -> agent-owned: each area's agent (Finance/Learning/Anime/Agents) fetches its real state, plans today, writes rows. Card shipped 2026-09-04 as a hand-kept localStorage checklist (`Main_Menu/.../DayPlanPanel.tsx`); this item is the wiring. | queued |
+| 16 | Agent roster expansion: awareness + autonomous-code + job-hunt agents on Muse Spark contributor — 12 profiles added 2026-09-05, none wired | queued (blocked on item 4 V2) |
 
 Items 1, 2 and 12 run in parallel . Everything else is sequential.
 
@@ -261,16 +262,31 @@ D15 2D pixel-art office replaced the 3D stage 2026-09-02.
   `furniture.tsx` design in `.scratch/agents-chambers/QWEN_BUILD_PROMPT.md` — that brief
   is **obsolete**. The only piece of it never built is the bottom-left `TaskBrief`
   panel, now folded into the V2 brief below.
-- **V2 — real AI agents.** Brief written 2026-09-02:
-  `.scratch/glm-briefs/1_AGENT_DECK_v2_groundwork.md` (+ `__CONTEXT.md`). Turns the
-  `ask_agent` stub into a real OmniRoute call (`services/omni.py` is already complete),
-  adds a `runs` table + RUNS panel, DM rooms, per-agent model pinning via new optional
-  `office.json` keys, and the leftover `TaskBrief` panel. 26 agent profiles today.
-  Does **not** need Q10/Q12 — those govern the *finance-os* agents (item 3), not this
-  screen's gateway, which is already live. Ties to items 3 and 8. (The repo-root
-  `Agents/` + `Shared_By_All_Agents/` reuse pool this used to point at was deleted
-  2026-09-03 — it could not run; see the decision log.)
+- **V2 — real AI agents. Mostly shipped 2026-09-05 (D27–D27.5).** `ask_agent` is a
+  real OmniRoute call through one shared ask path (`/ask`, the DM composer, and
+  agent-kind rooms all use it); a `runs` table backs a live RUNS panel in
+  `/workspace`; per-agent model pinning is two optional `office.json` keys
+  (`model`/`models`) plus `GET /api/agents/models`; `AgentChat.tsx` renders real
+  replies and honest gateway-down errors inline. Verified live: gateway down →
+  the exact "OmniRoute unreachable…" sentence in the chat and in `runs`, no
+  fabricated reply; `npm run build` clean; `package.json`/lock untouched;
+  `Shared_By_All`/`httpx`/SDK greps clean; changes confined to `Screens/Agents/`.
+  **Left from the original brief** (`.scratch/glm-briefs/1_AGENT_DECK_v2_groundwork.md`,
+  now superseded by D27.4's scope note): the bottom-left **TaskBrief** panel — the
+  one D15-chambers piece never built — since the brief assumed a root-page chat
+  panel that doesn't exist; and a real-gateway-up end-to-end run (only the
+  gateway-down path was exercised this pass — OmniRoute wasn't started to avoid
+  generating fresh gateway secrets mid-autonomous-run). 26 agent profiles today
+  (34 once item 16's twelve are counted, still inert). Ties to items 3 and 8.
 - **V3 (optional)** — board × agents: pick an `ENH-n`, ask an agent.
+- **Twelve new agent profiles landed 2026-09-05** — awareness (Context Engine,
+  Time Analyst, Pattern Learner, Focus Guard), autonomous code (UI Builder, Code
+  Explainer, Bug Fix, Regression Watcher) and job hunt (Job Research, Resume,
+  Interview Prep, Application Tracker — these four belong to item 12's OFFICE
+  screen). Folders + `office.json` only; none run until V2 above turns
+  `ask_agent` into a real call, and the per-agent model key they'll need is V2's
+  to introduce. Scope, data sources, the Muse Spark contributor decision and what
+  each one is *not* allowed to do: **item 16**.
 - **Responsive polish (owner-led, later; ENH-19).** D18.7 made the floor
   re-layout per viewport (fixed 140×128 zones, flex walkways, camera clamped to
   the plan — no scroll, no backdrop). Owner accepted the current rendering on
@@ -436,6 +452,151 @@ re-built and served. Residue:
   for a parser-only change if the fallback is ever needed.
 - Agent Deck V2 (items 3/4): point the research agents' tool loop at
   `127.0.0.1:3101/mcp` (tools already live).
+
+---
+
+## 16 — Agent roster expansion: awareness layer + autonomous code agents
+
+Raised 2026-09-05 from two sources: the owner's own agent asks this session, and an
+outside "Kage Agent System" draft (Qwen3.8-Max, 2026-09-04) pasted in for sifting.
+**Only the parts that fit this repo are below** — what was dropped, and why, is at the
+end so it isn't re-proposed. Twelve profile folders exist now
+(`Screens/Agents/AI_Agents/*/description.txt` + `office.json`) — eight `deck`/`sub`
+under `Deck_Main_Agent`, four `learning`/`sub` under `Learning_Main_Agent`. **None of
+them run**: `ask_agent` is still the honest `pending` stub, so this whole item is
+blocked on **item 4 V2**. The model they route to is section **D**.
+
+### A — Awareness layer
+
+The load-bearing idea from the draft, and the one thing genuinely missing today: no
+agent knows what the owner is *currently doing*, so every planner guesses.
+
+- **`Context_Engine_Agent`** — the collector everything else reads. Polls WakaTime
+  (item 14 already brings it in), Google Calendar (D23), `git log --since` today, and
+  each screen's own health/activity endpoint; writes one current-state file into the
+  Storage seam (item 2 — it owns `KAGE_DATA_DIR`, don't invent a second store).
+  **Rule 8 applies hard:** an unreachable source is written as unreachable, never
+  silently carried over from the last poll. Build this first; A and B below are
+  worthless without it.
+- **`Time_Analyst_Agent`** — evening pass: planned blocks vs logged time, writes the
+  gap report. Consumes the Context Engine; hands the report to `Day_Planner_Agent`
+  (which already writes tomorrow's plan — item 15) rather than planning itself.
+- **`Pattern_Learner_Agent`** — weekly: rolling per-time-of-day focus score from
+  accumulated gap reports. Needs ~6 weeks of real history before it says anything;
+  until then it reports "not enough data", not a guess.
+- **`Focus_Guard_Agent`** — one short nudge when current activity has drifted from the
+  planned block. Cheap, no LLM needed for the *detection* (a comparison, not a
+  judgment); only the wording of the nudge is worth a model call, if that.
+
+**Data source for non-office hours: a custom Pomodoro tracker.** Owner starts/stops a
+session by hand (no auto-detection); each session logs start, end, and — v2 — a task
+label. Its own small Home card + local table, feeding the four agents above the same
+way WakaTime feeds them for office hours. What the agents get out of it: idle gaps
+between sessions, sessions that don't line up with the plan, session-length and break
+pattern vs a baseline, which hours produce *finished* vs abandoned sessions,
+streak/consistency, and an honest weekly "where the time actually went". **All of it
+waits on real logged data** — none of it is specified yet.
+
+Supersedes the narrower "time-pattern coach" deferred under item 12 (Learning study
+sessions only). Same idea, whole-day scope: build it once, here.
+
+### B — Autonomous code agents
+
+Today `UI_Steward_Agent` finds drift and writes proposals but edits nothing. These
+four close that loop.
+
+- **`UI_Builder_Agent`** — plain-English UI request → edits that screen's own `Page/`
+  files → runs its build + lint → reports the diff. One screen per request; never
+  reaches across the HTTP seam (Rule 5).
+- **`Code_Explainer_Agent`** — reads the live source, not the docs, and answers "what
+  does this do / why". Distinct from `Inky_Knowledge_Agent` (stored knowledge;
+  `context.md` still empty and unscoped).
+- **`Bug_Fix_Agent`** — stack trace or breakage report → patch → *runs it* → reports.
+  A fix it could not verify is reported unverified (Rule 8).
+- **`Regression_Watcher_Agent`** — fires after any agent edits a screen, re-runs that
+  screen's tests/build, files a board card on a break. The net under autonomous
+  editing, where no human has reviewed the diff.
+
+### C — Job hunt (4 agents) — belongs to the OFFICE screen, item 12 M7
+
+**Correction, same session:** these were first ruled out of scope on the grounds that
+no Job screen was planned. That was wrong. **Item 12 M7 is the OFFICE screen** —
+applications pipeline, interview prep, work log, machine-enforced resume-defensible
+flag (≥2 Good/Easy ratings) — and M8 already lists "Office agents" as crew work.
+D17.5 moved that screen to **port 8010** (CLAUDE.md port table); item 12's own line
+still says `:8008`, which is Hermes. **Fix that line when M7 starts.**
+
+Four profiles added, `learning`/`sub` under `Learning_Main_Agent`:
+
+- **`Job_Research_Agent`** — reads saved JDs, extracts the real skill/stack asks,
+  aims the Planner at live openings. This *is* the "JD-skill radar" already deferred
+  on the board under item 12 — one agent, not two.
+- **`Resume_Agent`** — claims only what the Learning OS has marked
+  resume-defensible; flags lines that no longer earn their place.
+- **`Interview_Prep_Agent`** — per-interview prep pack; feeds the
+  "interview-question radar → Quizmaster" deferred card and triggers M6's
+  interview-day preemption.
+- **`Application_Tracker_Agent`** — staleness over the pipeline rows. Plain SQL, no
+  model call for the detection.
+
+**Standing constraint, unchanged:** *never* auto-apply to job portals (item 12's own
+"Never"). These four surface and draft; the owner sends.
+
+**Department:** parked under `learning` because the Pixel Office floor has six
+departments hard-coded (`Backend/services/office.py` + `roomPlan.ts`) and OFFICE is
+not one of them. A real `office` department is a later change to both files, not part
+of this item.
+
+### D — Model: Muse Spark contributor
+
+Owner's call, 2026-09-05: route this roster at the **Muse Spark contributor tier**
+rather than burning the Claude subscription on it — an API key plus a large token
+budget for a $20 top-up, against a subscription that gives no key at all.
+
+Three things to settle before it's real:
+
+1. **The exact model id.** `Screens/Model/GATEWAY_CONFIG.md` records
+   `muse-spark-1.2-contributor-free` in the persisted OmniRoute config — **not 1.3**.
+   Check the gateway dashboard, pin the id, update that file. The same file already
+   carries a CONFIRM that no "GLM Flash 5.3" exists there either.
+2. **Its real per-token price and rate limits.** Everything in D depends on these and
+   the repo has verified neither. A 15-minute Context Engine poll is ~96 calls/day;
+   confirm RPM first, fall back to a 30-minute cadence if it doesn't fit.
+3. **The data-sharing tradeoff.** Contributor tier means prompts and outputs may be
+   used to improve the provider's products. That collides directly with item 12 M8's
+   standing rule, **"PII → local models only"** — and there is no local model here
+   today. So: either those agents stay off this tier, or a sanitizer earns its place
+   first (item 2 already asks whether an LLM sanitizer pass is worth its cost).
+   **Unresolved. It gates C and every Finance agent; it does not gate A or B**, which
+   read code, build state and timestamps — no personal data in either.
+
+Per-agent model pinning is an `office.json` key that **item 4 V2 introduces**; the
+twelve new profiles ship without it rather than carrying a key nothing reads.
+
+### Blocked on
+
+1. **Item 4 V2** — until `ask_agent` is a real OmniRoute call, all twelve are folders.
+2. **Item 2 (Storage seam)** — the Context Engine needs somewhere to write.
+3. **Item 14 (WakaTime)** — the Context Engine's main office-hours signal.
+4. **D above** — model id, price, rate limits, and the contributor-tier data question.
+5. **Item 12 M7** for section C specifically — the OFFICE screen has to exist before
+   its four agents have anything to read.
+
+### Sifted out of the pasted draft — do not re-propose
+
+- **The ₹35/month cost table.** Arithmetic on a price the repo has not verified.
+  Keep the *shape* of the estimate (see D below), throw away the numbers until the
+  model id and its real price are confirmed.
+- **Morning Brief + Schedule Optimizer as new agents.** `Day_Planner_Agent` already is
+  both (reads the trace ledger nightly, writes tomorrow's plan). Item 15 is its wiring.
+- **Watch_Dog / Quota Warden / Evolution Analyst as new agents.** All three already
+  exist as profiles.
+- **Architecture / Documentation / Project-Manager agents.** Overlap
+  `Doctrine_Planner_Agent`, `Integration_Expert_Agent`, `Mission_Planner_Agent` and
+  `UI_Steward_Agent`. Revisit only if a real gap shows up in use.
+- **A separate `KAGE_DATA_DIR/planning/` store and a "trigger dispatcher" runtime.**
+  Item 2 owns storage; item 4 V2 owns the runtime. Two owners for one job is how the
+  deleted repo-root `Agents/` pool died.
 
 ---
 

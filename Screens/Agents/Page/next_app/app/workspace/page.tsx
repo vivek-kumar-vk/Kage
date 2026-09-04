@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import BoardRoom from "../../components/BoardRoom";
 import IdeaDetail from "../../components/IdeaDetail";
-import RunsStub from "../../components/RunsStub";
+import RunsPanel from "../../components/RunsPanel";
 import DeckRail, { type DeckSelection } from "../../components/deck/DeckRail";
 import AgentChat from "../../components/deck/AgentChat";
 import ProfilePanel from "../../components/deck/ProfilePanel";
@@ -78,7 +78,7 @@ export default function DeckPage() {
       />
     );
   } else if (selection.id === "runs") {
-    center = <RunsStub />;
+    center = <RunsPanel events={events} />;
   } else {
     center = <CenterNote title="Room" copy="This room is not available yet." />;
   }

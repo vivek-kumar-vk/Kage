@@ -661,3 +661,52 @@ highest sub-number is the one in force and the parent stays as history.
     Learning (`server_for_learning.py`) now send `no-cache` on every HTML
     shell; the hashed assets stay cacheable because the hash busts them.
     Same class of staleness as D21.3.1's Model page.
+
+## D27 — AGENT DECK V2: live asks, runs, model sets (2026-09-05)
+
+- **D27 — `ask_agent` calls OmniRoute for real; one ask code path.**
+  `services/agents.py` gained `_run_ask(name, message)`, used by all three
+  entry points that can start a run: `POST /agents/{name}/ask`, the DM
+  composer at `POST /agents/{name}/messages`, and `POST
+  /rooms/{room_id}/messages` for a `kind='agent'` room. A `kind='board'` or
+  `'system'` room stores the message and returns `state: "ok"` without
+  calling a model. The system prompt is built per agent, per ask, from that
+  agent's own `description.txt` + role + department + tier — never a global
+  template — and never invents a missing description.
+- **D27.1 — `state: "error"` ships as HTTP 200, not a 5xx.** A failed ask
+  (`OmniError` or otherwise) closes the run, emits `type_="error"` on the
+  SSE stream, inserts a `system`-authored message carrying the gateway's own
+  sentence, and returns `{"state": "error", "problem": "..."}` at HTTP 200 —
+  a 5xx would surface in the UI as a generic network error and lose the
+  specific reason. `unknown agent` stays 404 and `empty message` stays 422,
+  unchanged from V1.
+- **D27.2 — `runs` table, append-only.** Every ask opens a row
+  (`services/runs.py`) and closes it by `UPDATE`, never delete. A row left
+  `status='running'` because the server died is swept to `status='error'`
+  ("interrupted — server restarted") on the next boot if `started_at` is
+  over 10 minutes old — never shown as a false "ok". `tokens_in`/`tokens_out`
+  stay `NULL` (rendered `—`) unless the gateway's response carried a `usage`
+  object; nothing is guessed.
+- **D27.3 — Per-agent model pinning is two optional `office.json` keys**,
+  `model` (pinned) and `models` (preference order), read defensively by
+  `office.read_office` — a bad value is dropped, never raised, since the
+  file is read at boot and the gateway may be down. Resolution order for an
+  ask: `model` → first of `models` → the gateway's own default. No agent's
+  `office.json` was edited to add them; the keys are opt-in, documented in
+  `Backend/README_seed.md`. `GET /api/agents/models` proxies the gateway's
+  `/v1/models`, cached 60s on success and never on failure.
+- **D27.4 — Scope trimmed from the original brief
+  (`.scratch/glm-briefs/1_AGENT_DECK_v2_groundwork.md`).** That brief
+  assumed a `components/office/DeskChat.tsx` chat panel on the root Pixel
+  Office page and briefed `TaskBrief.tsx` / `DMPanel.tsx` to sit alongside
+  it; no such chat panel exists on that page — the actual 1:1 chat, DM
+  history and room list are the `/workspace` route's existing `AgentChat.tsx`
+  / `DeckRail.tsx` / `ProfilePanel.tsx` (D12/D17.3), which this pass wired
+  to real replies instead of duplicating them elsewhere. The bottom-left
+  **TaskBrief panel** (the one D15-chambers piece never built) is still
+  outstanding and stays on `PLAN.md` item 4 rather than being retrofitted
+  onto a page that has nowhere to put it.
+- **D27.5 — `RunsStub.tsx` replaced by `RunsPanel.tsx`**, live, refreshing
+  off the SSE `done`/`error` events already flowing through `workspace/page.tsx`
+  rather than polling — a run only ever closes on one of those two event
+  types, so a timer would mostly re-read the same row.

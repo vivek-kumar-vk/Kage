@@ -20,9 +20,12 @@ interface MessagesResponse {
 }
 
 interface PostResponse {
-  state: string;
+  state: "ok" | "error";
   message: ChatMessage;
-  note: string;
+  reply_message?: ChatMessage;
+  problem?: string;
+  run_id?: number;
+  model?: string;
 }
 
 const DAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
@@ -111,18 +114,21 @@ export default function AgentChat({ agent, accent, states }: Props) {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ body }),
       });
-      const data = (await res.json()) as PostResponse & { problem?: string };
+      const data = (await res.json()) as PostResponse;
       if (!res.ok) throw new Error(data.problem ?? `HTTP ${res.status}`);
 
       setMessages((prev) => {
         const next = [...(prev ?? []), data.message];
-        if (data.note) {
+        if (data.state === "ok" && data.reply_message) {
+          next.push(data.reply_message);
+        } else if (data.state === "error" && data.problem) {
+          // A run that failed shows why, inline — never a fabricated reply (Rule 8).
           next.push({
-            id: `${data.message.id}-note`,
+            id: `${data.message.id}-problem`,
             room_id: data.message.room_id,
             author: "system",
             agent_name: null,
-            body: data.note,
+            body: data.problem,
             created_at: new Date().toISOString(),
           });
         }
@@ -189,9 +195,8 @@ export default function AgentChat({ agent, accent, states }: Props) {
           <div className="px-panel m-auto max-w-md p-4 text-sm text-deck-dim">
             <p className="font-display text-sm text-deck-text">Say hello to {name.replace(/_Agent$/, "")}</p>
             <p className="mt-2">
-              Your DMs are stored per agent. Live replies land with the V2 model wiring
-              (PLAN.md item 4) — for now your message is queued and announced on the
-              office stage.
+              Your DMs are stored per agent and answered live through OmniRoute. If the
+              gateway is down, the failure shows here — never a fabricated reply.
             </p>
           </div>
         ) : (

@@ -5,6 +5,7 @@ speaks /v1/chat/completions to it. Gateway-down is an honest error the caller
 surfaces as an event — never a fabricated reply.
 """
 
+import time
 from typing import Optional
 
 import httpx
@@ -17,6 +18,9 @@ class OmniError(RuntimeError):
 
 
 _model_cache: Optional[str] = None
+_models_list_cache: Optional[list] = None
+_models_list_cache_at: float = 0.0
+MODELS_CACHE_SECONDS = 60.0
 
 
 def _headers():
@@ -48,7 +52,9 @@ async def _resolve_model(client: httpx.AsyncClient) -> str:
     return "gpt-4o-mini"
 
 
-async def ask_omni(system: str, prompt: str) -> str:
+async def ask_omni_detailed(system: str, prompt: str, *, model: Optional[str] = None) -> dict:
+    """-> {"text": str, "model": str, "usage": dict | None}
+    Same error contract as ask_omni: raises OmniError with a human sentence."""
     payload = {
         "messages": [
             {"role": "system", "content": system},
@@ -57,7 +63,7 @@ async def ask_omni(system: str, prompt: str) -> str:
     }
 
     async with httpx.AsyncClient(timeout=httpx.Timeout(90.0, connect=5.0)) as client:
-        payload["model"] = await _resolve_model(client)
+        payload["model"] = model or await _resolve_model(client)
 
         try:
             response = await client.post(
@@ -88,4 +94,43 @@ async def ask_omni(system: str, prompt: str) -> str:
     if not text or not text.strip():
         raise OmniError("gateway returned an empty reply")
 
-    return text.strip()
+    return {
+        "text": text.strip(),
+        "model": payload["model"],
+        "usage": data.get("usage") if isinstance(data.get("usage"), dict) else None,
+    }
+
+
+async def ask_omni(system: str, prompt: str) -> str:
+    return (await ask_omni_detailed(system, prompt))["text"]
+
+
+async def list_models() -> list:
+    """GET /v1/models off the gateway, cached 60s on success. Never caches a failure."""
+    global _models_list_cache, _models_list_cache_at
+
+    if _models_list_cache is not None and (time.monotonic() - _models_list_cache_at) < MODELS_CACHE_SECONDS:
+        return _models_list_cache
+
+    async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0)) as client:
+        try:
+            response = await client.get(cfg.OMNIROUTE_URL + "/v1/models", headers=_headers())
+        except httpx.HTTPError as exc:
+            raise OmniError(
+                f"OmniRoute unreachable at {cfg.OMNIROUTE_URL} — start the gateway first"
+            ) from exc
+
+    if response.status_code == 401:
+        raise OmniError("gateway rejected the API key (401)")
+    if response.status_code >= 400:
+        raise OmniError(f"gateway error HTTP {response.status_code}")
+
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise OmniError("gateway returned non-JSON") from exc
+
+    ids = [m.get("id") for m in data.get("data", []) if m.get("id")]
+    _models_list_cache = ids
+    _models_list_cache_at = time.monotonic()
+    return ids

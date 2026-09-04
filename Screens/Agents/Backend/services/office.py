@@ -23,11 +23,15 @@ _TIERS = {"head", "main", "sub"}
 
 def read_office(agent_dir: Path) -> dict:
     parent = None
+    model = None
+    models = None
     try:
         data = json.loads((agent_dir / "office.json").read_text(encoding="utf-8"))
         department = data.get("department", "deck")
         tier = data.get("tier", "sub")
         parent = data.get("parent") or None
+        model = data.get("model")
+        models = data.get("models")
     except (OSError, ValueError):
         department, tier = "deck", "sub"
 
@@ -38,7 +42,20 @@ def read_office(agent_dir: Path) -> dict:
     if tier != "sub":
         parent = None  # only subs report to a main
 
-    return {"department": department, "tier": tier, "parent": parent}
+    if not isinstance(model, str) or not model.strip():
+        model = None
+    if not isinstance(models, list) or not all(
+        isinstance(entry, str) and entry.strip() for entry in models
+    ):
+        models = None
+
+    return {
+        "department": department,
+        "tier": tier,
+        "parent": parent,
+        "model": model,
+        "models": models,
+    }
 
 
 def dept_color(department: str) -> str:

@@ -12,7 +12,7 @@ sys.path.insert(0, str(BACKEND_DIR))
 import settings_for_agents as cfg
 from db import init_db
 import seed
-from services import agents, board, events
+from services import agents, board, events, runs
 
 
 @asynccontextmanager
@@ -26,10 +26,12 @@ app = FastAPI(title=cfg.SCREEN_LABEL, lifespan=lifespan)
 
 init_db()
 seed.run()
+runs.mark_interrupted_runs()
 
 app.include_router(board.router)
 app.include_router(agents.router)
 app.include_router(events.router)
+app.include_router(runs.router)
 
 
 @app.get("/")
