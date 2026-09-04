@@ -2,7 +2,7 @@
 import { useFinanceData } from "@/lib/api";
 import { useOverviewScope } from "@/lib/useOverviewScope";
 import HistoricalMarker from "@/components/finance/HistoricalMarker";
-import type { DataHealthData } from "@/lib/types";
+import type { DataHealthData, ObservabilitySummary } from "@/lib/types";
 
 const R = 36;
 const C = 2 * Math.PI * R; // 226.2
@@ -42,6 +42,10 @@ export default function DataHealthCard() {
   );
   const score = data?.score ?? null;
   const ring = score === null ? 0 : (Math.min(Math.max(score, 0), 100) / 100) * C;
+  // PLAN item 7: this screen's request/error observability, folded into the
+  // existing Data Health block rather than a 10th card — restarts the
+  // backend clears the window, which is honest, not a bug.
+  const { data: obs } = useFinanceData<ObservabilitySummary>("/observability/summary");
 
   return (
     <div className="flex h-full flex-col">
@@ -104,6 +108,20 @@ export default function DataHealthCard() {
               <span className="pos">ALL TXNS MATCHED</span>
             )}
             {missingSummary(data.missing_info)}
+          </div>
+
+          <div className="footnote mt-1">
+            {obs === null || obs.window === 0 ? (
+              "SYSTEM · NO REQUESTS YET"
+            ) : (
+              <>
+                SYSTEM ·{" "}
+                <span className={obs.error_rate_pct ? "neg" : ""}>
+                  {obs.error_rate_pct ?? 0}% ERR
+                </span>{" "}
+                · {obs.avg_duration_ms ?? "—"}MS AVG · {obs.window} REQ
+              </>
+            )}
           </div>
         </>
       )}

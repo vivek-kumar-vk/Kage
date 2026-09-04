@@ -333,10 +333,18 @@ The Aurum rebuild shipped 2026-09-02 (`AGENTS.md` D13/D13.1-3,
 
 ## 7 — Observability on every tab
 
-On each tab (Finance, Learning, AGENT DECK, Model, Main Menu), pick one existing block
-and replace it with an observability feature: live health, request/latency, error feed,
-or a trace view for that screen. Each block is self-contained per `CLAUDE.md` Rule 5 — it reads its
-own screen's data directly, no shared module.
+**Mostly shipped 2026-09-05 (D30–D30.5).** Finance (`DataHealthCard` footnote) and
+Learning (Insights "Ledger" panel header) each got their own request/error-rate
+observability, self-contained per Rule 5 — no shared module, verified live (honest
+zero with no traffic, real counts once requests land). AGENT DECK's `RunsPanel`
+(item 4) got a stats strip (runs/error-rate/avg-latency) — no backend change needed,
+item 4 already built the `runs` table. Model is exempted — it already *is* the
+gateway's observability surface. **Left:** Main Menu already has the backend half
+(full request trace middleware into the trace ledger, `health_check` dependency
+probe, `GET /api/main_menu/live` SSE) — none of it surfaced as a UI panel yet. Not
+done this pass because `Main_Menu/Page/next_app/` was mid-redesign (uncommitted
+home-page rework) when this item was reached; wire `/api/main_menu/live` into a
+small panel once that settles.
 
 ---
 

@@ -23,6 +23,13 @@ type Insights = {
   ledger: { ts: string; kind: string; text: string }[];
 };
 
+type Observability = {
+  window: number;
+  errors: number;
+  error_rate_pct: number | null;
+  avg_duration_ms: number | null;
+};
+
 const LEVEL_CLS: Record<string, string> = {
   mastered: "jade", strong: "jade", familiar: "ember", learning: "", novice: "",
 };
@@ -77,6 +84,9 @@ function RetentionChart({ data }: { data: Insights["retention"] }) {
 
 export default function InsightsPage() {
   const { data, error, loading } = useResource<Insights>("/api/learning/insights");
+  // PLAN item 7: this screen's own request/error observability, folded
+  // into the existing Ledger block rather than a new panel.
+  const { data: obs } = useResource<Observability>("/api/learning/observability/summary");
   const [range, setRange] = useState("30d");
 
   if (loading) return <div className="state-loading">computing from the ledger…</div>;
@@ -305,7 +315,12 @@ export default function InsightsPage() {
         <section className="panel" style={{ padding: "14px 18px", gridColumn: "1 / 4" }}>
           <div className="panel-head" style={{ padding: 0 }}>
             <div className="panel-label">Ledger · the ground truth</div>
-            <span className="mono-micro">{data.ledger.length} recent entries</span>
+            <span className="mono-micro">
+              {data.ledger.length} recent entries
+              {obs && obs.window > 0
+                ? ` · SYSTEM ${obs.error_rate_pct ?? 0}% ERR · ${obs.avg_duration_ms ?? "—"}MS AVG`
+                : ""}
+            </span>
           </div>
           <div style={{
             display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0 24px",

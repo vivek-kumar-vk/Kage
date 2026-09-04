@@ -778,3 +778,50 @@ highest sub-number is the one in force and the parent stays as history.
   references to the still-live Anime *screen* in `DayPlanPanel.tsx`'s area
   list, nothing stale. Item removed from `PLAN.md` (Rule 12) rather than
   implemented — there was nothing left to do.
+
+## D30 — Observability per tab: three screens wired, two exempted (2026-09-05)
+
+- **D30 — Finance and Learning each get their own `services/observability.py`**,
+  independently written per Rule 5 (not shared, not imported cross-screen) —
+  an ASGI middleware recording the last 200 requests' status and duration in
+  an in-memory deque, plus a `GET .../observability/summary` route. A
+  restart clears the window; that is the honest behaviour (Rule 8), not a
+  bug — this is a live snapshot, not a stored history. Verified live on
+  both: 0 requests → `error_rate_pct: null`, `avg_duration_ms: null` (never
+  a fake `0`); real requests → real counts.
+- **D30.1 — Folded into an existing block, not a 10th card.** Finance's
+  `DataHealthCard` gained a `SYSTEM · N% ERR · Nms AVG` footnote line;
+  Learning's Insights "Ledger" panel header gained the same, inline next to
+  its entry count. Neither screen lost a card or a feature to make room —
+  "replace the block" is read here as *broaden what the block reports*,
+  not *delete what the user already relies on*.
+- **D30.2 — AGENT DECK already had richer infrastructure from item 4
+  (`runs` table + SSE events)**, so its "observability panel" is a stats
+  strip (runs in the current window, error rate, avg latency) added to the
+  `RunsPanel` built this session — no new backend at all.
+- **D30.3 — Model screen exempted.** It already *is* the observability
+  surface for the OmniRoute gateway (CLAUDE.md port table: "reports on the
+  gateway"), and its three backend/frontend files were mid-edit
+  (uncommitted, another session's D21.3.1 forwarding-logic rework) when
+  this pass reached it — touching them for a second, unrelated reason
+  risked colliding with in-flight work for no real gain.
+- **D30.4 — Main Menu exempted, for now — it's the one screen already ahead
+  of this item.** `server_for_main_menu.py` already runs a full request
+  trace middleware (every API call, with duration/outcome/correlation id,
+  into the trace ledger), a `health_check.register` dependency probe, and
+  a `GET /api/main_menu/live` SSE stream of its own traces — none of it
+  surfaced as a UI block yet. That's a real gap, but `Main_Menu/Page/next_app/`
+  was mid-redesign (uncommitted: `page.tsx`, `TopBar.tsx`, `CalendarPanel.tsx`,
+  `EmailPanel.tsx`, `SkillsDeckPanel.tsx`, two panels deleted, one added)
+  when this pass reached it — adding a new panel into an actively-churning
+  layout is exactly the collision this rule set's "leave WIP alone" guard
+  exists for. Left in `PLAN.md` item 7 as the one remaining piece: wire
+  `/api/main_menu/live` into a small panel once the home-page redesign
+  settles — the backend needs nothing more.
+- **D30.5 — `health_check.py`'s cross-screen-import pattern
+  (`import health_check` "on sys.path") is not extended to any other
+  screen.** It predates the current Rule 4/5/6 (modular to the block, no
+  shared directory) and only Main Menu itself uses it today. Following
+  that pattern elsewhere would recreate the exact `Shared_By_All_*`
+  coupling those rules exist to unwind — each screen's own
+  `observability.py` (D30) is written from scratch instead, on purpose.

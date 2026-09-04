@@ -9,15 +9,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_for_learning as cfg
 from db import init_db
 import seed
-from services import today, sessions, path, room, recall, insights, crew
+from services import today, sessions, path, room, recall, insights, crew, observability
 
 app = FastAPI(title=cfg.SCREEN_LABEL)
+app.add_middleware(observability.ObservabilityMiddleware)
 
 init_db()
 seed.run()
 
-for router in (today, sessions, path, room, recall, insights, crew):
+for router in (today, sessions, path, room, recall, insights, crew, observability):
     app.include_router(router.router)
+
+
+# The exported HTML shells point at hash-named _next/* chunks, so a stale
+# shell loads stale JS - and stale JS is what makes a shipped fix (e.g.
+# the shallow-history tab nav) look like it never landed. The shells are
+# tiny; make the browser revalidate them every time. Hashed _next/*
+# assets keep their default cacheable behaviour - the hash busts them.
+NO_CACHE = {"Cache-Control": "no-cache"}
 
 
 @app.get("/")
@@ -25,7 +34,7 @@ def root():
     if cfg.USE_NEXT_UI:
         index_path = cfg.NEXT_DIST / "index.html"
         if index_path.exists():
-            return FileResponse(index_path)
+            return FileResponse(index_path, headers=NO_CACHE)
 
     return JSONResponse(
         {
@@ -85,7 +94,7 @@ def static_or_page(full_path: str):
 
     for candidate in candidates:
         if candidate.is_file():
-            return FileResponse(candidate)
+            return FileResponse(candidate, headers=NO_CACHE)
 
     raise HTTPException(status_code=404)
 

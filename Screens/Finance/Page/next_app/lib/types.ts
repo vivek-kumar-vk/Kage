@@ -148,6 +148,14 @@ export interface BenchmarkData {
   points: BenchmarkPoint[];
 }
 
+export interface ObservabilitySummary {
+  state: "ok";
+  window: number;
+  errors: number;
+  error_rate_pct: number | null;
+  avg_duration_ms: number | null;
+}
+
 export interface DataHealthData {
   id: number;
   cas_last_import: string | null;

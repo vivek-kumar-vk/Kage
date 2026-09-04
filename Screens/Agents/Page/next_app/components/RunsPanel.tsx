@@ -31,6 +31,32 @@ function clockOf(iso: string | null) {
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
 
+interface Stats {
+  total: number;
+  errors: number;
+  errorRate: number | null;
+  avgDurationMs: number | null;
+}
+
+/** Computed from whatever page the RUNS list is currently showing (up to 50
+ * most recent) — an honest snapshot of that window, not a lifetime metric
+ * the backend doesn't track (PLAN item 7). */
+function statsOf(runs: Run[]): Stats {
+  const closed = runs.filter((r) => r.status !== "running");
+  const errors = closed.filter((r) => r.status === "error").length;
+  const durations = closed
+    .map((r) => r.duration_ms)
+    .filter((d): d is number => d !== null);
+  return {
+    total: closed.length,
+    errors,
+    errorRate: closed.length ? (errors / closed.length) * 100 : null,
+    avgDurationMs: durations.length
+      ? Math.round(durations.reduce((s, d) => s + d, 0) / durations.length)
+      : null,
+  };
+}
+
 /** Live RUNS panel (V2) — refreshes off the SSE done/error events already
  * flowing through the page, since a run only ever closes on one of those two
  * event types; a 4s poll would just re-read the same row most of the time. */
@@ -64,10 +90,40 @@ export default function RunsPanel({ events }: { events: OfficeEvent[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [closedCount]);
 
+  const stats = runs ? statsOf(runs) : null;
+
   return (
     <section className="deck-panel flex h-full min-h-0 flex-col gap-3 p-4">
       <p className="section-label">System room</p>
       <h2 className="text-lg font-semibold text-deck-text">Runs</h2>
+
+      {stats && stats.total > 0 ? (
+        <div className="px-panel flex items-center gap-5 p-3 text-xs">
+          <div>
+            <div className="text-deck-dim">Runs (window)</div>
+            <div className="font-mono text-deck-text">{stats.total}</div>
+          </div>
+          <div>
+            <div className="text-deck-dim">Error rate</div>
+            <div
+              className="font-mono"
+              style={
+                stats.errorRate && stats.errorRate > 0
+                  ? { color: "var(--deck-alert)" }
+                  : undefined
+              }
+            >
+              {stats.errorRate === null ? "—" : `${stats.errorRate.toFixed(0)}%`}
+            </div>
+          </div>
+          <div>
+            <div className="text-deck-dim">Avg latency</div>
+            <div className="font-mono text-deck-text">
+              {stats.avgDurationMs === null ? "—" : `${stats.avgDurationMs}ms`}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {runs === null ? (
         <p className="text-sm text-deck-dim">Loading…</p>
