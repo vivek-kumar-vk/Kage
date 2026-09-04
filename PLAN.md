@@ -23,8 +23,8 @@ Status: `queued` | `in progress` | `parked`.
 | 4 | AGENT DECK chambers (pixel V1.5) + V2 | **mostly shipped 2026-09-05** — TaskBrief panel + live-gateway run left |
 | 6 | finance-os Overview follow-ups | **mostly shipped 2026-09-05** — SMS import + one manual browser check left |
 | 7 | Observability on every tab | **mostly shipped 2026-09-05** — Main Menu panel left (frontend mid-redesign) |
-| 9 | Python/FastAPI → Node + Express | queued |
-| 11 | dsh local-model observability | parked |
+| 9 | Runtime choice per service | **rescoped by D21.1** — no action item left, just standing discipline |
+| 11 | Repoint the Hermes fleet off the dead local endpoint | **mostly shipped** — 15 per-profile repoints blocked on owner (D25.1, cost/behavior changes per agent) |
 | 12 | Learning OS rebuild (D16): Ember Studio UI + agent crew | **in progress** |
 | 13 | Investments end-to-end (Analyse / Analysis / Trade Desk / market MCP) | **shipped 2026-09-02** — residue tracked below |
 | 14 | Calendar card (D23): Google Calendar + agent + WakaTime | **in progress** |
