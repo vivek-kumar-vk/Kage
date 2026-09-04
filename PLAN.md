@@ -18,7 +18,7 @@ Status: `queued` | `in progress` | `parked`.
 | # | Item | Status |
 |---|------|--------|
 | 1 | Finance data migration / backfill | **in progress** (user-led) |
-| 2 | Local private storage seam + hybrid RAG | **in progress** — seam live (D32), RAG/trader/glyph left |
+| 2 | Local private storage seam + hybrid RAG | **mostly shipped 2026-09-05** (D32-D33.5) — only the menu glyph left, deferred on Main Menu WIP |
 | 3 | Wire finance-os agents through OmniRoute | queued |
 | 4 | AGENT DECK chambers (pixel V1.5) + V2 | **mostly shipped 2026-09-05** — TaskBrief panel + live-gateway run left |
 | 6 | finance-os Overview follow-ups | **mostly shipped 2026-09-05** — SMS import + one manual browser check left |
@@ -201,18 +201,29 @@ No Google keys.
    the 5 routes; `server_for_storage.py` boots on 8009, creates the data dir if
    missing. Verified live: full write/read/list/search/status/delete round-trip on
    real disk, `../` traversal rejected 422, port snapshot regenerated.
-3. `db.py` + `rag.sqlite` schema (FTS5 + chunks) + honest-zero seed (2 generic
-   sourced notes, guarded/idempotent).
-4. `rag.py` — note CRUD via seam, chunk+overlap, FTS5 keyword, embeddings client
-   (OmniRoute), hybrid fusion, `reindex`, sanitizer hook.
-5. `trader.py` — append-only ledger.
-6. Status page — every panel, real states.
-7. Glyph in `TopBar.tsx` + Main-Menu rebuild; regenerate `ports_for_inky.json`.
-8. Verify: boots on 8009 with OmniRoute down (keyword-only, honest, no traceback);
-   PUT/GET/LIST/DELETE round-trip on disk + `.trash`; note+source → hybrid search
-   returns it; `reindex` rebuilds to the same counts; trader POST lands on disk;
-   STORAGE row at menu position 8; `grep -R "Shared_By_All\|googleapi\|mcp\b"
-   Screens/Storage/` empty.
+3. **Done 2026-09-05 (D33).** `db.py` + `rag.sqlite` schema (FTS5 + chunks,
+   trigger-synced) + honest-zero seed (2 generic sourced notes, guarded by a
+   marker file, not by "does the file still exist").
+4. **Done 2026-09-05 (D33-D33.3).** `rag.py` — note CRUD via the seam (a note
+   without `**Source:**` → 422), chunk+overlap (180w/20), FTS5 keyword, an
+   OmniRoute embeddings client (stdlib `urllib`, no new dependency), RRF fusion
+   (D33 — the fusion-method research wasn't findable; RRF picked as the
+   parameter-light default), `reindex`, a sanitizer hook (`sanitize.py`, empty
+   ruleset, D11.5.3).
+5. **Done 2026-09-05 (D33).** `trader.py` — append-only ledger,
+   `POST/GET /api/storage/trader/decisions`, no update/delete.
+6. **Done 2026-09-05 (D33).** Status page — STORE, KNOWLEDGE (note count + a
+   working hybrid-search box), EMBEDDINGS (gateway/model, honest down state),
+   TRADER LEDGER (recent decisions) — real panels, not placeholders.
+7. **Deferred (D33.5).** Glyph in `TopBar.tsx` — that file is still mid the
+   in-progress home-page redesign (same collision risk as item 7's Main Menu
+   deferral, D30.4); a five-minute change once that WIP lands. Port snapshot
+   already regenerated (D32).
+8. **Done 2026-09-05 (D33).** Verify: boots with OmniRoute unreachable
+   (keyword-only, honest, no traceback) ✓; full round-trip incl. `.trash` ✓;
+   sourceless note → 422 ✓; `reindex` rebuilds to the same counts twice running
+   ✓; trader POST lands on disk, newest-first on GET ✓; STORAGE row at menu
+   position 8 (pending the deferred glyph) ; `grep` clean ✓.
 
 ### Consumers (own follow-ups, not this item)
 
@@ -222,11 +233,16 @@ salary transactions from 2026-09-04 on should land via the seam from day one.
 
 ### Open — owner researching today
 
-- Hybrid fusion method (RRF vs weighted vs add a reranker) and **which free
-  OmniRoute model is an actual embedder**.
+- **Which free OmniRoute model is an actual embedder** — `STORAGE_EMBED_MODEL` is
+  still unset; until it's picked, embeddings-status honestly reports "no model
+  configured" and search stays keyword-only. Fusion method was decided as RRF
+  (D33) absent the owner's research landing — revisit if that research says
+  otherwise.
 - Sanitizer rules + whether an LLM scrub pass earns its cost — after the data review.
 - **Backup:** local disk is the only copy today. A periodic export (zip → Drive /
   SD card / another box) is a later PLAN item.
+- **Menu glyph** (build phase 7) — deferred until `Main_Menu/Page/next_app/app/
+  components/TopBar.tsx`'s in-progress redesign lands.
 
 ---
 

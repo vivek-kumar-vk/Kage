@@ -26,13 +26,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_for_storage as cfg  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
-from services import seam  # noqa: E402
+from db import init_db  # noqa: E402
+import seed  # noqa: E402
+from services import seam, rag, trader  # noqa: E402
 
 app = FastAPI(title=cfg.SCREEN_LABEL)
 
 cfg.KAGE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+init_db()
+seed.run()
 
 app.include_router(seam.router)
+app.include_router(rag.router)
+app.include_router(trader.router)
 
 
 @app.get("/")

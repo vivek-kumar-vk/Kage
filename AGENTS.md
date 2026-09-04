@@ -915,3 +915,49 @@ highest sub-number is the one in force and the parent stays as history.
     `TopBar.tsx` — that file is mid the same in-progress home-page
     redesign D30.4 already deferred around, so the glyph waits for it to
     settle rather than risk a collision.
+
+## D33 — Storage screen: hybrid RAG + trader ledger (2026-09-05)
+
+- **D33 — RRF is the fusion method**, since the owner's own research into
+  RRF vs weighted vs a reranker (flagged open in `PLAN.md` item 2) wasn't
+  findable as a completed decision when this pass reached it. RRF was
+  picked because it needs no score normalization between keyword (BM25,
+  unbounded, lower-is-better) and dense (cosine, -1..1) — a chunk's fused
+  score is just `Σ 1/(60 + rank)` across whichever list(s) it appears in.
+  Revisit if the owner's research lands with a different answer; nothing
+  here is hard to swap.
+- **D33.1 — Dense search degrades to keyword-only, never to broken.**
+  `hybrid_search` returns `state: "partial"` with an honest
+  `"dense search offline — keyword-only results"` note whenever
+  `STORAGE_EMBED_MODEL` is unset or the gateway call fails — verified live
+  with no gateway running and no model configured: real keyword hits came
+  back, no traceback, no fabricated dense score.
+- **D33.2 — A note needs a `**Source:**` line; the raw seam doesn't
+  enforce it.** `PUT /api/storage/knowledge/notes` is a second, stricter
+  door onto the same files the generic `PUT /api/storage/doc` already
+  writes — sourceless content still exists as a plain document (a
+  trader-ledger row, a Finance blueprint) elsewhere in the tree; only
+  things filed as *knowledge* carry the citation requirement.
+- **D33.3 — System files get a leading underscore, which the seam's path
+  validator had to be taught.** `_seed_marker.json`, `_sanitize_rules.json`
+  both start with `_`; the original regex only allowed `[a-z0-9]` to open
+  a segment and rejected both at first boot. Fixed to `[a-z0-9_]`. Caught
+  immediately by the boot-check, not shipped broken.
+- **D33.4 — The honest-zero seed is guarded by a marker, not by
+  "does the file still exist."** Checking existence would silently
+  recreate a seed note the owner deliberately deleted on the next
+  restart — the marker (`knowledge/_seed_marker.json`) records "seeding
+  already happened" once, independent of what's still there.
+- **D33.5 — The Main Menu glyph (build phase 7) stays deferred.**
+  `TopBar.tsx` is still mid the home-page redesign (confirmed dirty again
+  this pass) — same collision risk already logged at D30.4 for the
+  observability panel. Wiring the `storage:` case into `GLYPHS` is a
+  five-minute change once that WIP lands; not worth the risk before then.
+- **Verified live, phase 8's checklist:** boots with OmniRoute unreachable
+  (keyword-only, honest, no traceback); full seam round-trip incl. `.trash`
+  (already D32); a note without `**Source:**` → 422; `reindex` rebuilds to
+  the same counts on a second run (2 notes, 2 chunks both times); a trader
+  POST lands on disk newest-first on `GET`; the `Shared_By_All`/`mcp`/
+  Google grep stays clean. Test artifacts (a probe trader decision) were
+  cleaned from the real `~/kage-data`; the two honest-zero seed notes were
+  left, since they're the intended first-boot state, not test pollution.

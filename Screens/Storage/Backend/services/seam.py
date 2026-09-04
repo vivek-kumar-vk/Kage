@@ -22,11 +22,12 @@ import settings_for_storage as cfg
 
 router = APIRouter()
 
-# One path segment: lowercase-first, then word chars/._- , any number of
-# "/segment" repeats, ending in one of the allowed extensions. No "..",
-# no leading dot on a segment, no absolute path.
+# One path segment: starts with a letter, digit or underscore (a leading
+# underscore marks a system file, e.g. _seed_marker.json), then word
+# chars/._- , any number of "/segment" repeats, ending in one of the
+# allowed extensions. No "..", no leading dot on a segment, no absolute path.
 _PATH_RE = re.compile(
-    r"^[a-z0-9][a-z0-9._-]*(?:/[a-z0-9][a-z0-9._-]*)*$"
+    r"^[a-z0-9_][a-z0-9._-]*(?:/[a-z0-9_][a-z0-9._-]*)*$"
 )
 
 

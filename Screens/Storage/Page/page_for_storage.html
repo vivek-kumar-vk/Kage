@@ -16,16 +16,33 @@
   .dot { width:8px; height:8px; border-radius:50%; background:var(--dim); }
   .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
   .spacer { flex:1; }
-  main { max-width:720px; margin:32px auto; padding:0 16px; display:flex;
+  main { max-width:760px; margin:32px auto; padding:0 16px; display:flex;
          flex-direction:column; gap:16px; }
   .panel { border:1px solid var(--line); border-radius:10px; background:var(--panel);
            padding:18px 20px; }
   .panel h3 { margin:0 0 12px; font-size:12px; letter-spacing:.14em; color:var(--amber);
-              font-weight:600; }
+              font-weight:600; display:flex; align-items:center; gap:10px; }
   .row { display:flex; gap:10px; padding:4px 0; }
   .row span:first-child { color:var(--dim); min-width:150px; }
   .row span.bad { color:var(--bad); }
   .placeholder { color:var(--dim); font-style:italic; }
+  .search { display:flex; gap:8px; margin-bottom:12px; }
+  .search input { flex:1; background:var(--bg); border:1px solid var(--line);
+                  border-radius:6px; color:var(--ink); padding:8px 10px;
+                  font:inherit; }
+  .search button { background:var(--amber); color:#1a1206; border:0; border-radius:6px;
+                    padding:8px 14px; font:inherit; font-weight:600; cursor:pointer; }
+  .hit { border-top:1px solid var(--line); padding:8px 0; font-size:12.5px; }
+  .hit:first-child { border-top:0; }
+  .hit .path { color:var(--amber); }
+  .hit .text { color:var(--dim); margin-top:3px; }
+  .tag { font-size:10px; padding:2px 8px; border-radius:999px; border:1px solid var(--line);
+         color:var(--dim); text-transform:uppercase; letter-spacing:.06em; }
+  .tag.dim { opacity:.7; }
+  .ledger-row { display:flex; gap:10px; padding:5px 0; border-top:1px solid var(--line);
+                font-size:12.5px; }
+  .ledger-row:first-child { border-top:0; }
+  .ledger-row .when { color:var(--dim); min-width:130px; }
 </style>
 
 <header>
@@ -43,18 +60,24 @@
   </section>
 
   <section class="panel">
-    <h3>KNOWLEDGE</h3>
-    <p class="placeholder">Hybrid search not built yet — lands with the RAG pass.</p>
+    <h3>KNOWLEDGE <span id="knowledge-count" class="tag dim"></span></h3>
+    <div class="search">
+      <input id="q" type="text" placeholder="hybrid search…"
+             onkeydown="if(event.key==='Enter') runSearch()">
+      <button onclick="runSearch()">SEARCH</button>
+    </div>
+    <div id="knowledge-state" class="placeholder"></div>
+    <div id="results"></div>
   </section>
 
   <section class="panel">
     <h3>EMBEDDINGS</h3>
-    <p class="placeholder">Not built yet — lands with the RAG pass.</p>
+    <div id="embeddings"></div>
   </section>
 
   <section class="panel">
-    <h3>TRADER LEDGER</h3>
-    <p class="placeholder">Not built yet — a stub, unbuilt beyond the ledger itself.</p>
+    <h3>TRADER LEDGER <span id="trader-count" class="tag dim"></span></h3>
+    <div id="trader"></div>
   </section>
 </main>
 
@@ -64,7 +87,7 @@ function row(label, value, bad) {
          `<span class="${bad ? 'bad' : ''}">${value}</span></div>`;
 }
 
-async function check() {
+async function checkStore() {
   const dot = document.getElementById('dot');
   const state = document.getElementById('state');
   let info;
@@ -85,6 +108,81 @@ async function check() {
   if (!ok) html += row('problem', info.problem || 'unreachable', true);
   document.getElementById('store').innerHTML = html;
 }
-check();
-setInterval(check, 10000);
+
+async function checkKnowledge() {
+  let notes;
+  try {
+    notes = await (await fetch('/api/storage/knowledge/notes')).json();
+  } catch (e) {
+    notes = { state: 'error', notes: [] };
+  }
+  const count = (notes.notes || []).length;
+  document.getElementById('knowledge-count').textContent = `${count} note${count === 1 ? '' : 's'}`;
+  document.getElementById('knowledge-state').textContent = count === 0
+    ? 'No notes yet.' : '';
+}
+
+async function runSearch() {
+  const q = document.getElementById('q').value.trim();
+  const resultsEl = document.getElementById('results');
+  const stateEl = document.getElementById('knowledge-state');
+  if (!q) { resultsEl.innerHTML = ''; stateEl.textContent = ''; return; }
+
+  let data;
+  try {
+    data = await (await fetch(`/api/storage/knowledge/search?q=${encodeURIComponent(q)}`)).json();
+  } catch (e) {
+    stateEl.textContent = `search failed: ${e}`;
+    resultsEl.innerHTML = '';
+    return;
+  }
+  stateEl.textContent = data.note || (data.state === 'partial' ? 'partial results' : '');
+  const hits = data.results || [];
+  resultsEl.innerHTML = hits.length === 0
+    ? '<p class="placeholder">No matches.</p>'
+    : hits.map(h => `<div class="hit"><div class="path">${h.doc_path}</div>` +
+        `<div class="text">${h.text.slice(0, 200)}${h.text.length > 200 ? '…' : ''}</div></div>`
+      ).join('');
+}
+
+async function checkEmbeddings() {
+  let info;
+  try {
+    info = await (await fetch('/api/storage/embeddings/status')).json();
+  } catch (e) {
+    info = { state: 'error', problem: String(e), gateway: '', model: null };
+  }
+  const ok = info.state === 'ok';
+  let html = '';
+  html += row('gateway', info.gateway || '—');
+  html += row('model', info.model || '(none configured)', !info.model);
+  if (!ok) html += row('problem', info.problem || 'unreachable', true);
+  document.getElementById('embeddings').innerHTML = html;
+}
+
+async function checkTrader() {
+  let data;
+  try {
+    data = await (await fetch('/api/storage/trader/decisions?limit=10')).json();
+  } catch (e) {
+    data = { decisions: [] };
+  }
+  const decisions = data.decisions || [];
+  document.getElementById('trader-count').textContent =
+    `${decisions.length} recent`;
+  document.getElementById('trader').innerHTML = decisions.length === 0
+    ? '<p class="placeholder">No decisions logged yet — the trader agent itself is unbuilt; this is only its ledger.</p>'
+    : decisions.map(d => `<div class="ledger-row"><span class="when">${d.recorded_at || d.path}</span>` +
+        `<span>${d.symbol || ''} ${d.action || ''} ${d.thesis || ''}</span></div>`
+      ).join('');
+}
+
+function refreshAll() {
+  checkStore();
+  checkKnowledge();
+  checkEmbeddings();
+  checkTrader();
+}
+refreshAll();
+setInterval(refreshAll, 15000);
 </script>
