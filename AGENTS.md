@@ -825,3 +825,59 @@ highest sub-number is the one in force and the parent stays as history.
   that pattern elsewhere would recreate the exact `Shared_By_All_*`
   coupling those rules exist to unwind — each screen's own
   `observability.py` (D30) is written from scratch instead, on purpose.
+
+## D31 — `Shared_By_All_Screens/` down to its irreducible core (2026-09-05)
+
+- **D31 — The four "known heavy pieces" PLAN item 8 named were already gone
+  before this pass.** `read_and_write_numbers.py` and `trace_every_action.py`
+  live single-owner in `Main_Menu/Backend/` now (an earlier session's work);
+  `add_and_search_the_knowledge_base.py` and `the_lease_board.py` don't
+  exist anywhere in the repo. What was left when this pass started:
+  `Look_And_Feel/` (CSS/fonts/JS), `Current_Numbers/` (the noticeboard,
+  ADR-010), and three Python files.
+- **D31.1 — `Look_And_Feel/` moved to `Main_Menu/Look_And_Feel/`.** Grepping
+  every *tracked* file found exactly one real importer: `Main_Menu/Backend/
+  settings_for_main_menu.py`. `Screens/Finance/Backend/settings_for_finance.py`
+  declared `LOOK_AND_FEEL`/`FONTS_DIR`/`WATCHED_FOLDERS` pointing at it but
+  never actually used any of the three — dead leftovers from before the
+  Aurum Next.js rebuild, which brought its own Tailwind theme. Deleted
+  rather than moved. Verified live: Main Menu boots, `/shared/colours_and_fonts.css`
+  and `/` both 200; Finance boots clean with the dead constants gone.
+  **Caught late:** `Screens/Anime/` (gitignored, untracked, invisible to a
+  normal grep) has its own real dependency on this path in `server.js` and
+  `settings_for_anime.py` — repointed to `Main_Menu/Look_And_Feel/` too
+  (path verified to resolve and exist) so the owner's local Anime screen
+  doesn't quietly break. Those two edits live only on disk; git ignores the
+  whole folder, so they were never at risk of being committed and never
+  will be. **Lesson for next time this repo greps for "every caller":**
+  gitignored screens are real runtime consumers and a plain grep misses
+  them — check `Screens/*/` on disk, not just what git tracks.
+- **D31.2 — The remaining three files
+  (`read_screen_settings.py`, `restart_signal.py`, `clear_every_data_cache.py`)
+  are NOT inlined, and that is the intended end state, not unfinished
+  work.** Their real importers are `Main_Menu/Backend/server_for_main_menu.py`
+  and `Start_Inky/{start_every_screen,serve_everything_on_one_port,
+  write_ports_for_inky}.py` — five importers across two callers, but
+  neither caller is a *screen*. `Start_Inky/` is the launcher, and Rule 17
+  already carves out the launcher and menu discovery as the one place
+  allowed to know about every screen by walking folders. Rule 5/6 targets
+  screen-to-screen coupling; this is launcher-and-menu-discovery
+  infrastructure, which is exactly what Rule 17 says gets to be
+  cross-cutting. `read_screen_settings.py`'s own docstring makes the
+  concrete cost of duplicating it explicit: "two copies of 'how do I find
+  the port' is how the menu ends up linking to a port nothing is listening
+  on." Copying it into both `Start_Inky/` and `Main_Menu/Backend/` would
+  reintroduce the exact bug class it was written to prevent, for a rule
+  whose actual target (screens sharing logic with each other) doesn't
+  apply here. Not done, on purpose — reversed here rather than pushed
+  through on momentum.
+- **D31.3 — `Current_Numbers/` (the noticeboard) is not code and stays.**
+  It is the one deliberate cross-screen channel (ADR-010): Finance writes
+  totals, Main Menu reads them for its home cards. Rule 6 targets shared
+  *logic* folders; a single shared data file is already the
+  minimum-coupling answer to "how do two screens exchange one number", not
+  a violation of it.
+- **Net effect:** `Shared_By_All_Screens/` now holds exactly what has a
+  standing reason to be there: three launcher/menu-discovery Python files
+  and one cross-screen data file. `PLAN.md` item 8 is closed as this state,
+  not as an empty folder.

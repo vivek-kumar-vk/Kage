@@ -42,20 +42,9 @@ NEXT_SOURCE = SCREEN / "Page" / "next_app"
 # Private records this screen still owns (gitignored).
 SAVED_RECORDS = SCREEN / "Saved_Records"
 
-# Colours, fonts and background art are shared by every screen so they
-# cannot drift apart.
-LOOK_AND_FEEL = PROJECT_ROOT / "Shared_By_All_Screens" / "Look_And_Feel"
-FONTS_DIR = LOOK_AND_FEEL / "Fonts"
-
 # ---------------------------------------------------------------------
 # API
 # ---------------------------------------------------------------------
 API_PREFIX = "/api/finance"
-
-# The folders the /dev/changed-since endpoint fingerprints: this
-# screen's own code plus everything shared. Data folders are excluded
-# inside code_change_monitor.py, so ordinary clicks never look
-# like code changes.
-WATCHED_FOLDERS = [SCREEN, PROJECT_ROOT / "Shared_By_All_Screens"]  # the shared tree is now just Look_And_Feel + the noticeboard
 
 

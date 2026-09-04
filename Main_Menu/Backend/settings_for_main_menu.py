@@ -35,7 +35,7 @@ PAGE = SCREEN / "Page" / "page_for_main_menu.html"
 
 # Colours, fonts and background art are shared by every screen so they
 # cannot drift apart.
-LOOK_AND_FEEL = PROJECT_ROOT / "Shared_By_All_Screens" / "Look_And_Feel"
+LOOK_AND_FEEL = SCREEN / "Look_And_Feel"
 FONTS_DIR = LOOK_AND_FEEL / "Fonts"
 
 # ---------------------------------------------------------------------
@@ -59,7 +59,7 @@ EXTERNAL_LINKS: dict[str, str] = {}
 # screen's own code plus everything shared. Data folders are excluded
 # inside code_change_monitor.py, so ordinary clicks never look
 # like code changes.
-MONITORED_FOLDERS = [SCREEN, PROJECT_ROOT / "Shared_By_All_Screens"]  # the shared tree is now just Look_And_Feel + the noticeboard
+MONITORED_FOLDERS = [SCREEN, PROJECT_ROOT / "Shared_By_All_Screens"]  # Look_And_Feel moved into SCREEN (item 8); Shared_By_All_Screens is now just the launcher+menu port-discovery/restart-signal code this screen imports, plus the noticeboard
 
 # ---------------------------------------------------------------------
 # NEXT.JS REBUILD FLAG (Phase 12.3)

@@ -20,10 +20,9 @@ Status: `queued` | `in progress` | `parked`.
 | 1 | Finance data migration / backfill | **in progress** (user-led) |
 | 2 | Google Drive private storage layer | **in progress** (Qwen-led, parallel) |
 | 3 | Wire finance-os agents through OmniRoute | queued |
-| 4 | AGENT DECK chambers (pixel V1.5) + V2 | queued |
-| 6 | finance-os Overview follow-ups | queued |
-| 7 | Observability on every tab | queued |
-| 8 | Remove `Shared_By_All_Screens/` — mostly done 2026-09-03 | queued |
+| 4 | AGENT DECK chambers (pixel V1.5) + V2 | **mostly shipped 2026-09-05** — TaskBrief panel + live-gateway run left |
+| 6 | finance-os Overview follow-ups | **mostly shipped 2026-09-05** — SMS import + one manual browser check left |
+| 7 | Observability on every tab | **mostly shipped 2026-09-05** — Main Menu panel left (frontend mid-redesign) |
 | 9 | Python/FastAPI → Node + Express | queued |
 | 11 | dsh local-model observability | parked |
 | 12 | Learning OS rebuild (D16): Ember Studio UI + agent crew | **in progress** |
@@ -70,10 +69,6 @@ from D21.1 (~1 h, part of item 12).
 | # | Item | Hours |
 |---|------|-------|
 | 3 | Wire finance-os agents through OmniRoute (blocked on Q10/Q12) | 2-3 |
-| 4 | AGENT DECK V2 — real agents, runs table, DM rooms, TaskBrief | 8-12 |
-| 6 | finance-os Overview follow-ups (month selector, benchmark line, SMS import) | 4-6 |
-| 7 | Observability on every tab (5 screens) | 8-12 |
-| 8 | Delete `Shared_By_All_*` entirely | 6-10 |
 | 9 | Runtime choice per service — rescoped by D21.1 | ~0 |
 | 11 | dsh local-model observability (parked) | 4-6 |
 | 12 | Learning M6 — THM lab, day template, Planner rebalance | 6-8 |
@@ -348,19 +343,24 @@ small panel once that settles.
 
 ---
 
-## 8 — Remove `Shared_By_All_Screens/` entirely
+## 8 — Shrink `Shared_By_All_Screens/` to its irreducible core — closed 2026-09-05 (D31-D31.3)
 
-End state: both directories gone (`CLAUDE.md` Rule 6). Every currently-shared function
-moves into the single screen/agent that uses it; genuinely multi-consumer logic is
-duplicated per consumer, not shared.
+**Closed as this state, not as an empty folder.** The "known heavy pieces" this item
+originally named were already gone: `read_and_write_numbers.py` and `trace_every_action.py`
+are single-owner in `Main_Menu/Backend/`; `add_and_search_the_knowledge_base.py` and
+`the_lease_board.py` don't exist in the repo. This pass moved `Look_And_Feel/` into
+`Main_Menu/Look_And_Feel/` (its one real tracked caller — Finance's reference was dead)
+and deleted the dead `LOOK_AND_FEEL`/`FONTS_DIR`/`WATCHED_FOLDERS` lines from
+`settings_for_finance.py`; also repointed the gitignored `Screens/Anime/` screen's own
+reference (uncommitted, untracked, but a real local dependency a plain grep misses).
 
-Sequence: inventory each shared file's callers → inline and delete the single-caller
-files → copy the multi-caller ones into each caller, then delete → keep the app booting
-after each file.
-
-Known heavy pieces: `read_and_write_numbers.py` (the noticeboard),
-`add_and_search_the_knowledge_base.py`, `trace_every_action.py`, `the_lease_board.py`,
-`read_screen_settings.py`.
+**What's left, on purpose:** `read_screen_settings.py`, `restart_signal.py`,
+`clear_every_data_cache.py` — imported only by `Main_Menu/Backend/server_for_main_menu.py`
+and `Start_Inky/*.py`. Neither caller is a screen; `Start_Inky/` is the launcher, which
+Rule 17 already carves out as allowed to know about every screen. Duplicating
+`read_screen_settings.py` would reintroduce the exact "two copies of how-do-I-find-the-port"
+bug its own docstring exists to prevent. `Current_Numbers/` (the noticeboard) is data, not
+logic — the deliberate one channel between screens (ADR-010), not a Rule 6 violation.
 
 ---
 
