@@ -300,19 +300,36 @@ D15 2D pixel-art office replaced the 3D stage 2026-09-02.
 ## 6 — finance-os Overview follow-ups
 
 The Aurum rebuild shipped 2026-09-02 (`AGENTS.md` D13/D13.1-3,
-`Screens/Finance/DECISIONS.md` FD5+FD6). Left open:
+`Screens/Finance/DECISIONS.md` FD5+FD6).
 
-- Interactive month selector in the header — the pill is display-only today.
-  **Brief written 2026-09-02:** `.scratch/glm-briefs/3_FINANCE_frontend_overview.md`.
-- Benchmark comparison on the net-worth ridge (index line behind the actual).
-  Same brief; the `GET /api/finance/market/benchmark` contract is frozen there and built
-  by the item-1 backend brief.
+- **Interactive month selector + benchmark ridge overlay — shipped 2026-09-05
+  (D28-D28.4).** Brief: `.scratch/glm-briefs/3_FINANCE_frontend_overview.md`.
+  The header pill is a real accessible dropdown scoped to Overview only,
+  reading its month list off `net-worth`'s own `trend` (never an arithmetic
+  range); the scope lives in `?month=` in the URL. `NetWorthCard` genuinely
+  scopes to a past month (hero, deltas, truncated ridge, projection hidden);
+  every other Overview card appends `?through=` and shows an honest
+  "AS OF \<month\> — not yet historical" marker, since the backend doesn't
+  support it yet. The ridge's benchmark line (Nifty 50, hardcoded symbol) is
+  rebased onto net worth's own scale through one shared normalize call — no
+  double-scaling — and renders `NO BENCHMARK LOADED` honestly since
+  `GET /api/finance/market/benchmark` (item 1's backend brief) doesn't exist
+  on this branch yet; verified live that a 404 there doesn't break the card.
+  `npm run build` clean, zero TS errors, `package.json`/lock untouched,
+  chart/animation-lib and `Shared_By_All` greps clean, changes confined to
+  `Screens/Finance/Page/next_app/`.
+  **Not verified this pass** (no browser extension connected during this
+  autonomous run): the benchmark line actually drawing once the backend
+  endpoint exists, and the three.js WebGL render/draw-in/drag-to-tilt in a
+  real window — folds into the manual check below.
 - SMS import pipeline, so `sms_last_import` stops going stale by hand. **Not briefed** —
   needs your SMS export format first.
-- **One manual check owed:** the three.js net-worth ridge was never watched running.
-  Automated Chrome reports `visibilityState: hidden` (freezes `requestAnimationFrame`)
-  and `prefers-reduced-motion: reduce`, so only the SVG fallback was verified. The
-  WebGL path, its draw-in and drag-to-tilt need one look in a normal window.
+- **One manual check owed:** the three.js net-worth ridge (now with the
+  benchmark line) was never watched running. Automated Chrome reports
+  `visibilityState: hidden` (freezes `requestAnimationFrame`) and
+  `prefers-reduced-motion: reduce`, so only the SVG fallback was verified.
+  The WebGL path, its draw-in, drag-to-tilt, and the benchmark overlay (once
+  item 1 lands the backend endpoint) need one look in a normal window.
 
 ---
 

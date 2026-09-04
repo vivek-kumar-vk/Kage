@@ -1,6 +1,8 @@
 "use client";
 import { useFinanceData } from "@/lib/api";
 import { inrCompact, num } from "@/lib/format";
+import { useOverviewScope } from "@/lib/useOverviewScope";
+import HistoricalMarker from "@/components/finance/HistoricalMarker";
 import type { CashflowData } from "@/lib/types";
 
 const UP = "#3DDC97";
@@ -63,7 +65,10 @@ function Legend({ swatch, children }: { swatch: string; children: React.ReactNod
 }
 
 export default function CashflowCard() {
-  const { data, isLoading, error } = useFinanceData<CashflowData>("/overview/cashflow");
+  const scope = useOverviewScope();
+  const { data, isLoading, error } = useFinanceData<CashflowData>(
+    `/overview/cashflow${scope.query}`
+  );
   const months = data?.months ?? [];
 
   // The headline follows the tag: sum the window actually charted, and only
@@ -86,6 +91,7 @@ export default function CashflowCard() {
               {windowed ? `last ${months.length} mo` : "all time"}
             </span>
           </div>
+          {scope.isHistorical ? <HistoricalMarker label={scope.label} /> : null}
           <div className="mt-3.5 flex gap-[26px]">
             <Stat label="INCOME" value={`₹${num(income)}`} cls="pos" />
             <Stat label="EXPENSES" value={`₹${num(expenses)}`} cls="neg" />

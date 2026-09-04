@@ -1,6 +1,8 @@
 "use client";
 import { useFinanceData } from "@/lib/api";
 import { inr, inrCompact } from "@/lib/format";
+import { useOverviewScope } from "@/lib/useOverviewScope";
+import HistoricalMarker from "@/components/finance/HistoricalMarker";
 import type { SurplusAllocationData } from "@/lib/types";
 
 const R = 66;
@@ -10,8 +12,9 @@ const C = 2 * Math.PI * R; // 414.7
 const SLICE_COLORS = ["#E4C07C", "#8B93FF", "#6BE1FF"];
 
 export default function SurplusAllocationCard() {
+  const scope = useOverviewScope();
   const { data, isLoading, error } = useFinanceData<SurplusAllocationData>(
-    "/overview/surplus-allocation"
+    `/overview/surplus-allocation${scope.query}`
   );
 
   const slices = (data?.allocation ?? []).map((a, i) => ({
@@ -39,6 +42,7 @@ export default function SurplusAllocationCard() {
           <div className="plabel">
             Surplus Allocation <span className="tag dim">this month</span>
           </div>
+          {scope.isHistorical ? <HistoricalMarker label={scope.label} /> : null}
 
           <div className="mt-5 flex items-center gap-5">
             <svg width="170" height="170" viewBox="0 0 170 170" className="shrink-0">

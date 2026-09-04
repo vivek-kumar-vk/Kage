@@ -1,6 +1,8 @@
 "use client";
 import { useFinanceData } from "@/lib/api";
 import { inrCompact, num, pct } from "@/lib/format";
+import { useOverviewScope } from "@/lib/useOverviewScope";
+import HistoricalMarker from "@/components/finance/HistoricalMarker";
 import type { DebtStatusData } from "@/lib/types";
 
 // Loans are returned largest-first, so the ramp reads big → small.
@@ -17,7 +19,10 @@ function Stat({ label, value, cls }: { label: string; value: string; cls?: strin
 }
 
 export default function DebtStatusCard() {
-  const { data, isLoading, error } = useFinanceData<DebtStatusData>("/overview/debt-status");
+  const scope = useOverviewScope();
+  const { data, isLoading, error } = useFinanceData<DebtStatusData>(
+    `/overview/debt-status${scope.query}`
+  );
   const loans = data?.loans ?? [];
 
   return (
@@ -34,6 +39,7 @@ export default function DebtStatusCard() {
               {data.count} {data.count === 1 ? "loan" : "loans"}
             </span>
           </div>
+          {scope.isHistorical ? <HistoricalMarker label={scope.label} /> : null}
 
           <div className="mt-3.5 flex gap-6">
             <Stat label="OUTSTANDING" value={`₹${num(data.total_debt)}`} />

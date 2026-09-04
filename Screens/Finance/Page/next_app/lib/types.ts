@@ -133,6 +133,21 @@ export interface TopActionsData {
   count: number;
 }
 
+export interface BenchmarkPoint {
+  date: string;
+  close: number;
+  indexed: number; // close / close_at_base * 100
+}
+
+export interface BenchmarkData {
+  symbol: string;
+  name: string;
+  state: "ok" | "partial" | "empty";
+  note: string | null;
+  base_date: string | null;
+  points: BenchmarkPoint[];
+}
+
 export interface DataHealthData {
   id: number;
   cas_last_import: string | null;

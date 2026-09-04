@@ -1,6 +1,8 @@
 "use client";
 import { useFinanceData } from "@/lib/api";
 import { inrCompact, monthLabel, num } from "@/lib/format";
+import { useOverviewScope } from "@/lib/useOverviewScope";
+import HistoricalMarker from "@/components/finance/HistoricalMarker";
 import type { GoalsOverviewData } from "@/lib/types";
 
 const BARS = [
@@ -10,7 +12,10 @@ const BARS = [
 ];
 
 export default function GoalsCard() {
-  const { data, isLoading, error } = useFinanceData<GoalsOverviewData>("/overview/goals");
+  const scope = useOverviewScope();
+  const { data, isLoading, error } = useFinanceData<GoalsOverviewData>(
+    `/overview/goals${scope.query}`
+  );
   const goals = data?.goals ?? [];
   const monteCarlo = goals.some((g) => g.probability_source === "monte-carlo");
 
@@ -25,6 +30,7 @@ export default function GoalsCard() {
           <div className="plabel">
             Goals <span className="tag dim">{data.count} active</span>
           </div>
+          {scope.isHistorical ? <HistoricalMarker label={scope.label} /> : null}
 
           {goals.length === 0 ? (
             <p className="mt-6 text-xs text-aurum-muted">

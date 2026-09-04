@@ -1,6 +1,8 @@
 "use client";
 import { useFinanceData } from "@/lib/api";
 import { num, pct } from "@/lib/format";
+import { useOverviewScope } from "@/lib/useOverviewScope";
+import HistoricalMarker from "@/components/finance/HistoricalMarker";
 import type { PortfolioPulseData } from "@/lib/types";
 
 function PulseSparkline({ points }: { points: number[] }) {
@@ -35,7 +37,10 @@ function PulseSparkline({ points }: { points: number[] }) {
 }
 
 export default function PortfolioPulseCard() {
-  const { data, isLoading, error } = useFinanceData<PortfolioPulseData>("/overview/portfolio-pulse");
+  const scope = useOverviewScope();
+  const { data, isLoading, error } = useFinanceData<PortfolioPulseData>(
+    `/overview/portfolio-pulse${scope.query}`
+  );
 
   // A series of zeros with today's value tacked on is an artifact of missing
   // lots, not a trend — don't draw a cliff and call it history.
@@ -53,6 +58,7 @@ export default function PortfolioPulseCard() {
           <div className="plabel">
             Portfolio Pulse <span className="tag dim">today</span>
           </div>
+          {scope.isHistorical ? <HistoricalMarker label={scope.label} /> : null}
           <div className="mt-3 flex items-baseline gap-3">
             <div className="value-lg">
               <span className="cur">₹</span>

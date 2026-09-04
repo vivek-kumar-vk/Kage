@@ -710,3 +710,54 @@ highest sub-number is the one in force and the parent stays as history.
   off the SSE `done`/`error` events already flowing through `workspace/page.tsx`
   rather than polling — a run only ever closes on one of those two event
   types, so a timer would mostly re-read the same row.
+
+## D28 — finance-os Overview: month selector + benchmark ridge overlay (2026-09-05)
+
+- **D28 — Two series get ONE shared min/max, never two.** The net-worth
+  ridge's benchmark overlay is rebased onto net worth's own units
+  (`lib/benchmark.ts` `rebaseBenchmark`) rather than min-max scaled on its
+  own — scaling two series independently into the same box makes them look
+  like they track each other regardless of what the numbers say, which is a
+  fabricated chart (Rule 8). Net worth can be negative (a large education
+  loan), so the rebase is an absolute swing off the first trend point sized
+  by that point's own magnitude, not a ratio. `NetWorthRidge.tsx`'s
+  `normalizeWithBenchmark()` normalizes trend and the rebased benchmark
+  together in one call; the plain `normalize()` used by the existing
+  trend/projection tail is untouched (a pre-existing, separate scale — out
+  of scope for this pass). A month the benchmark response doesn't cover is
+  a gap (`null`), never interpolated — both the three.js line and the SVG
+  fallback render it as a broken run, not a straight line across the hole.
+- **D28.1 — The month scope lives in the URL (`?month=YYYY-MM-DD`), not a
+  React context.** The header pill (`app/finance/layout.tsx`) sits above the
+  Overview page in the component tree, so a context provider mounted on the
+  page can't reach it. `lib/useOverviewScope.ts` splits into a read-only
+  `useOverviewScope()` (every Overview card) and a `useMonthPicker(trend)`
+  writer (the header only). Survives a refresh and a shared link for free.
+  Selectable months come only from `net-worth`'s own `trend` array — never
+  an arithmetic range — so a month with no snapshot is never offered.
+- **D28.2 — The month pill is only interactive on the Overview tab.** On
+  every other Finance tab it renders as a plain, non-clickable "LIVE" pill —
+  the `month` query param does nothing outside Overview, so an interactive
+  control there would imply a scope that isn't real.
+- **D28.3 — The backend doesn't support `?through=` yet, so only
+  `NetWorthCard` genuinely scopes.** It already holds the full `trend`
+  client-side and can read a past month straight out of it (hero number,
+  recomputed `month_change_pct`/`all_time_pct`, truncated ridge, projection
+  hidden entirely — a projection from a past month is a fiction). Every
+  other Overview card still appends `?through=` to its own fetch (so a
+  future backend can pick it up) but shows a small `HistoricalMarker`
+  ("AS OF \<month\> — not yet historical") instead of silently rendering
+  live numbers under a back-dated label.
+- **D28.4 — The benchmark symbol is hardcoded to `^NSEI` (Nifty 50)** — no
+  per-user index setting exists yet. `GET /api/finance/market/benchmark`
+  (the contract item 1's backend brief owns) doesn't exist on this branch;
+  a 404 is treated exactly like the endpoint's own `state: "empty"` — the
+  card renders normally with a `NO BENCHMARK LOADED` chip, never a crash.
+  Verified live: `curl .../market/benchmark?...` → 404, Overview still
+  loads, real net-worth trend renders. **Not verified live:** the
+  benchmark-present path (endpoint doesn't exist to test against) and the
+  three.js WebGL render in an actual browser — the Claude-in-Chrome
+  extension wasn't connected during this autonomous pass, only `npm run
+  build` (zero TS errors, static export clean) and the grep/scope checks
+  from §8 of the brief. Owner: give the ridge + benchmark line one look in
+  a normal window per PLAN.md item 6's existing "one manual check owed."

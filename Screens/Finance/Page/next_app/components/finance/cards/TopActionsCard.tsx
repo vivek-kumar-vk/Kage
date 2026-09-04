@@ -1,10 +1,15 @@
 "use client";
 import { useFinanceData } from "@/lib/api";
+import { useOverviewScope } from "@/lib/useOverviewScope";
+import HistoricalMarker from "@/components/finance/HistoricalMarker";
 import type { TopActionsData } from "@/lib/types";
 
 // Rendered inside the shared panel in app/finance/page.tsx — no .panel here.
 export default function TopActionsCard() {
-  const { data, isLoading, error } = useFinanceData<TopActionsData>("/overview/top-actions");
+  const scope = useOverviewScope();
+  const { data, isLoading, error } = useFinanceData<TopActionsData>(
+    `/overview/top-actions${scope.query}`
+  );
   const actions = data?.actions ?? [];
 
   return (
@@ -21,6 +26,7 @@ export default function TopActionsCard() {
               {actions.length} open
             </span>
           </div>
+          {scope.isHistorical ? <HistoricalMarker label={scope.label} /> : null}
 
           {actions.length === 0 ? (
             <p className="mt-4 text-xs text-aurum-muted">Nothing needs a decision today.</p>

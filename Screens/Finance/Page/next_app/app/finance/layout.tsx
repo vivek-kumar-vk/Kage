@@ -1,9 +1,12 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Suspense, useEffect, type MouseEvent } from 'react';
 import { useFinanceData } from '@/lib/api';
-import type { DataHealthData } from '@/lib/types';
+import type { DataHealthData, NetWorthData } from '@/lib/types';
+import MonthSelector from '@/components/finance/MonthSelector';
+
+const OVERVIEW = '/finance';
 
 const tabs = [
   { name: 'Overview', href: '/finance' },
@@ -18,6 +21,42 @@ function isActive(pathname: string, href: string) {
   return href === '/finance' ? pathname === '/finance' : pathname.startsWith(href);
 }
 
+/**
+ * Tab clicks that keep browser history shallow. The stack for this
+ * screen never grows past [main menu, Overview, current tab], so one
+ * Back press from any tab lands on Overview and one more lands on the
+ * main menu — instead of walking back through every tab visited.
+ *
+ *   -> Overview      : step back (Overview is always the entry just
+ *                      below a tab, so there is nothing to add)
+ *   Overview -> tab  : push (the single entry above Overview)
+ *   tab -> tab       : replace (swap that single entry)
+ *
+ * Keeps <Link> for prefetch + real href (middle-click, right-click);
+ * only the plain left-click is intercepted.
+ */
+function useShallowTabNav() {
+  const router = useRouter();
+  const pathname = usePathname();
+  return (event: MouseEvent, href: string) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+    event.preventDefault();
+    if (href === pathname) return;
+    if (href === OVERVIEW) router.back();
+    else if (pathname === OVERVIEW) router.push(href);
+    else router.replace(href);
+  };
+}
+
 function syncedLabel(freshness?: { prices?: string | null }): string | null {
   const p = freshness?.prices;
   if (!p) return null;
@@ -27,7 +66,11 @@ function syncedLabel(freshness?: { prices?: string | null }): string | null {
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
+  const onTabClick = useShallowTabNav();
   const { data, refetch } = useFinanceData<DataHealthData>('/overview/data-health');
+  // The month list comes from the same trend the Overview cards already use —
+  // no arithmetic range, so a month with no snapshot is never offered (D28).
+  const { data: netWorth } = useFinanceData<NetWorthData>('/overview/net-worth');
 
   // keep the LIVE pill honest — re-poll freshness every 60 s
   useEffect(() => {
@@ -36,9 +79,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   }, [refetch]);
 
   const synced = syncedLabel(data?.freshness);
-  const month = new Date()
-    .toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-    .toUpperCase();
 
   return (
     <div className="flex min-h-screen flex-col aurum-page">
@@ -51,6 +91,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <Link
               key={tab.href}
               href={tab.href}
+              onClick={(e) => onTabClick(e, tab.href)}
               className={`flex items-center border-b-2 px-[18px] text-[13px] font-medium tracking-wide ${
                 isActive(pathname, tab.href)
                   ? 'border-aurum-gold text-aurum-gold-bright'
@@ -66,9 +107,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <span className="dot" />
             {synced ? `LIVE · synced ${synced}` : 'LIVE · awaiting first sync'}
           </div>
-          <div className="pill">{month}</div>
+          <Suspense fallback={<div className="pill">···</div>}>
+            <MonthSelector trend={netWorth?.trend} interactive={pathname === '/finance'} />
+          </Suspense>
           <Link
             href="/finance/settings"
+            onClick={(e) => onTabClick(e, '/finance/settings')}
             className="chip hover:border-aurum-gold/40 hover:text-aurum-gold"
           >
             SETTINGS

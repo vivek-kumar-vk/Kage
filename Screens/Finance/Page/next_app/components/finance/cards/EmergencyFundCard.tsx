@@ -1,14 +1,17 @@
 "use client";
 import { useFinanceData } from "@/lib/api";
 import { inrCompact, monthLabel, num, pctFromFraction } from "@/lib/format";
+import { useOverviewScope } from "@/lib/useOverviewScope";
+import HistoricalMarker from "@/components/finance/HistoricalMarker";
 import type { EmergencyFundData } from "@/lib/types";
 
 const R = 56;
 const C = 2 * Math.PI * R; // 351.9
 
 export default function EmergencyFundCard() {
+  const scope = useOverviewScope();
   const { data, isLoading, error } = useFinanceData<EmergencyFundData>(
-    "/overview/emergency-fund"
+    `/overview/emergency-fund${scope.query}`
   );
   const progress = Math.min(Math.max(data?.progress ?? 0, 0), 1);
 
@@ -21,6 +24,7 @@ export default function EmergencyFundCard() {
       ) : !data ? null : (
         <>
           <div className="plabel">Emergency Fund</div>
+          {scope.isHistorical ? <HistoricalMarker label={scope.label} /> : null}
 
           <div className="mt-4 flex items-center gap-5">
             <svg width="140" height="140" viewBox="0 0 140 140" className="shrink-0">

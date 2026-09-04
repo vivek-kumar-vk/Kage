@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import NetWorthCard from "@/components/finance/cards/NetWorthCard";
 import CashflowCard from "@/components/finance/cards/CashflowCard";
 import PortfolioPulseCard from "@/components/finance/cards/PortfolioPulseCard";
@@ -12,6 +13,14 @@ import DataHealthCard from "@/components/finance/cards/DataHealthCard";
 // 12-col mockup grid: 8+4 / 5+4+3 / 4+4+4. TopActions and DataHealth share
 // one panel, split 1.15/0.85 like the design.
 export default function OverviewPage() {
+  return (
+    <Suspense fallback={<div className="footnote">LOADING…</div>}>
+      <OverviewGrid />
+    </Suspense>
+  );
+}
+
+function OverviewGrid() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
       <div className="lg:col-span-8">

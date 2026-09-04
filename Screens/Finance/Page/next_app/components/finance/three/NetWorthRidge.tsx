@@ -12,6 +12,10 @@ import * as THREE from "three";
 export interface RidgeProps {
   trend: number[]; // actual net-worth points (solid)
   projection: number[]; // 12-month projected points (dashed tail)
+  /** Benchmark, already rebased onto net worth's own units and aligned
+   * point-for-point with `trend` (same length; null = no snapshot that
+   * month — a gap, never interpolated). Omitted or too short => no line. */
+  benchmark?: (number | null)[];
 }
 
 /** Which renderer actually drew — the card labels itself from this. */
@@ -30,6 +34,60 @@ function normalize(values: number[]): { x: number; y: number }[] {
     x: (i / (values.length - 1)) * W,
     y: ((Number.isFinite(v) ? v : min) - min) / range * H,
   }));
+}
+
+/** Trend and its benchmark overlay, mapped through ONE shared min/max so
+ * neither line is independently rescaled to fill the box — two series
+ * scaled apart from each other would look like they track regardless of
+ * what the numbers say (D28, AGENTS.md). `x` uses trend's own spacing
+ * (trend.length - 1), since the benchmark is aligned point-for-point with
+ * it, not appended after it in time. */
+function normalizeWithBenchmark(
+  trend: number[],
+  benchmark: (number | null)[] | undefined
+): { solid: { x: number; y: number }[]; benchmarkPoints: ({ x: number; y: number } | null)[] } {
+  const finiteTrend = trend.filter((v) => Number.isFinite(v));
+  const finiteBenchmark = (benchmark ?? []).filter(
+    (v): v is number => v !== null && Number.isFinite(v)
+  );
+
+  if (finiteTrend.length < 2) return { solid: [], benchmarkPoints: [] };
+  if (finiteBenchmark.length === 0 || !benchmark) {
+    return { solid: normalize(trend), benchmarkPoints: [] };
+  }
+
+  const all = [...finiteTrend, ...finiteBenchmark];
+  const min = Math.min(...all);
+  const max = Math.max(...all);
+  const range = max - min || 1;
+  const xOf = (i: number) => (i / (trend.length - 1)) * W;
+  const yOf = (v: number) => ((v - min) / range) * H;
+
+  const solid = trend.map((v, i) => ({
+    x: xOf(i),
+    y: yOf(Number.isFinite(v) ? v : min),
+  }));
+  const benchmarkPoints = benchmark.map((v, i) =>
+    v === null || !Number.isFinite(v) ? null : { x: xOf(i), y: yOf(v) }
+  );
+  return { solid, benchmarkPoints };
+}
+
+/** Split a point-per-index array (with gaps) into contiguous runs — a
+ * missing month breaks the line rather than being interpolated across. */
+function runsOf(points: ({ x: number; y: number } | null)[]): { x: number; y: number }[][] {
+  const runs: { x: number; y: number }[][] = [];
+  let current: { x: number; y: number }[] = [];
+  for (const p of points) {
+    if (p) {
+      current.push(p);
+    } else if (current.length) {
+      runs.push(current);
+      current = [];
+    }
+  }
+  if (current.length) runs.push(current);
+  return runs.filter((run) => run.length >= 2);
 }
 
 function useDragTilt() {
@@ -74,9 +132,14 @@ function useDragTilt() {
 function RidgeScene({
   trend,
   projection,
+  benchmark,
   onFirstFrame,
 }: RidgeProps & { onFirstFrame: () => void }) {
-  const solid = useMemo(() => normalize(trend), [trend]);
+  const { solid, benchmarkPoints } = useMemo(
+    () => normalizeWithBenchmark(trend, benchmark),
+    [trend, benchmark]
+  );
+  const benchmarkRuns = useMemo(() => runsOf(benchmarkPoints), [benchmarkPoints]);
   const full = useMemo(
     () => normalize([...trend, ...projection.map((v, i) => (i === 0 && trend.length ? trend[trend.length - 1] : v))]),
     [trend, projection],
@@ -181,6 +244,17 @@ function RidgeScene({
   return (
     <group ref={tiltRef} {...handlers} scale={[1, yScale, 1]}>
       <group ref={groupRef}>
+        {benchmarkRuns.map((run, i) => (
+          <DreiLine
+            key={`benchmark-${i}`}
+            points={run.map((p) => new THREE.Vector3(p.x, p.y, -0.05))}
+            color="#8B93FF"
+            lineWidth={1.4}
+            transparent
+            opacity={0.45}
+            depthWrite={false}
+          />
+        ))}
         {fillGeometry && (
           <mesh ref={fillRef} geometry={fillGeometry}>
             <meshBasicMaterial color="#E4C07C" transparent opacity={0.13} depthWrite={false} />
@@ -229,14 +303,27 @@ function hasWebGL(): boolean {
 }
 
 /** Static gold SVG ridge — same data, no motion (mockup port). */
-function RidgeFallback({ trend, projection }: RidgeProps) {
-  const { solidPath, areaPath, tailPath, today, viewBox } = useMemo(() => {
+function RidgeFallback({ trend, projection, benchmark }: RidgeProps) {
+  const { solidPath, areaPath, tailPath, benchmarkPath, today, viewBox } = useMemo(() => {
     const values = [...trend, ...projection];
-    if (values.length < 2) return { solidPath: "", areaPath: "", tailPath: "", today: null, viewBox: "0 0 1000 150" };
+    if (values.length < 2) {
+      return {
+        solidPath: "",
+        areaPath: "",
+        tailPath: "",
+        benchmarkPath: "",
+        today: null,
+        viewBox: "0 0 1000 150",
+      };
+    }
     const Wv = 1000;
     const Hv = 150;
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    const finiteBenchmark = (benchmark ?? []).filter(
+      (v): v is number => v !== null && Number.isFinite(v)
+    );
+    const scaleValues = finiteBenchmark.length ? [...values, ...finiteBenchmark] : values;
+    const min = Math.min(...scaleValues);
+    const max = Math.max(...scaleValues);
     const range = max - min || 1;
     const px = (i: number) => (i / (values.length - 1)) * Wv;
     const py = (v: number) => Hv - 6 - ((v - min) / range) * (Hv - 18);
@@ -246,14 +333,32 @@ function RidgeFallback({ trend, projection }: RidgeProps) {
     const tail = pts.slice(Math.max(nSolid - 1, 0));
     const toPath = (arr: readonly (readonly [number, number])[]) =>
       arr.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+
+    // Benchmark is aligned point-for-point with trend, not appended after it
+    // — same px() index basis as trend, gaps break the path (new "M").
+    let benchmarkPathStr = "";
+    if (benchmark && finiteBenchmark.length) {
+      let segment = "";
+      benchmark.forEach((v, i) => {
+        if (v === null || !Number.isFinite(v)) {
+          segment = "";
+          return;
+        }
+        const cmd = segment === "" ? "M" : "L";
+        benchmarkPathStr += `${cmd}${px(i).toFixed(1)},${py(v).toFixed(1)} `;
+        segment = "x";
+      });
+    }
+
     return {
       solidPath: toPath(solid),
       areaPath: `${toPath(solid)} L${solid[solid.length - 1][0].toFixed(1)},${Hv} L${solid[0][0].toFixed(1)},${Hv} Z`,
       tailPath: toPath(tail),
+      benchmarkPath: benchmarkPathStr.trim(),
       today: solid[solid.length - 1],
       viewBox: `0 0 ${Wv} ${Hv}`,
     };
-  }, [trend, projection]);
+  }, [trend, projection, benchmark]);
 
   if (!solidPath) return null;
   return (
@@ -281,6 +386,9 @@ function RidgeFallback({ trend, projection }: RidgeProps) {
         <line x1="0" y1="75" x2="1000" y2="75" />
         <line x1="0" y1="113" x2="1000" y2="113" />
       </g>
+      {benchmarkPath && (
+        <path d={benchmarkPath} fill="none" stroke="#8B93FF" strokeWidth="1" strokeOpacity=".45" />
+      )}
       <path d={areaPath} fill="url(#au-goldfill)" />
       <path d={solidPath} fill="none" stroke="url(#au-goldline)" strokeWidth="2.5" filter="url(#au-glow)" />
       {tailPath && (
@@ -299,6 +407,7 @@ function RidgeFallback({ trend, projection }: RidgeProps) {
 export default function NetWorthRidge({
   trend,
   projection,
+  benchmark,
   onMode,
 }: RidgeProps & { onMode?: (mode: RidgeMode) => void }) {
   const [mode, setMode] = useState<"pending" | "three" | "svg">("pending");
@@ -327,7 +436,8 @@ export default function NetWorthRidge({
   }, [mode]);
 
   if (trend.length < 2 && projection.length < 2) return null;
-  if (mode !== "three") return <RidgeFallback trend={trend} projection={projection} />;
+  if (mode !== "three")
+    return <RidgeFallback trend={trend} projection={projection} benchmark={benchmark} />;
 
   return (
     <div className="h-full w-full touch-none" style={{ touchAction: "none" }}>
@@ -339,6 +449,7 @@ export default function NetWorthRidge({
         <RidgeScene
           trend={trend}
           projection={projection}
+          benchmark={benchmark}
           onFirstFrame={() => {
             framed.current = true;
           }}

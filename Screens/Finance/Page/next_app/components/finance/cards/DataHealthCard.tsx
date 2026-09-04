@@ -1,5 +1,7 @@
 "use client";
 import { useFinanceData } from "@/lib/api";
+import { useOverviewScope } from "@/lib/useOverviewScope";
+import HistoricalMarker from "@/components/finance/HistoricalMarker";
 import type { DataHealthData } from "@/lib/types";
 
 const R = 36;
@@ -34,7 +36,10 @@ function Freshness({ label, value }: { label: string; value: string | null | und
 
 // Rendered inside the shared panel in app/finance/page.tsx — no .panel here.
 export default function DataHealthCard() {
-  const { data, isLoading, error } = useFinanceData<DataHealthData>("/overview/data-health");
+  const scope = useOverviewScope();
+  const { data, isLoading, error } = useFinanceData<DataHealthData>(
+    `/overview/data-health${scope.query}`
+  );
   const score = data?.score ?? null;
   const ring = score === null ? 0 : (Math.min(Math.max(score, 0), 100) / 100) * C;
 
@@ -47,6 +52,7 @@ export default function DataHealthCard() {
       ) : !data ? null : (
         <>
           <div className="plabel">Data Health</div>
+          {scope.isHistorical ? <HistoricalMarker label={scope.label} /> : null}
 
           <div className="mt-3.5 flex items-center gap-3.5">
             <svg width="92" height="92" viewBox="0 0 92 92" className="shrink-0">
