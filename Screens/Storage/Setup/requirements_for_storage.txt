@@ -1,0 +1,19 @@
+# What the Storage screen needs installed.
+#
+# Every screen keeps its own list, so one screen can be installed and run
+# on its own without dragging in the others. Start_Everything.bat installs
+# every one of these files it can find.
+#
+# Install just this one:
+#   cd <repo root>
+#   python -m pip install -r Screens\Storage\Setup\requirements_for_storage.txt
+
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.0
+
+# Nothing else. No Google client libraries, no mcp SDK (D11.5 - the
+# backend is plain files under KAGE_DATA_DIR), no embedding SDK (the RAG
+# pass calls OmniRoute's OpenAI-compatible /v1/embeddings over plain
+# httpx-free stdlib urllib, or httpx if a later pass needs async fan-out -
+# not decided yet, so nothing is pinned here ahead of that work).

@@ -57,6 +57,13 @@
       "host": "127.0.0.1",
       "port": 8005,
       "settings_file": "Screens\\Model\\Backend\\settings_for_model.py"
+    },
+    {
+      "name": "Storage",
+      "label": "Storage",
+      "host": "127.0.0.1",
+      "port": 8009,
+      "settings_file": "Screens\\Storage\\Backend\\settings_for_storage.py"
     }
   ],
   "reserved_not_running": {

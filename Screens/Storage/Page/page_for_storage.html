@@ -1,0 +1,90 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Storage — Kage</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#12161b; --line:#232a33; --ink:#dfe6ee;
+          --dim:#8b98a8; --ok:#57d9a3; --bad:#ff6b6b; --amber:#e8a851; }
+  * { box-sizing:border-box; }
+  html,body { height:100%; margin:0; background:var(--bg); color:var(--ink);
+              font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  header { display:flex; align-items:center; gap:12px; padding:10px 16px;
+           border-bottom:1px solid var(--line); background:var(--panel); }
+  header b { letter-spacing:.14em; font-weight:600; color:var(--amber); }
+  a { color:var(--dim); text-decoration:none; }
+  a:hover { color:var(--ink); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--dim); }
+  .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
+  .spacer { flex:1; }
+  main { max-width:720px; margin:32px auto; padding:0 16px; display:flex;
+         flex-direction:column; gap:16px; }
+  .panel { border:1px solid var(--line); border-radius:10px; background:var(--panel);
+           padding:18px 20px; }
+  .panel h3 { margin:0 0 12px; font-size:12px; letter-spacing:.14em; color:var(--amber);
+              font-weight:600; }
+  .row { display:flex; gap:10px; padding:4px 0; }
+  .row span:first-child { color:var(--dim); min-width:150px; }
+  .row span.bad { color:var(--bad); }
+  .placeholder { color:var(--dim); font-style:italic; }
+</style>
+
+<header>
+  <b>STORAGE</b>
+  <span class="dot" id="dot"></span>
+  <span id="state">checking…</span>
+  <span class="spacer"></span>
+  <a href="http://127.0.0.1:8000/">← Main Menu</a>
+</header>
+
+<main>
+  <section class="panel">
+    <h3>STORE</h3>
+    <div id="store"></div>
+  </section>
+
+  <section class="panel">
+    <h3>KNOWLEDGE</h3>
+    <p class="placeholder">Hybrid search not built yet — lands with the RAG pass.</p>
+  </section>
+
+  <section class="panel">
+    <h3>EMBEDDINGS</h3>
+    <p class="placeholder">Not built yet — lands with the RAG pass.</p>
+  </section>
+
+  <section class="panel">
+    <h3>TRADER LEDGER</h3>
+    <p class="placeholder">Not built yet — a stub, unbuilt beyond the ledger itself.</p>
+  </section>
+</main>
+
+<script>
+function row(label, value, bad) {
+  return `<div class="row"><span>${label}</span>` +
+         `<span class="${bad ? 'bad' : ''}">${value}</span></div>`;
+}
+
+async function check() {
+  const dot = document.getElementById('dot');
+  const state = document.getElementById('state');
+  let info;
+  try {
+    info = await (await fetch('/api/storage/status')).json();
+  } catch (e) {
+    info = { state: 'error', problem: String(e) };
+  }
+  const ok = info.state === 'ok';
+  dot.className = ok ? 'dot ok' : 'dot bad';
+  state.textContent = ok ? 'reachable' : (info.problem || 'unreachable');
+
+  let html = '';
+  html += row('data dir', info.data_dir || '—');
+  html += row('documents', info.doc_count ?? '—');
+  html += row('free space', info.free_bytes != null
+    ? `${(info.free_bytes / 1e9).toFixed(1)} GB` : '—');
+  if (!ok) html += row('problem', info.problem || 'unreachable', true);
+  document.getElementById('store').innerHTML = html;
+}
+check();
+setInterval(check, 10000);
+</script>

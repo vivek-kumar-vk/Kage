@@ -18,7 +18,7 @@ Status: `queued` | `in progress` | `parked`.
 | # | Item | Status |
 |---|------|--------|
 | 1 | Finance data migration / backfill | **in progress** (user-led) |
-| 2 | Google Drive private storage layer | **in progress** (Qwen-led, parallel) |
+| 2 | Local private storage seam + hybrid RAG | **in progress** — seam live (D32), RAG/trader/glyph left |
 | 3 | Wire finance-os agents through OmniRoute | queued |
 | 4 | AGENT DECK chambers (pixel V1.5) + V2 | **mostly shipped 2026-09-05** — TaskBrief panel + live-gateway run left |
 | 6 | finance-os Overview follow-ups | **mostly shipped 2026-09-05** — SMS import + one manual browser check left |
@@ -191,14 +191,16 @@ hand-rolled HTML status page (no Next app).
 `STORAGE_EMBED_MODEL` (free embedder routed on OmniRoute), reuse `GATEWAY_API_KEY`.
 No Google keys.
 
-### Build phases (all this pass)
+### Build phases
 
-1. Contract files — `screen_definition_for_storage.py`, `settings_for_storage.py`
-   (`_env` loader + `KAGE_DATA_DIR`), `Setup/requirements_for_storage.txt`
-   (`fastapi`, `uvicorn[standard]`, `pydantic` — nothing else), `.gitignore`
-   (`Backend/index/`), README.
-2. `seam.py` — path validation, atomic write, `.trash`, the 5 routes; `server_for_
-   storage.py` boots on 8009 with no data dir yet (creates it).
+1. **Done 2026-09-05 (D32).** Contract files — `screen_definition_for_storage.py`,
+   `settings_for_storage.py` (`_env` loader + `KAGE_DATA_DIR`),
+   `Setup/requirements_for_storage.txt` (`fastapi`, `uvicorn[standard]`, `pydantic`
+   — nothing else), `.gitignore` (`Backend/index/`), `Backend/README_storage.md`.
+2. **Done 2026-09-05 (D32).** `seam.py` — path validation, atomic write, `.trash`,
+   the 5 routes; `server_for_storage.py` boots on 8009, creates the data dir if
+   missing. Verified live: full write/read/list/search/status/delete round-trip on
+   real disk, `../` traversal rejected 422, port snapshot regenerated.
 3. `db.py` + `rag.sqlite` schema (FTS5 + chunks) + honest-zero seed (2 generic
    sourced notes, guarded/idempotent).
 4. `rag.py` — note CRUD via seam, chunk+overlap, FTS5 keyword, embeddings client

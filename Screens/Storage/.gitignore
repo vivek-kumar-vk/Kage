@@ -1,0 +1,2 @@
+# The RAG index is a rebuildable cache, never a copy of record (D11.5.2).
+Backend/index/

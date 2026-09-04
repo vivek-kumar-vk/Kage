@@ -1,0 +1,80 @@
+"""The server behind the Storage screen - the repo's one local-disk
+storage seam (D11.5).
+
+WHAT THIS FILE DOES
+    Boots the seam on its own port, creates KAGE_DATA_DIR if it does not
+    exist yet, and serves this screen's own status page.
+
+WHAT THIS FILE MUST NEVER DO
+    Import from Shared_By_All_Screens/, or reach into another screen's
+    code (Rule 5). Store anything personal inside this repo - everything
+    real lives under KAGE_DATA_DIR, outside the tree (Rule 7).
+
+HOW TO RUN IT ON ITS OWN
+    cd <repo root>
+    .venv\\Scripts\\python Screens\\Storage\\Backend\\server_for_storage.py
+    then open http://127.0.0.1:8009
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import settings_for_storage as cfg  # noqa: E402
+from fastapi import FastAPI  # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
+from services import seam  # noqa: E402
+
+app = FastAPI(title=cfg.SCREEN_LABEL)
+
+cfg.KAGE_DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+app.include_router(seam.router)
+
+
+@app.get("/")
+def page():
+    if not cfg.PAGE.is_file():
+        return JSONResponse(
+            {"status": "page missing", "expected": str(cfg.PAGE)},
+            status_code=503,
+        )
+    return FileResponse(cfg.PAGE)
+
+
+@app.get(cfg.API_PREFIX + "/status")
+def status():
+    """One honest snapshot: is the data dir reachable, how many docs, how
+    much free space. Every value here is measured, never assumed."""
+    try:
+        docs = seam.list_docs()
+        doc_count = len(docs)
+        reachable = True
+        problem = None
+    except OSError as exc:
+        docs, doc_count, reachable, problem = [], 0, False, str(exc)
+
+    free_bytes = None
+    try:
+        import shutil
+
+        free_bytes = shutil.disk_usage(cfg.KAGE_DATA_DIR).free
+    except OSError:
+        pass
+
+    return {
+        "state": "ok" if reachable else "error",
+        "problem": problem,
+        "data_dir": str(cfg.KAGE_DATA_DIR),
+        "doc_count": doc_count,
+        "free_bytes": free_bytes,
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host=cfg.HOST, port=cfg.PORT, log_level="info")

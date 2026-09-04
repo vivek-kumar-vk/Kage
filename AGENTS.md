@@ -881,3 +881,37 @@ highest sub-number is the one in force and the parent stays as history.
   standing reason to be there: three launcher/menu-discovery Python files
   and one cross-screen data file. `PLAN.md` item 8 is closed as this state,
   not as an empty folder.
+
+## D32 — Storage screen started: the seam boots (2026-09-05)
+
+- **D32 — `Screens/Storage/` exists, phases 1-2 of its build.**
+  `Screens/Storage/` was still untouched (Qwen-led per `PLAN.md`, but
+  nothing on disk) when this pass reached item 2, so it started here
+  rather than sit idle. FastAPI on **8009** (`MENU_ORDER 8`), following the
+  Deepseek/Hermes template exactly (`screen_definition_for_storage.py` +
+  `Backend/settings_for_storage.py` + `Backend/server_for_storage.py` +
+  `Page/page_for_storage.html`, no Next app). `services/seam.py` ships
+  `read_doc`/`write_doc`/`list_docs`/`delete_doc`/`search`, addressed by a
+  validated logical path (lowercase `a-z0-9._-` per segment, depth ≤ 6,
+  extension in `{.md,.txt,.json}`, no `..`) under `KAGE_DATA_DIR`
+  (default `~/kage-data`, outside the repo — Rule 7). `write_doc` is
+  atomic; `delete_doc` moves to `.trash/<date>/`, never annihilates
+  (Rule 8). `GET /api/storage/status` reports data dir, doc count, free
+  space, honestly.
+  - Verified live: full round-trip (write → read → list → search →
+    status reflects the new count → delete → 404 on re-read); a `../`
+    traversal attempt rejected with `422 bad path`; the trashed file
+    confirmed on disk, then cleaned out of the real `~/kage-data` (it was
+    test data, not the owner's). Port snapshot regenerated
+    (`write_ports_for_inky.py`) — Storage now lists at 8009.
+    `grep -R "Shared_By_All\|googleapi\|mcp\b" Screens/Storage/` clean
+    (only comments naming what's deliberately absent).
+  - **Not built yet, on purpose (see `Backend/README_storage.md`):**
+    `db.py` + `rag.sqlite` schema, `services/rag.py` (FTS5 + OmniRoute
+    embeddings + sanitizer, D11.5.1-.3), `services/trader.py` (append-only
+    ledger stub), the status page's KNOWLEDGE/EMBEDDINGS/TRADER LEDGER
+    panels (currently honest "not built yet" placeholders, not empty
+    tables pretending to be real), and the Main Menu `storage:` glyph in
+    `TopBar.tsx` — that file is mid the same in-progress home-page
+    redesign D30.4 already deferred around, so the glyph waits for it to
+    settle rather than risk a collision.
