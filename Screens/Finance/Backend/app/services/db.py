@@ -17,6 +17,10 @@ def connect():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA journal_mode=WAL")
+    # a second connection opened mid-request (e.g. the market feed caching a
+    # BSE scrip code while a batch refresh holds its own connection) must wait
+    # for the writer, not 'database is locked' straight away.
+    conn.execute("PRAGMA busy_timeout=5000")
     conn.row_factory = sqlite3.Row
     return conn
 

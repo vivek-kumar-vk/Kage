@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import sqlite3
 import time
 import urllib.error
 import urllib.parse
@@ -39,6 +40,109 @@ def _get(address: str) -> tuple[bool, dict | str]:
         if attempt < FETCH_ATTEMPTS - 1:
             time.sleep(RETRY_PAUSE_SECONDS * (attempt + 1))
     return False, reason
+
+
+_BSE_BASE = "https://api.bseindia.com/BseIndiaAPI/api"
+_BSE_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "Referer": "https://www.bseindia.com/",
+    "Origin": "https://www.bseindia.com",
+    "Accept": "application/json, text/plain, */*",
+}
+
+
+def _bse_get(address: str) -> tuple[bool, dict | list | str]:
+    """One GET against api.bseindia.com — it 403s without a browser UA and
+    the bseindia.com referer, so it needs its own headered request."""
+    request = urllib.request.Request(address, method="GET")
+    for name, value in _BSE_HEADERS.items():
+        request.add_header(name, value)
+    try:
+        with urllib.request.urlopen(request, timeout=HOW_LONG_WE_WAIT) as response:
+            return True, json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as problem:
+        return False, f"BSE answered HTTP {problem.code}"
+    except urllib.error.URLError as problem:
+        return False, f"could not reach BSE: {problem.reason}"
+    except ValueError:
+        return False, "BSE sent something that was not JSON"
+    except Exception as problem:  # noqa: BLE001
+        return False, f"unexpected trouble reaching BSE: {problem}"
+
+
+def _bse_scrip_code(symbol: str) -> str | None:
+    """Resolve an NSE-style ticker to its BSE numeric scrip code, cached in
+    ref_cache for 30 days (the mapping is effectively permanent)."""
+    sym = normalize_symbol(symbol)
+    key = f"bse_scrip_code:{sym}"
+    try:
+        with connect() as db:
+            row = db.execute(
+                "SELECT payload, fetched_at FROM ref_cache WHERE key = ?", (key,)
+            ).fetchone()
+        if row:
+            age = datetime.now() - datetime.fromisoformat(row["fetched_at"])
+            if age.days < 30:
+                return json.loads(row["payload"]) or None
+    except (ValueError, TypeError, sqlite3.Error):
+        pass  # cache miss / unreadable / busy — fall through to a live lookup
+    ok, body = _bse_get(
+        f"{_BSE_BASE}/PeerSmartSearch/w?Type=SS&text={urllib.parse.quote(sym)}"
+    )
+    code = None
+    if ok and isinstance(body, str):
+        # body is an HTML <li> blob: liclick('544387','DESCO INFRATECH LTD')
+        for hit_code, _name in re.findall(r"liclick\('(\d+)','([^']*)'\)", body):
+            code = hit_code
+            break
+    try:  # best-effort — a locked DB must not sink the quote
+        with connect() as db:
+            db.execute(
+                "INSERT INTO ref_cache(key, payload, fetched_at) VALUES (?,?,?) "
+                "ON CONFLICT(key) DO UPDATE SET payload=excluded.payload, "
+                "fetched_at=excluded.fetched_at",
+                (key, json.dumps(code),
+                 datetime.now().isoformat(timespec="seconds")),
+            )
+            db.commit()
+    except sqlite3.Error:
+        pass
+    return code
+
+
+def get_bse_price(symbol: str) -> dict:
+    """Fallback quote straight from BSE — the only source that carries the
+    SME board, where Yahoo has neither a .NS nor a .BO line."""
+    code = _bse_scrip_code(symbol)
+    if not code:
+        return {"has_data": False, "symbol": symbol, "where_from": "bseindia",
+                "note": "no BSE scrip code for this ticker"}
+    ok, body = _bse_get(
+        f"{_BSE_BASE}/getScripHeaderData/w?Quotetype=EQ&scripcode={code}"
+    )
+    if not ok or not isinstance(body, dict):
+        return {"has_data": False, "symbol": symbol, "where_from": "bseindia",
+                "note": body if isinstance(body, str) else "BSE sent no quote"}
+    raw = ((body.get("CurrRate") or {}).get("LTP")
+           or (body.get("Header") or {}).get("LTP")
+           or (body.get("Header") or {}).get("PrevClose"))
+    try:
+        price = float(str(raw).replace(",", ""))
+    except (TypeError, ValueError):
+        return {"has_data": False, "symbol": symbol, "where_from": "bseindia",
+                "note": "BSE quote had no usable price"}
+    if price <= 0:
+        return {"has_data": False, "symbol": symbol, "where_from": "bseindia",
+                "note": "BSE shows no trade (SME scrips are often circuit-locked)"}
+    return {
+        "has_data": True,
+        "symbol": symbol,
+        "price": price,
+        "currency": "INR",
+        "source": f"bseindia:{code}",
+        "as_of": (body.get("Header") or {}).get("Ason"),
+        "cached": False,
+    }
 
 
 def _amfi_navall_text(today: date | None = None) -> tuple[bool, str]:
@@ -221,19 +325,33 @@ def _yahoo_symbol(symbol: str) -> str:
 
 
 def get_stock_price(symbol: str) -> dict:
+    cached = get_last_cached_price(symbol)
     try:
         import yfinance
     except ImportError:
+        # No Yahoo client — BSE's own API still answers (and it's the only
+        # source for the SME board anyway).
+        bse = get_bse_price(symbol)
+        if bse.get("has_data"):
+            return bse
+        if cached:
+            return cached
         return {
             "has_data": False,
-            "where_from": "yfinance",
-            "note": "yfinance not installed",
+            "symbol": symbol,
+            "where_from": "bseindia",
+            "note": bse.get("note") or "yfinance not installed",
         }
 
-    cached = get_last_cached_price(symbol)
     try:
+        sym = normalize_symbol(symbol)
+        # .NS (NSE) first, then the bare ticker, then .BO — Yahoo lists BSE
+        # equities, including most of the SME board, under '<SYMBOL>.BO'.
+        cands = [_yahoo_symbol(symbol), sym]
+        if "." not in sym:
+            cands.append(f"{sym}.BO")
         info = None
-        for cand in (_yahoo_symbol(symbol), normalize_symbol(symbol)):
+        for cand in cands:
             try:
                 info = yfinance.Ticker(cand).info or {}
             except Exception:  # noqa: BLE001
@@ -244,13 +362,17 @@ def get_stock_price(symbol: str) -> dict:
             info = {}
         price = info.get("regularMarketPrice") or info.get("previousClose")
         if price is None:
+            # Yahoo carries neither board for this ticker — ask BSE directly.
+            bse = get_bse_price(symbol)
+            if bse.get("has_data"):
+                return bse
             if cached:
                 return cached
             return {
                 "has_data": False,
                 "symbol": symbol,
-                "where_from": "yfinance",
-                "note": "no price found",
+                "where_from": "yfinance+bseindia",
+                "note": bse.get("note") or "no price found",
             }
         return {
             "has_data": True,
@@ -261,12 +383,15 @@ def get_stock_price(symbol: str) -> dict:
             "cached": False,
         }
     except Exception as e:
+        bse = get_bse_price(symbol)
+        if bse.get("has_data"):
+            return bse
         if cached:
             return cached
         return {
             "has_data": False,
             "symbol": symbol,
-            "where_from": "yfinance",
+            "where_from": "yfinance+bseindia",
             "note": str(e),
         }
 
