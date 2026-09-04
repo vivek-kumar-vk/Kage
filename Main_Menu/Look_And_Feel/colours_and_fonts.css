@@ -5,12 +5,15 @@
      The single definition of every colour, font and size used anywhere
      in INKY. Nothing else defines a colour.
 
-   Why it lives in Shared_By_All_Screens/Look_And_Feel/:
-     There is one page per screen. If each kept its own copy of these
-     colours they would drift apart within a month, and a "red" on one
-     screen would stop matching the "red" on another.
+   Why it lives in Main_Menu/Look_And_Feel/ (moved from Shared_By_All_Screens/,
+   PLAN item 8, 2026-09-05):
+     Main Menu's own plain HTML/JS page is the only real consumer left -
+     every other screen now has its own Tailwind theme (Finance's Aurum
+     skin, Learning's Ember Studio, the Agent Deck's pixel theme). Finance
+     used to point its settings at this file too but never actually
+     served it; that dead reference is gone.
 
-   How to use it, from any page:
+   How to use it, from Main Menu's own page:
        @import url('/shared/colours_and_fonts.css');
      Then use the names, never the raw values:
          color: var(--bone);          <- yes
