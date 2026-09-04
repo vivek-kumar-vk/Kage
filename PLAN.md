@@ -25,7 +25,6 @@ Status: `queued` | `in progress` | `parked`.
 | 7 | Observability on every tab | queued |
 | 8 | Remove `Shared_By_All_Screens/` — mostly done 2026-09-03 | queued |
 | 9 | Python/FastAPI → Node + Express | queued |
-| 10 | Anime-removal cleanup in framework UIs | queued |
 | 11 | dsh local-model observability | parked |
 | 12 | Learning OS rebuild (D16): Ember Studio UI + agent crew | **in progress** |
 | 13 | Investments end-to-end (Analyse / Analysis / Trade Desk / market MCP) | **shipped 2026-09-02** — residue tracked below |
@@ -76,7 +75,6 @@ from D21.1 (~1 h, part of item 12).
 | 7 | Observability on every tab (5 screens) | 8-12 |
 | 8 | Delete `Shared_By_All_*` entirely | 6-10 |
 | 9 | Runtime choice per service — rescoped by D21.1 | ~0 |
-| 10 | Anime-removal cleanup in the Next/Svelte menu variants | 1-2 |
 | 11 | dsh local-model observability (parked) | 4-6 |
 | 12 | Learning M6 — THM lab, day template, Planner rebalance | 6-8 |
 | 12 | Learning M7 — OFFICE screen (:8008), job hunt | 8-12 |
@@ -366,18 +364,6 @@ Learning backend and the Main Menu; Node/Express for the Agent Deck's SSE fan-ou
 Anime and the MCP servers. Nothing is rewritten for the sake of its language. What is
 left of this item is only the discipline — every cross-language call stays on HTTP,
 and no service imports across the line.
-
----
-
-## 10 — Finish the Anime removal in the optional framework UIs
-
-The plain HTML/JS Main Menu is clean. Give the Next.js and Svelte Main Menu variants a
-full pass for layout gaps left by removing the Anime *card*.
-
-Note: the Anime *screen* (`Screens/Anime/`, Node/Express + Vite React, port 8006) was
-restored locally 2026-08-30 and is **gitignored** — never on GitHub. It reappears in the
-Main Menu via normal screen discovery. This item is only about the removed dashboard
-card, not the screen.
 
 ---
 

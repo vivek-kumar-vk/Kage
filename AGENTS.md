@@ -761,3 +761,20 @@ highest sub-number is the one in force and the parent stays as history.
   build` (zero TS errors, static export clean) and the grep/scope checks
   from §8 of the brief. Owner: give the ridge + benchmark line one look in
   a normal window per PLAN.md item 6's existing "one manual check owed."
+
+## D29 — PLAN item 10 dropped: Anime-removal cleanup was already overtaken (2026-09-05)
+
+- **D29 — Item 10 asked for a pass over "the Next.js and Svelte Main Menu
+  variants" for layout gaps left by removing the Anime dashboard card. Both
+  premises are gone.** `git log --diff-filter=D -- '*svelte*'` shows
+  `Main_Menu/Page/svelte_app/` was deleted in the Claude-only cleanup (PLAN
+  item C, 2026-09-03) — there is no Svelte variant left to clean up. The
+  Next.js variant's `app/page.tsx` has since been rebuilt around the RUBRIC
+  Agentic OS reference (owner layout, 2026-09-02) as flexible `flex flex-col
+  gap-*` columns, not a fixed `grid-cols-N` needing a card-shaped gap filled
+  — and its card roster has already turned over twice since (YouTube Studio
+  → dropped; Routines → dropped; Day Plan added), none of it Anime-shaped.
+  `grep -rniE anime` across both Main Menu UIs turns up only legitimate
+  references to the still-live Anime *screen* in `DayPlanPanel.tsx`'s area
+  list, nothing stale. Item removed from `PLAN.md` (Rule 12) rather than
+  implemented — there was nothing left to do.
