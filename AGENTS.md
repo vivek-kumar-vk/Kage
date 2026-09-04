@@ -117,8 +117,8 @@ highest sub-number is the one in force and the parent stays as history.
     auto-disabled on gateway startup by `Start_Inky/run_omniroute.py`.
 - **D11 — The Drive-backed private storage layer (P7; 2026-08-31).** `Screens/Storage/`
   is the repo's **one storage seam** (`read_doc`/`write_doc`/`list_docs`/`delete_doc`/
-  `search`, logical-path addressed under one Drive root folder): FastAPI, port **8007**,
-  `MENU_ORDER 6`, one Status tab, hand-rolled HTML status page (no Next app). Built by
+  `search`, logical-path addressed under one Drive root folder): FastAPI, port **8009**,
+  `MENU_ORDER 8`, one Status tab, hand-rolled HTML status page (no Next app). Built by
   Qwen 3-Max from the house brief `.scratch/drive-storage/QWEN_BUILD_PROMPT.md`
   (map: `.scratch/drive-storage/map.md`); Node migration rides P4 (user chose FastAPI
   for this service over the old Node-only stack rule — the seam is HTTP, consumers don't care).
@@ -127,10 +127,27 @@ highest sub-number is the one in force and the parent stays as history.
     `@piotr-agier/google-drive-mcp` (MIT; service-account auth via
     `GOOGLE_APPLICATION_CREDENTIALS`, scope `drive`), run as a **standalone Streamable
     HTTP server** at `127.0.0.1:3100/mcp` by `Start_Inky/run_drive_mcp.py`
-    (`run_omniroute.py` pattern, idempotent, chained into `Start_Everything.bat`).
+    (`run_omniroute.py` pattern, idempotent; auto-discovered by
+    `start_every_screen.py`'s `run_*.py` glob — no `Start_Everything.bat` edit).
     The app is an MCP client (official Python SDK) and **never spawns it** —
     gateway-down is an honest first-class state. The app carries zero Google client
     libraries and never opens the SA key.
+    - **D11.1a — Gateway pinned + tool surface verified (2026-09-04, v2.8.0).**
+      Package still MIT, actively released. Standalone HTTP is
+      `... start --transport http --host 127.0.0.1 --port 3100`; endpoint `POST/GET
+      /mcp` with an `mcp-session-id` header after `initialize` (the Python SDK's
+      `streamablehttp_client` handles it). Service-account mode is auto-selected when
+      `GOOGLE_APPLICATION_CREDENTIALS` is set; scopes via `GOOGLE_DRIVE_MCP_SCOPES=drive`.
+      The eight seam tools exist as named in the brief — `search` (`rawQuery:true`),
+      `listFolder`, `readTextFile`, `createTextFile`, `updateTextFile`, `uploadFile`
+      (`contentBase64`), `deleteItem` (→ trash), `createFolder` — **one correction:
+      `createFolder`'s parent arg is `parent`, not `parentFolderId`.** Account/identity
+      for the status panel comes from `authGetStatus` (reports active auth mode +
+      effective Google identity). Open risk: a service account has no Drive storage
+      quota of its own, so writes into a **consumer-Gmail**-owned shared folder can be
+      rejected — a Workspace account with domain-wide delegation
+      (`GOOGLE_DRIVE_MCP_SUBJECT`), a Shared Drive, or local-OAuth/external-token mode
+      is the fallback if the gate hits it.
   - **D11.2 — Stateless path resolution.** Logical paths resolve by name via Drive
     `listFolder`/`search` with an in-memory cache only — **no local path→id map**
     (that map would be personal data on disk). All seam docs are stored as UTF-8
@@ -145,6 +162,34 @@ highest sub-number is the one in force and the parent stays as history.
     (Finance's no-buy/sell-recommendation rule stays). This build ships only its
     append-only decisions ledger (`trader/ledger/<IST date>/<HHMMSS>-<seq>.json` via
     the seam — no update/delete routes); the agent itself is unbuilt.
+  - **D11.5 — Storage goes local-disk; Google Drive is dropped (2026-09-04).**
+    Supersedes the transport half of D11 / D11.1 / D11.1a / D11.2. The seam, the
+    screen (`Screens/Storage/`, FastAPI, **8009**, `MENU_ORDER 8`, one Status tab,
+    hand HTML) and the RAG / trader layers stay; the **backend becomes plain files
+    under `KAGE_DATA_DIR`** (default `~/kage-data`, outside the repo — Rule 7), not
+    MCP-to-Google-Drive. Why: the intended host is Termux on Android (no Node, no
+    Ollama, 24/7), and the Drive-MCP path needed a Node gateway + a service account
+    + OAuth and hit "service accounts have no Drive storage quota" for a consumer
+    Gmail. `Start_Inky/run_drive_mcp.py` is removed; no `mcp` SDK, no Google
+    libraries, no `path_map` (a logical path is now a validated real subpath).
+    `write_doc` is atomic (`os.replace`); `delete_doc` moves to
+    `KAGE_DATA_DIR/.trash/<date>/`. Near-term the laptop hosts and the phone
+    browses over LAN; a phone deploy repoints `KAGE_DATA_DIR` to `/sdcard/kage-data`.
+    Build brief lives in `PLAN.md` item 2 (the `.scratch/drive-storage/` brief is
+    history). Open: a backup path — local disk is the only copy today.
+    - **D11.5.1 — Embeddings via OmniRoute, not Ollama.** Supersedes D11.3's Ollama
+      `nomic-embed-text`. `rag.py` calls the gateway's OpenAI-compatible
+      `/v1/embeddings` (a **free** model, id in `.env` as `STORAGE_EMBED_MODEL`,
+      reuse `GATEWAY_API_KEY`). Unreachable or not-an-embedder → keyword-only
+      `partial`, honest.
+    - **D11.5.2 — Hybrid retrieval.** Keyword (SQLite **FTS5**, stdlib) + dense
+      fused; fusion method (RRF / weighted / + reranker) is an owner decision from
+      research 2026-09-04. Index `Backend/index/rag.sqlite` — git-ignored,
+      rebuildable from the notes.
+    - **D11.5.3 — Sanitizer hook.** `services/sanitize.py` `sanitize(text)` (rules
+      at `knowledge/_sanitize_rules.json` via the seam) runs on every chunk before
+      it is sent to OmniRoute to embed. v1 = hook + empty ruleset; real rules and a
+      possible LLM scrub pass follow the owner's data review.
 - **D12 — AGENT DECK Pixel Office (Screens/Agents/; 2026-08-31).** The Agents screen
   landing view is a Three.js/react-three-fiber pixel "office stage" driven by an
   append-only `events` table + one SSE endpoint (`Backend/services/events.py`);
@@ -423,6 +468,20 @@ highest sub-number is the one in force and the parent stays as history.
     gateway dashboard when that answers `ok`, and otherwise shows which command
     starts the gateway. It re-checks every 10 s, so the gateway coming up needs no
     reload. Honest states, CLAUDE.md Rule 8.
+    - **D21.3.1 — The menu links straight to the gateway (2026-09-04).** D21.3's
+      iframe embed never rendered: the OmniRoute dashboard sends
+      `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'`, so `:8005/` showed
+      the status header over a blank pane and the owner had to type `:8003` by hand.
+      Two changes: (1) the MODEL menu row now points **directly** at the gateway.
+      A screen may declare `MENU_ADDRESS` in its settings; `read_screen_settings.
+      web_address()` returns it for direct access (still the folder path behind the
+      one-port proxy, still no screen named anywhere). The Model screen still runs
+      on `PORT` 8005 — the launcher starts it there and it stays reachable for the
+      `/api/model/overview` probe and the "gateway is down" page. (2) The `:8005`
+      page, when visited directly, forwards to the dashboard with `location.replace`
+      when the probe says `ok` and keeps D21.3's start-it panel when it says down;
+      `GET :8005/` is served `Cache-Control: no-store` so a stale pre-forward copy
+      can't linger. Same "can't be framed, so link out" move D24 made for DeepSeek.
   - **D21.4 — The old agent layer is deleted (2026-09-03).** Repo-root `Agents/`
     (20 folders holding one `description.txt` each, every one reporting "not built")
     and `Shared_By_All_Agents/` were kept as a reuse pool for a future agent version.
@@ -577,3 +636,28 @@ highest sub-number is the one in force and the parent stays as history.
   `%LOCALAPPDATA%\hermes\config.yaml` — outside the repo and outside git
   (Rule 7), but a real key at rest on disk, which is worth knowing rather
   than discovering.
+
+## D26 — Tab navigation keeps browser history shallow (2026-09-04)
+
+- **D26 — One Back press per level, not per tab.** Every screen's tab bar
+  used `<Link>` (= `router.push`), so visiting Overview → Investments →
+  Analysis → Trade Desk left four history entries and Back walked through
+  every one before reaching the Main Menu. A screen's stack now never
+  grows past `[Main Menu, Overview, current tab]`: a small `useShallowTabNav`
+  in each screen's own nav component (`Finance/…/app/finance/layout.tsx`,
+  `Learning/…/components/Rail.tsx` — copied, not shared, per Rule 5)
+  intercepts the plain left-click and routes it — **to Overview:**
+  `router.back()` (Overview is always the entry just below a tab);
+  **Overview → tab:** `router.push` (the one entry above Overview);
+  **tab → tab:** `router.replace` (swap that one entry). `<Link>` is kept
+  for prefetch and a real href, so middle-/right-click still open a tab.
+  Single-view screens (Model, Deepseek, Hermes) and the two-route Agents
+  deck need nothing. Anime's SPA is out of the repo.
+  - **D26.1 — HTML shells are served `Cache-Control: no-cache`.** The bug
+    hid twice behind stale caches: the exported `*.html` shells point at
+    hash-named `_next/*` chunks, and FastAPI's `FileResponse` sent no
+    cache header, so a browser kept an old shell (and its old JS) for
+    hours and the fix "didn't land." Finance (`app_factory.py`) and
+    Learning (`server_for_learning.py`) now send `no-cache` on every HTML
+    shell; the hashed assets stay cacheable because the hash busts them.
+    Same class of staleness as D21.3.1's Model page.

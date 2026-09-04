@@ -30,6 +30,7 @@ Status: `queued` | `in progress` | `parked`.
 | 12 | Learning OS rebuild (D16): Ember Studio UI + agent crew | **in progress** |
 | 13 | Investments end-to-end (Analyse / Analysis / Trade Desk / market MCP) | **shipped 2026-09-02** — residue tracked below |
 | 14 | Calendar card (D23): Google Calendar + agent + WakaTime | **in progress** |
+| 15 | Day Plan card -> agent-owned: each area's agent (Finance/Learning/Anime/Agents) fetches its real state, plans today, writes rows. Card shipped 2026-09-04 as a hand-kept localStorage checklist (`Main_Menu/.../DayPlanPanel.tsx`); this item is the wiring. | queued |
 
 Items 1, 2 and 12 run in parallel . Everything else is sequential.
 
@@ -124,39 +125,112 @@ unexercised. Both fill in from this migration, not from UI work.
 
 ---
 
-## 2 — Google Drive private storage layer  *(Qwen 3-Max writes the code, ACTIVE)*
+## 2 — Local private storage seam + hybrid RAG  *(ACTIVE — build end-to-end)*
 
-Goal: **nothing personal on local disk.** Reads and writes both go through to Google
-Drive, into the right folder.
+**Pivot 2026-09-04 (D11.5): Google Drive is dropped.** Store on local disk, in a
+folder **outside the repo** (`KAGE_DATA_DIR`). Why: the intended host is Termux on
+Android — no Node, no Ollama, must run 24/7 — and the Drive-MCP path needed a Node
+gateway + a Google service account + OAuth and hit the "service accounts have no
+Drive storage quota" wall for a consumer Gmail account. Near-term the **laptop is
+the host** and the phone reaches it over LAN (`http://<laptop-ip>:8000`); a
+phone-only deploy later just repoints `KAGE_DATA_DIR` to `/sdcard/kage-data`.
 
-**Brief written 2026-08-31:** `.scratch/drive-storage/QWEN_BUILD_PROMPT.md`
-(+ `.scratch/drive-storage/map.md`, turn plan). Decisions **D11–D11.4** in `AGENTS.md`.
-**Next:** paste the brief into Qwen 3-Max, turn by turn; Claude validates and wires in
-(gateway runner, `Start_Everything.bat`, ports snapshot, menu glyph). The needs-Drive
-half of the verify gate waits on your Google setup (README_SETUP).
+Goal is unchanged: **one seam every screen's persistence funnels through**, with a
+retrieval layer on top. Only the backend changes — plain files in a folder instead
+of MCP-to-Drive. This makes the build markedly smaller (no Node, no `mcp` SDK, no
+Google libraries, no `path_map` id-resolution, no gateway process).
 
-**Spec (was `immediate_plan.md` Phase 5)**
+Old Drive brief (`.scratch/drive-storage/*`) and decisions **D11–D11.4 / D11.1a**
+are **history**; the in-force decision is **D11.5** (+ D11.5.1–.3) in `AGENTS.md`.
 
-- **One storage seam** — a single module every screen's persistence funnels through
-  (`read_doc` / `write_doc` / `list_docs` / `delete_doc` / `search`), logical-path
-  addressed. Replaces the scattered inline `json`/`csv` helpers in each screen's
-  `Calculations/` modules.
-- **Transport** — the app is an MCP *client* to an adopted open-source (Node.js) Google
-  Drive MCP server. The server runs as its own process the app connects to — **Inky
-  never spawns an MCP server** (house rule). Config in a repo-tracked
-  `mcp_servers.json`; the Google service-account credential stays in a gitignored file.
-  Portable: laptop now, a phone host later.
-- **RAG / smart retrieval** — extend the existing
-  `Shared_By_All_Screens/add_and_search_the_knowledge_base.py` pattern (local
-  embeddings + cosine + sourced Markdown notes) so retrieval returns exactly the source
-  docs a query needs. Add chunk overlap and a real index when the corpus outgrows a few
-  thousand rows.
-- **AI-trader hook (seam only)** — a future trader reads portfolio state via
-  `build_the_portfolio_review.read_review()` and market data via the
-  `Screens/Finance/Calculations/Shared_Market_Data/fetch_*` modules, pulls context
-  through the retrieval layer, and writes decisions to a new append-only ledger. It must
-  live in its own screen/agent — the Finance screen's rule against recommending buy/sell
-  stays.
+### Shape
+
+`Screens/Storage/` — FastAPI on **8009**, `MENU_ORDER 8`, one Status tab,
+hand-rolled HTML status page (no Next app).
+
+- **The seam** — `Backend/services/seam.py`: module functions + thin routes,
+  `read_doc` / `write_doc` / `list_docs` / `delete_doc` / `search`, logical-path
+  addressed (`finance/blueprint.json`, `knowledge/notes/docker.md`,
+  `trader/ledger/2026-09-04/143005-001.json`). A logical path **is** a real subpath
+  under `KAGE_DATA_DIR`: validate (`^[a-z0-9][a-z0-9._-]*(/…)*$`, ext ∈
+  {.md,.txt,.json}, depth ≤ 6, no `..`), then `open()`. `write_doc` = atomic
+  (tmp + `os.replace`), `mkdir -p` the parent. `delete_doc` moves to
+  `KAGE_DATA_DIR/.trash/<date>/` — recoverable, never annihilation (Rule 8).
+  Routes: `GET /api/storage/docs?prefix=`, `GET /api/storage/doc?path=`,
+  `PUT /api/storage/doc {path,content}`, `DELETE /api/storage/doc?path=`,
+  `GET /api/storage/search?q=` (keyword). RAG + trader call the functions
+  in-process, never over HTTP.
+- **Hybrid RAG** — `Backend/services/rag.py`. Retrieval = **keyword (SQLite FTS5,
+  stdlib) + dense (embeddings) fused** (fusion method — RRF / weighted / rerank —
+  from the owner's research today). Sourced Markdown notes at
+  `knowledge/notes/<slug>.md` via the seam (frontmatter + inline `**Source:**`
+  lines, ported from `add_and_search_the_knowledge_base.py`); sourceless note → 422.
+  Chunks 180 words / 20 overlap. Index `Backend/index/rag.sqlite` (FTS5 table +
+  chunks table with a JSON vector column) — git-ignored, rebuilt from the notes by
+  `reindex` (BackgroundTask).
+  - **Embeddings via OmniRoute** (`127.0.0.1:8003`, OpenAI-compatible
+    `/v1/embeddings`, reuse `GATEWAY_API_KEY`) — a **free** embedding model, id in
+    `.env` as `STORAGE_EMBED_MODEL`. **Not Ollama** (won't exist on the phone).
+    Endpoint unreachable / model isn't an embedder → note still saves, search
+    returns keyword-only, state `partial`, honest "dense search offline" note.
+  - **Sanitizer hook** — `Backend/services/sanitize.py`: `sanitize(text) ->
+    (clean, hits)`, rules the owner maintains at `knowledge/_sanitize_rules.json`
+    via the seam, run on every chunk **before** it is sent to OmniRoute to embed.
+    v1 ships the hook + an empty ruleset; real rules and whether an LLM scrub pass
+    is added come after the owner reviews his actual data. Nothing leaves the
+    device except embedding inputs, and those are scrubbed.
+- **Trader ledger stub** — `Backend/services/trader.py`, unchanged from D11.4:
+  append-only, `POST /api/storage/trader/decisions` writes one
+  `trader/ledger/<IST date>/<HHMMSS>-<seq>.json` via the seam; `GET` newest-first;
+  no update/delete. The trader agent stays unbuilt, in its own screen later.
+- **Status page** — STORE panel (data dir, doc count, free space), KNOWLEDGE
+  (notes / chunks / topics + a working hybrid-search box), EMBEDDINGS (OmniRoute
+  reachable? model? — honest down state), TRADER LEDGER (count + newest, stub
+  copy). Distinct loading / empty / error / degraded branches. Utility/terminal
+  look, one amber accent, red only for delete.
+- **Menu glyph** — add a `storage:` case to `Main_Menu/…/components/TopBar.tsx`
+  `GLYPHS` (a drive/box mark), then rebuild `Main_Menu/Page/next_app`.
+
+### Config (repo-root `.env`; `.env.example` updated)
+
+`KAGE_DATA_DIR` (default `~/kage-data`; phone/Termux → `/sdcard/kage-data`),
+`STORAGE_EMBED_MODEL` (free embedder routed on OmniRoute), reuse `GATEWAY_API_KEY`.
+No Google keys.
+
+### Build phases (all this pass)
+
+1. Contract files — `screen_definition_for_storage.py`, `settings_for_storage.py`
+   (`_env` loader + `KAGE_DATA_DIR`), `Setup/requirements_for_storage.txt`
+   (`fastapi`, `uvicorn[standard]`, `pydantic` — nothing else), `.gitignore`
+   (`Backend/index/`), README.
+2. `seam.py` — path validation, atomic write, `.trash`, the 5 routes; `server_for_
+   storage.py` boots on 8009 with no data dir yet (creates it).
+3. `db.py` + `rag.sqlite` schema (FTS5 + chunks) + honest-zero seed (2 generic
+   sourced notes, guarded/idempotent).
+4. `rag.py` — note CRUD via seam, chunk+overlap, FTS5 keyword, embeddings client
+   (OmniRoute), hybrid fusion, `reindex`, sanitizer hook.
+5. `trader.py` — append-only ledger.
+6. Status page — every panel, real states.
+7. Glyph in `TopBar.tsx` + Main-Menu rebuild; regenerate `ports_for_inky.json`.
+8. Verify: boots on 8009 with OmniRoute down (keyword-only, honest, no traceback);
+   PUT/GET/LIST/DELETE round-trip on disk + `.trash`; note+source → hybrid search
+   returns it; `reindex` rebuilds to the same counts; trader POST lands on disk;
+   STORAGE row at menu position 8; `grep -R "Shared_By_All\|googleapi\|mcp\b"
+   Screens/Storage/` empty.
+
+### Consumers (own follow-ups, not this item)
+
+finance-os and Learning stop writing their own scattered local files and persist
+through the seam — one place, one backup point. **Finance is the first real user:**
+salary transactions from 2026-09-04 on should land via the seam from day one.
+
+### Open — owner researching today
+
+- Hybrid fusion method (RRF vs weighted vs add a reranker) and **which free
+  OmniRoute model is an actual embedder**.
+- Sanitizer rules + whether an LLM scrub pass earns its cost — after the data review.
+- **Backup:** local disk is the only copy today. A periodic export (zip → Drive /
+  SD card / another box) is a later PLAN item.
 
 ---
 

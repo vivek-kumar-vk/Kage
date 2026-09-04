@@ -47,9 +47,9 @@ One screen, one port. Nothing else may take these.
 | 8008 | **Hermes** — reports on the Hermes profile fleet | `Screens/Hermes/Backend/settings_for_hermes.py` |
 | 3080 | DeepSeek Harness (`dsh web`) — a service, not a screen | `Start_Inky/run_dsh_web.py`; dsh's own default, `DSH_BASE_URL` overrides |
 | 9119 | Hermes dashboard (`hermes dashboard`) — a service, not a screen | `Start_Inky/run_hermes_dashboard.py`; Hermes's own default, `HERMES_DASHBOARD_URL` overrides |
-| 3100 | Drive MCP server | `Start_Inky/run_drive_mcp.py` |
+| 3100 | *free* — was the Drive MCP gateway; D11.5 moved Storage to local disk | — |
 | 3101 | Market-data MCP server | `Start_Inky/run_market_mcp.py` |
-| 8009 | *reserved* — Storage screen (D11.1), not built | — |
+| 8009 | **Storage** — local-disk storage seam + hybrid RAG (D11.5); in build | `Screens/Storage/Backend/settings_for_storage.py` |
 | 8010 | *reserved* — Office screen (D17.5), not built | — |
 | 8080 / 8081 | *reserved* — local llama.cpp models | — |
 | 9000 | one-port proxy, only for phone / ngrok | `Start_Inky/serve_everything_on_one_port.py` |
