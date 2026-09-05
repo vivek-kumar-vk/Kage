@@ -295,7 +295,18 @@ def _stop_all(processes: list[tuple]) -> None:
         print(f"  stopped {s['label']}")
 
 
+def _run_checks() -> None:
+    """Item 18: surface the aggregated test/hygiene gate before screens start.
+    Reports honestly (Rule 8) but never blocks the launcher - a known-broken
+    check shouldn't stop you from running screens while you fix it."""
+    checks = Path(__file__).parent / "run_checks.py"
+    result = subprocess.run([sys.executable, str(checks)])
+    if result.returncode != 0:
+        print("  (run_checks failed - see above. Starting anyway.)")
+
+
 def main() -> None:
+    _run_checks()
     screens = find_screens()
 
     if not screens:

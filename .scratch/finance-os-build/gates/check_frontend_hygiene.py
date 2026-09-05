@@ -8,7 +8,7 @@ import pathlib
 import re
 import sys
 
-FRONTEND = pathlib.Path("B:/inky_code/finance-os/frontend")
+FRONTEND = pathlib.Path("B:/inky_code/Screens/Finance/Page/next_app")
 
 BANNED_IMPORTS = (
     "framer-motion",

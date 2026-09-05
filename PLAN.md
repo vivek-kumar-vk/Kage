@@ -23,7 +23,6 @@ Item numbers never change (Rule 11). Gaps mean that item closed.
 | 15 | Day Plan card becomes agent-owned | queued |
 | 16 | Agent roster expansion | blocked (item 4 V2, item 2, item 14) |
 | 17 | Backup for `KAGE_DATA_DIR` | queued |
-| 18 | A test that runs before a commit | queued |
 
 Items 1, 2 and 12 may run in parallel; everything else is sequential.
 Whole backlog: roughly **70–100 focused hours**, excluding the owner's own figures,
@@ -53,9 +52,8 @@ Detail (gitignored, PII): `Screens/Finance/finance-datamigration.md`. Port brief
 
 ## 2 — Storage seam + hybrid RAG — tail
 
-Shipped 2026-09-05 (D32, D33–D33.5): the seam, FTS5 + dense RRF hybrid search, the sanitizer hook, the append-only trader ledger, and real status panels on 8009. What is left:
+Shipped 2026-09-05 (D32, D33–D33.6): the seam, FTS5 + dense RRF hybrid search, the sanitizer hook, the append-only trader ledger, real status panels on 8009, and the Main Menu `storage:` glyph. What is left:
 
-- **Menu glyph** — shipped 2026-09-05: a stacked-disk `storage:` case in `TopBar.tsx` `GLYPHS`, rebuilt, verified live at `localhost:8000`.
 - **you** Pick a free OmniRoute model that is an actual embedder and set `STORAGE_EMBED_MODEL`. Until then, embeddings report "no model configured" honestly and search stays keyword-only.
 - **you** Write the real sanitizer rules at `knowledge/_sanitize_rules.json`, and decide whether an LLM scrub pass earns its cost — after reviewing your own data.
 - Fusion is RRF (D33) absent your research landing; revisit only if that research says otherwise.
@@ -110,15 +108,8 @@ Finance, Learning and AGENT DECK are done (D30–D30.2); Model is exempt (D30.3)
 
 M0–M5 shipped (D16, D17.1): the Ember Studio shell, schema v2, dynamic Path, Today and Focus Session, the room player, Recall and Card Studio, INSIGHTS, the crew shell, the corpus stored, honest zero, and two ground-zero tracks re-seeded.
 
-- **M6** — shipped 2026-09-05: TryHackMe standing lab (`lab_url`/`source`
-  tags + THM-only streak), day-template settings (weekday/weekend minute-
-  blocks seeded from Master_Context.md, Today protects the THM slot), and
-  the Sunday-cadence Planner rebalance (`services/planner_rebalance.py`,
-  files a `proposals` row when a track falls under half its weekly target,
-  the THM slot gets skipped, or session completion drops — tested against
-  synthetic ledger fixtures, `tests/test_planner_rebalance.py`). **Left:
-  interview-day preemption — genuinely blocked on M7 existing** (it reads
-  Office's interview data over HTTP; there is no Office screen yet to read).
+- **M6** — shipped 2026-09-05 (D35–D37) except interview-day preemption
+  (D38, blocked on M7 existing).
 - **M7** — OFFICE screen v1 on **port 8010** (D17.5; 8008 is Hermes): applications pipeline, interview prep, work log, machine-enforced resume-defensible flag at ≥2 Good/Easy ratings. *8–12 h.*
 - **M8** — Crew live on OmniRoute (Planner, Quizmaster, Tutor, Auditor) plus the SIGNAL verification queue, THM Scout and the Office agents, with per-agent token and cost discipline. **PII routes to local models only** — and there is no local model today, which collides with item 16 D. *10–14 h.* **Gated: plan only until real data is wired; test on dummy data, never the DB.*
 - **Room content** — 101 rooms have 0 steps and 0 cards. *2–3 h plus your reading.*
@@ -175,12 +166,6 @@ Local disk is the only copy of everything the Storage seam holds (D11.5). A peri
 
 ---
 
-## 18 — A test that runs before a commit
-
-Every "verified live" in `AGENTS.md` was a manual check, which is why the same class of regression keeps resurfacing. There are already pytest files (`Screens/Learning/Backend/tests/`) and a reusable set of hygiene gates at `.scratch/finance-os-build/gates/` (import checks, forbidden-dependency greps, build checks) written for the finance-os phase loop. Wire the gates plus the existing tests into one command the launcher and a pre-commit hook both call. Nothing new to design — this is assembly.
-
----
-
 ## Reference material kept on disk
 
 Anything in `.scratch/` that is not listed here is deletable (D34.1).
@@ -192,7 +177,7 @@ Anything in `.scratch/` that is not listed here is deletable (D34.1).
 | `.scratch/glm-briefs/2_FINANCE_backend_lots_history*.md` | Item 1's backend brief and its context pack |
 | `.scratch/learning-redesign/` | Item 12 plan (`PLAN_V3.md`) + the Ember Studio mockups |
 | `.scratch/finance-redesign/mockups/` | Aurum mockups — the reference for any tab not yet re-skinned (Rule 13) |
-| `.scratch/finance-os-build/gates/` | Reusable hygiene gate scripts — item 18 assembles these |
+| `.scratch/finance-os-build/gates/check_{backend,frontend}_hygiene.py` | Live dependency of `Start_Inky/run_checks.py` (D39) — not deletable. `gate_phaseN.py` in the same folder are dead. |
 | `.scratch/agents-workspace/` | The house-style template for writing a screen brief |
 | `.scratch/agent-deck-claude-p/PLAN.md` | Item 4's unstarted `claude -p` test harness |
 | `qwen_agent_port/` | Item 1 old-code extracts (gitignored) |

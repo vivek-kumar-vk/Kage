@@ -7,7 +7,7 @@ import pathlib
 import re
 import sys
 
-BACKEND = pathlib.Path("B:/inky_code/finance-os/backend")
+BACKEND = pathlib.Path("B:/inky_code/Screens/Finance/Backend/app")
 ROUTERS = BACKEND / "routers"
 
 # routes that legitimately have a trivial body

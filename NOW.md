@@ -7,15 +7,19 @@ Backlog lives in `PLAN.md` — do not open it while a task is open here.
 
 ## No task open
 
-Item 12 (M6) shipped 2026-09-05 except interview-day preemption — blocked on
-M7 (Office screen) existing; deferred, whole-screen build, picked up later.
+**Item 18 shipped 2026-09-05.** `Start_Inky/run_checks.py` (Qwen wrote the
+aggregator from a self-contained brief, `.scratch/qwen/03_precommit_test_gate.md`)
+runs Learning's pytest suite plus the two Finance hygiene gates (their
+hardcoded paths were stale — `finance-os/backend` doesn't exist, fixed to
+the real `Screens/Finance/Backend/app` / `Page/next_app` paths) and exits
+non-zero on any failure. `.git/hooks/pre-commit` calls it and blocks the
+commit on failure (verified: injected a stub route, watched it FAIL and
+block, reverted, re-ran clean). `Start_Inky/start_every_screen.py` calls it
+too at the top of `main()`, non-blocking (prints the result, starts screens
+anyway — Rule 8 honesty without stopping the dev workflow).
 
-Item 2's menu glyph shipped 2026-09-05 too: `storage:` case in `TopBar.tsx`
-`GLYPHS`, rebuilt, verified live at `localhost:8000`. The rest of item 2
-(embedder model pick, sanitizer rules) is blocked on the owner.
-
-Nothing is currently open. Pick the next item off `PLAN.md`'s Order table,
-state its "done when" here, then start.
+Pick the next item off `PLAN.md`'s Order table, state its "done when" here,
+then start.
 
 If you catch yourself opening another screen's folder — stop, come back here.
 
