@@ -43,10 +43,10 @@ through it, never stop for it.
 
 ## Phase C — Storage sanitizer rules (item 2)
 
-- [ ] C1. Write real starter rules into `knowledge/_sanitize_rules.json` via the seam
+- [x] C1. Write real starter rules into `knowledge/_sanitize_rules.json` via the seam
       (name / phone / email / PAN / account-number patterns as literal rules per the
       hook's design), reviewed against the actual corpus.
-- [ ] C2. LLM scrub pass decision: record it (not worth it tonight — literal rules cover
+- [x] C2. LLM scrub pass decision: record it (not worth it tonight — literal rules cover
       the PII that actually flows; revisit when the owner reviews his data). Board card + commit.
 
 ## Phase D — Day Plan card agent-owned (item 15)
