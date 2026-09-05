@@ -7,8 +7,8 @@ WHAT THIS FILE DOES
 
 WHAT THIS FILE MUST NEVER DO
     Import from Shared_By_All_Screens/, or reach into another screen's
-    code (Rule 5). Store anything personal inside this repo - everything
-    real lives under KAGE_DATA_DIR, outside the tree (Rule 7).
+    code (Rule 5). Commit anything personal - everything real lives under
+    KAGE_DATA_DIR, repo-relative but gitignored (Rule 7.1, D40).
 
 HOW TO RUN IT ON ITS OWN
     cd <repo root>
@@ -72,12 +72,22 @@ def status():
     except OSError:
         pass
 
+    last_backup = None
+    backup_status_file = cfg.KAGE_DATA_DIR / "_backup_status.json"
+    if backup_status_file.is_file():
+        try:
+            import json
+            last_backup = json.loads(backup_status_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            last_backup = {"problem": "backup status file unreadable"}
+
     return {
         "state": "ok" if reachable else "error",
         "problem": problem,
         "data_dir": str(cfg.KAGE_DATA_DIR),
         "doc_count": doc_count,
         "free_bytes": free_bytes,
+        "last_backup": last_backup,
     }
 
 

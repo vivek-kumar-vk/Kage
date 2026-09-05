@@ -22,7 +22,6 @@ Item numbers never change (Rule 11). Gaps mean that item closed.
 | 14 | Calendar card | active |
 | 15 | Day Plan card becomes agent-owned | queued |
 | 16 | Agent roster expansion | blocked (item 4 V2, item 2, item 14) |
-| 17 | Backup for `KAGE_DATA_DIR` | queued |
 
 Items 1, 2 and 12 may run in parallel; everything else is sequential.
 Whole backlog: roughly **70–100 focused hours**, excluding the owner's own figures,
@@ -157,12 +156,6 @@ Twelve profile folders exist (`description.txt` + `office.json` only) and **none
 3. **The data-sharing tradeoff.** Contributor tier means prompts and outputs may be used to improve the provider's products, which collides head-on with M8's "PII → local models only" when there is no local model here. Either those agents stay off this tier, or the sanitizer (item 2) earns its place first. **Unresolved. It gates C and every Finance agent; it does not gate A or B**, which read only code, build state and timestamps.
 
 **Blocked on:** item 4 V2 (a real `ask_agent`), item 2 (somewhere to write), item 14 (the WakaTime signal), D above, and item 12 M7 for section C.
-
----
-
-## 17 — Backup for `KAGE_DATA_DIR`
-
-Local disk is the only copy of everything the Storage seam holds (D11.5). A periodic export — zip to an SD card, another box, or cloud — with an honest "last backup" line on the Storage status page. Small, and currently the only single point of data loss in the project.
 
 ---
 
