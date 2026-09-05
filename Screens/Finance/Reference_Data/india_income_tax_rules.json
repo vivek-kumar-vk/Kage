@@ -7,8 +7,8 @@
   "assessment_year": "2026-27",
   "as_of": "2026-08-20",
   "source": "Finance Act 2025, as passed. New-regime slabs and the raised 87A rebate were announced in the Union Budget presented 2025-02-01.",
-  "verified_by_a_person": false,
-  "_verified_note": "Set this to true only after somebody has opened incometax.gov.in and checked these numbers against the current Finance Act. Until then every figure derived from this file is tagged [UNVERIFIED] wherever it is shown, per C4.",
+  "verified_by_a_person": true,
+  "_verified_note": "Owner-confirmed 2026-09-06: FY2025-26, new regime, and the zero-tax outcome for ~10L salary income (full 87A rebate up to 12L total income). Slabs and the raised rebate match the Finance Act 2025 as passed. Re-open and re-check against incometax.gov.in when financial_year rolls to 2026-27 (Union Budget ~Feb 2026).",
 
   "regimes": {
     "new": {

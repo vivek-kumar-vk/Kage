@@ -5,31 +5,26 @@ Backlog lives in `PLAN.md` — do not open it while a task is open here.
 
 ---
 
-## No task open
+## Task — OpenClaw: configure real channels + a model provider (PLAN item 19)
 
-**OmniRoute embeddings configured 2026-09-06 (PLAN item 2, D51).** Owner's
-Jina free-tier key added to OmniRoute as the `jina-ai` apikey provider
-(key in `~/.omniroute`, not `.env`); `.env` gains
-`STORAGE_EMBED_MODEL=jina-ai/jina-embeddings-v5-text-nano` (768d).
-Verified: `/v1/embeddings` returns a vector, Storage
-`embeddings/status` = `ok`, `knowledge/search` now `ok` (dense path live),
-index reindexed. OmniRoute has no keyless embedder — that cost one free
-key; D11.5.1's "free model id" premise footnoted.
+Screen (`:8006`) + `run_openclaw.py` already shipped (D44). The local
+install has **no `node_modules`** yet (`Screens/OpenClaw/Setup/
+openclaw_install/` has only package.json + lock). So: `npm install` there
+→ bring the gateway up on 18789 → run `openclaw onboard`/`configure` to
+add a chat channel + a model provider. Open decision (PLAN item 19):
+route model calls through OmniRoute (`http://127.0.0.1:8010/v1` +
+`GATEWAY_API_KEY`, same as Hermes/DeepSeek — D6/D24.1/D25.1) or use
+OpenClaw's own provider connections. Recommend OmniRoute.
 
-**Fleet restarted via the restart flag** to pick up the new `.env` — this
-satisfies the "clean `start_every_screen.py` run owed" note. Screens
-8000/8002/8003/8009/8010/8011 all answered 200/307 after.
+**Done when:** local install built; gateway `GET :18789/healthz` →
+`{"ok": true}`; at least one real chat channel + one model provider
+configured (owner supplies channel choice + any tokens); OpenClaw screen
+at `:8006` shows the Control UI live, not "gateway down"; D-line logged;
+PLAN item 19 updated. **Owner input needed:** which chat channel(s), and
+the OmniRoute-vs-own-providers call.
 
-Still carried: M6 browser check — Claude-in-Chrome offline, `Preempt Test
-Co` interview in `office.db` (delete from Office → Interview Prep).
-
-Owner still owes on the finance side (item 1): education-loan statement
-screenshot; whether to flip `verified_by_a_person` in the tax JSON.
-Sequence set: OmniRoute (done for embeddings) → OpenClaw → finance AI
-agent (Q10/Q12).
-
-Pick the next item off `PLAN.md`'s Order table, state its "done when"
-here, then start.
+Carried: finance item 1 — owner sending the education-loan screenshot
+later. M6 browser check still owed (Claude-in-Chrome offline).
 
 ---
 
