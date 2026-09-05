@@ -18,7 +18,8 @@ never as a paragraph, and never into a second file.
 4. **Stack** — frontend is React 19 + Tailwind + Next.js (+ Three.js where it earns it); the backend runtime is chosen per service (the seam between screens is HTTP, so pick the runtime whose libraries the work lives in and never import across the line — see D21.1).
 5. **Modular to the block** — every page, tab and block runs independently and calls its dependencies directly, never through a shared directory.
 6. **Shrink the shared folders** — when you work near `Shared_By_All_*`, move the logic into its one caller and delete the shared file.
-7. **Nothing personal in git** — Kage is public; real data lives outside the repo under `KAGE_DATA_DIR`, reached through the Storage seam (D11.5).
+7. **Nothing personal in git** — Kage is public; real data lives under `KAGE_DATA_DIR`, reached through the Storage seam (D11.5), kept out of git by `.gitignore` alone since D40 (7.1) — not by living outside the repo folder.
+7.1. **`KAGE_DATA_DIR` is repo-relative** (`<repo>/kage-data/`, gitignored) — one self-contained folder, code and data together, for phone/Termux hosting (D40). Superseded from "outside the repo" (original Rule 7).
 8. **Honest states only** — a thing that is down says it is down; never fake data, never a silent fallback to stale data, never a record of work that did not happen.
 9. **Red is act-now only** — never decorative, in any screen's palette.
 10. **Track future work** — anything named "later" goes to `PLAN.md` and a card on the AGENT DECK board.

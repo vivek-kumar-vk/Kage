@@ -57,9 +57,11 @@ def _env(key, default=""):
 
 
 # ---------------------------------------------------------------------
-# THE ONE STORAGE ROOT (D11.5) - plain files, outside the repo (Rule 7)
+# THE ONE STORAGE ROOT (D11.5, D40) - plain files, repo-relative and
+# gitignored (Rule 7.1) so the whole project - code and data - is one
+# self-contained folder when hosted on the phone (Termux).
 # ---------------------------------------------------------------------
-KAGE_DATA_DIR = Path(_env("KAGE_DATA_DIR", "~/kage-data")).expanduser()
+KAGE_DATA_DIR = Path(_env("KAGE_DATA_DIR", str(PROJECT_ROOT / "kage-data"))).expanduser()
 TRASH_DIR = KAGE_DATA_DIR / ".trash"
 
 # A logical path may only carry these extensions - the format the

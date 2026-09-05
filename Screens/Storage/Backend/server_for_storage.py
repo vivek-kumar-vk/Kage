@@ -28,7 +28,7 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 from db import init_db  # noqa: E402
 import seed  # noqa: E402
-from services import seam, rag, trader  # noqa: E402
+from services import seam, rag, trader, library  # noqa: E402
 
 app = FastAPI(title=cfg.SCREEN_LABEL)
 
@@ -39,6 +39,7 @@ seed.run()
 app.include_router(seam.router)
 app.include_router(rag.router)
 app.include_router(trader.router)
+app.include_router(library.router)
 
 
 @app.get("/")

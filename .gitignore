@@ -33,6 +33,9 @@ desktop.ini
 .vscode/
 *.swp
 
+# --- Real personal data (NEVER commit) ---
+/kage-data/
+
 # --- Secrets & credentials (NEVER commit) ---
 Secrets_Keys/
 .env

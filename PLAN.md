@@ -52,12 +52,12 @@ Detail (gitignored, PII): `Screens/Finance/finance-datamigration.md`. Port brief
 
 ## 2 — Storage seam + hybrid RAG — tail
 
-Shipped 2026-09-05 (D32, D33–D33.6): the seam, FTS5 + dense RRF hybrid search, the sanitizer hook, the append-only trader ledger, real status panels on 8009, and the Main Menu `storage:` glyph. What is left:
+Shipped 2026-09-05 (D32, D33–D33.6): the seam, FTS5 + dense RRF hybrid search, the sanitizer hook, the append-only trader ledger, real status panels on 8009, and the Main Menu `storage:` glyph. Also shipped 2026-09-05 (D40): `KAGE_DATA_DIR` moved repo-relative (`<repo>/kage-data/`, gitignored, Rule 7.1) for phone/Termux hosting, and the agent library convention (`services/library.py`) — `library/<screen>/<tab>/<card>/<card>_<timestamp>.md`, one dated file per write, a `latest` + history read. What is left:
 
 - **you** Pick a free OmniRoute model that is an actual embedder and set `STORAGE_EMBED_MODEL`. Until then, embeddings report "no model configured" honestly and search stays keyword-only.
 - **you** Write the real sanitizer rules at `knowledge/_sanitize_rules.json`, and decide whether an LLM scrub pass earns its cost — after reviewing your own data.
 - Fusion is RRF (D33) absent your research landing; revisit only if that research says otherwise.
-- **Consumers, later:** finance-os and Learning stop writing scattered local files and persist through the seam. Finance is the first real user — salary transactions from 2026-09-04 on should land via the seam.
+- **Consumers, later:** each screen's own agent starts writing its real state into the library as it's built (calendar, schedule, email, finance, learning notes, documents, finance calculations, ...) — the skeleton is ready, nothing writes into it yet. Finance is likely first — salary transactions from 2026-09-04 on should land via the seam.
 
 ---
 
@@ -137,7 +137,7 @@ The card shipped 2026-09-04 as a hand-kept localStorage checklist (`Main_Menu/..
 Twelve profile folders exist (`description.txt` + `office.json` only) and **none of them run** — `ask_agent` has to be live first. Raised 2026-09-05 from the owner's own asks plus an outside draft, sifted.
 
 **A — Awareness layer.** The load-bearing idea: no agent knows what the owner is currently doing, so every planner guesses.
-- **`Context_Engine_Agent`** — the collector everything else reads. Polls WakaTime (item 14), Google Calendar (D23), `git log --since` today, and each screen's health endpoint; writes one current-state file into the Storage seam (item 2 owns `KAGE_DATA_DIR` — do not invent a second store). **Rule 8 applies hard:** an unreachable source is written as unreachable, never carried over from the last poll. **Build this first**; the rest of A is worthless without it.
+- **`Context_Engine_Agent`** — the collector everything else reads. Polls WakaTime (item 14), Google Calendar (D23), `git log --since` today, and each screen's health endpoint; writes each into the library (item 2, D40 — `library/<screen>/<tab>/<card>/...`, do not invent a second store). **Rule 8 applies hard:** an unreachable source is written as unreachable, never carried over from the last poll. **Build this first**; the rest of A is worthless without it.
 - **`Time_Analyst_Agent`** — evening pass: planned blocks vs logged time, writes the gap report, hands it to `Day_Planner_Agent` (item 15) rather than planning itself.
 - **`Pattern_Learner_Agent`** — weekly rolling focus score per time-of-day. Needs ~6 weeks of real history; until then it reports "not enough data", not a guess.
 - **`Focus_Guard_Agent`** — one short nudge when current activity has drifted from the planned block. The detection is a comparison, not a judgment — no model call needed for it.

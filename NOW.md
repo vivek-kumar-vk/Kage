@@ -7,16 +7,19 @@ Backlog lives in `PLAN.md` — do not open it while a task is open here.
 
 ## No task open
 
-**Item 18 shipped 2026-09-05.** `Start_Inky/run_checks.py` (Qwen wrote the
-aggregator from a self-contained brief, `.scratch/qwen/03_precommit_test_gate.md`)
-runs Learning's pytest suite plus the two Finance hygiene gates (their
-hardcoded paths were stale — `finance-os/backend` doesn't exist, fixed to
-the real `Screens/Finance/Backend/app` / `Page/next_app` paths) and exits
-non-zero on any failure. `.git/hooks/pre-commit` calls it and blocks the
-commit on failure (verified: injected a stub route, watched it FAIL and
-block, reverted, re-ran clean). `Start_Inky/start_every_screen.py` calls it
-too at the top of `main()`, non-blocking (prints the result, starts screens
-anyway — Rule 8 honesty without stopping the dev workflow).
+**Item 18 shipped 2026-09-05** — `Start_Inky/run_checks.py`, wired into
+`.git/hooks/pre-commit` (blocks) and the launcher (reports).
+
+**Item 2's data-dir move + agent library shipped 2026-09-05 (D40, owner's
+call, mid-session — mobile/Termux hosting).** `KAGE_DATA_DIR` is now
+`<repo>/kage-data/` (gitignored, Rule 7.1 supersedes Rule 7). New
+`services/library.py`: `library/<screen>/<tab>/<card>/<card>_<timestamp>.md`,
+one dated file per write, `GET .../latest` + full history. Verified live via
+curl (write, latest, history, honest 404 on an unwritten card), test data
+cleaned up, `run_checks.py` still green. Scope stopped at skeleton + write
+API on purpose — no screen writes into it yet; that's per-screen follow-up
+work as each agent gets built (item 16 A's `Context_Engine_Agent` is the
+natural first real writer).
 
 Pick the next item off `PLAN.md`'s Order table, state its "done when" here,
 then start.
