@@ -7,15 +7,29 @@ Backlog lives in `PLAN.md` — do not open it while a task is open here.
 
 ## No task open
 
-D21.1 rooms seeded 2026-09-05 (D47): "Two runtimes, one launcher" module
-in Track "Project → DevOps" (position 1), four empty rooms, no content
-(D46). `seed.py` back-fill is idempotent; live DB 68→72 rooms; 14
-Learning pytest green.
+**Finance data fill done 2026-09-06 (PLAN item 1, D48–D50).** Owner
+figures wired into `finance.db` (uncle 96000, salary 70000/70000, term
+life 0, Slice 0, 4 goals seeded, 2 folio numbers from the CAS) and the
+noticeboard (`all_current_numbers.md`, skip-worktree — EPF VERIFY
+dropped, edu-loan marker, portfolio_total 149513 Jul as-of, LAMF
+Oct-flight plan). Q11 answered: port the old finance code, don't rebuild
+(D48). CDSL CAS parsed via pdfminer (casparser can't read CDSL — D49);
+it only confirmed the portfolio, finance.db was already fresher.
+DB backup: `data/backups/finance.pre-owner-figures-20260906.db`.
 
-Owed (carried, not this task): M6 browser check — Claude-in-Chrome
-offline; `Preempt Test Co` interview left in `office.db`, delete from
-Office → Interview Prep. Also owed: a clean `start_every_screen.py` run —
-Learning/Office are hand-started right now.
+**Owner still owes** (tracked in `finance-datamigration.md` §9):
+- Education-loan statement screenshot → real outstanding (left at
+  654750 with a marker; `data_health.missing_info=edu_loan_statement`).
+- The pasted Gemini answer on the embedder (referenced but NOT in the
+  message — item 2, not item 1).
+- Whether to flip `verified_by_a_person` in the tax JSON (needs the
+  incometax.gov.in check).
+- Goa figure is a ₹35k midpoint of ₹30–40k; laptop target is NULL.
+
+Sequence the owner set: OmniRoute → OpenClaw → finance AI agent (Q10/Q12).
+
+Carried: M6 browser check — Claude-in-Chrome offline, `Preempt Test Co`
+interview in `office.db`. Clean `start_every_screen.py` run owed.
 
 Pick the next item off `PLAN.md`'s Order table, state its "done when"
 here, then start.
