@@ -7,8 +7,9 @@ Backlog lives in `PLAN.md` — do not open it while a task is open here.
 
 ## No task open
 
-Items 12 (M6), 2's glyph + data-dir/library move, 17 and 18 all shipped
-2026-09-05 — see `AGENTS.md` (D35–D41) for what and why.
+Items 12 (M6), 2's glyph + data-dir/library move, 17, 18 and 4's two open
+pieces (gateway run, TaskBrief) all shipped 2026-09-05 — see `AGENTS.md`
+(D35–D42) for what and why.
 
 Pick the next item off `PLAN.md`'s Order table, state its "done when" here,
 then start.

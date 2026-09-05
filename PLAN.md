@@ -68,10 +68,8 @@ Small adapters over `/v1/chat/completions` on `127.0.0.1:8003` with `GATEWAY_API
 
 ## 4 — AGENT DECK — tail + V3
 
-V2 shipped 2026-09-05 (D27–D27.5): real OmniRoute asks through one path, a `runs` table behind a live panel, per-agent model pinning. What is left:
+V2 shipped 2026-09-05 (D27–D27.5): real OmniRoute asks through one path, a `runs` table behind a live panel, per-agent model pinning. End-to-end gateway run verified and TaskBrief dropped for good, 2026-09-05 — see D42. What is left:
 
-- **`TaskBrief` panel** — the one D15-chambers piece never built; dropped from V2 because the original brief assumed a root-page chat panel that does not exist (D27.4). Needs a fresh placement decision.
-- **One end-to-end run with the gateway actually up.** Only the gateway-down path has been exercised; OmniRoute was not started during the autonomous pass to avoid regenerating gateway secrets mid-run.
 - **V3 (optional)** — board × agents: pick an `ENH-n`, ask an agent.
 - **`claude -p` test harness** — a way to exercise agent asks before OmniRoute is in the loop. Written up 2026-09-04, never started; pick it up when agent work resumes.
 - **Responsive polish (owner-led, ENH-19)** — on canvases under ~790 px tall the integer scale drops to 2× and rooms read small in wide corridors; very small windows crop the plan edge. D18.7 accepted the current rendering.
