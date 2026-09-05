@@ -84,7 +84,7 @@ House-style template for a screen brief: `.scratch/agents-workspace/`.
 The Aurum rebuild (D13) and the month selector + benchmark overlay (D28) shipped. Left:
 
 - **SMS import pipeline**, so `sms_last_import` stops going stale by hand. **Not briefed** — needs your SMS export format first.
-- **One manual browser check owed:** the three.js net-worth ridge, its draw-in, drag-to-tilt, and the benchmark overlay were never watched running. Automated Chrome reports `visibilityState: hidden` and `prefers-reduced-motion: reduce`, so only the SVG fallback has ever been verified. Needs one look in a normal window (Rule 15).
+- **you** One manual browser check owed: the three.js net-worth ridge, its draw-in, drag-to-tilt, and the benchmark overlay were never watched running. Confirmed 2026-09-05 this is not a fixable automation bug — Claude-in-Chrome (non-headless too) reports `visibilityState: "hidden"` and `prefers-reduced-motion: reduce` on every tab it drives, so `NetWorthRidge.tsx`'s own mode check always lands on the SVG fallback for any AI-driven browser. Genuinely needs your own eyes in a normal window; not something Claude can do (Rule 15).
 
 ---
 
