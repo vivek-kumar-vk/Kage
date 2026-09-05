@@ -124,3 +124,7 @@ Main_Menu/Backend/Calendar_Data/
 # Scratch downloads, logs and saved pages. Never committed - this is a
 # public repo (Rule 7).
 tmp/
+
+# --- Personal resume files (PII, Rule 7) - never in the public repo ---
+*.docx
+Vivek_Kumar_Resume_*
