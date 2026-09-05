@@ -41,6 +41,14 @@ TRACKS = [
                 "Linux shell from basics",
                 "Networking the project uses (DNS, HTTP, ports, localhost)",
             ]),
+            # D21.1 — structure only, no lessons (D46). Kept in sync with
+            # D21_1_ROOMS below, which back-fills it into an existing board.
+            ("Two runtimes, one launcher", 0, [
+                "Why two runtimes — a runtime per service",
+                "The HTTP seam — no imports across the line",
+                "One port per screen, written once",
+                "One launcher starts both runtimes",
+            ]),
             ("AI agenting", 0, [
                 "Agent anatomy — registry, roster, profiles",
                 "Event-driven agents — SSE streams + append-only events",
@@ -215,11 +223,65 @@ def d17_zero(cur) -> bool:
     return True
 
 
+# ---------------------------------------------------------------- D21.1 rooms
+# The "two runtimes, one launcher" module (D21.1) landed after the board was
+# already seeded, so it needs its own idempotent back-fill. Fresh installs get
+# it from TRACKS above and this is a no-op; keyed on the module name.
+D21_1_TRACK = "Project → DevOps"
+D21_1_MODULE = "Two runtimes, one launcher"
+D21_1_ROOMS = [
+    "Why two runtimes — a runtime per service",
+    "The HTTP seam — no imports across the line",
+    "One port per screen, written once",
+    "One launcher starts both runtimes",
+]
+
+
+def d21_1_rooms(cur) -> bool:
+    """Ensure the D21.1 module + its four empty rooms sit in Track
+    'Project → DevOps' at position 1 (right after Ground Zero). Idempotent:
+    a no-op once the module exists (or on a fresh TRACKS board). Structure
+    only — no steps, no cards (D46)."""
+    track = cur.execute(
+        "SELECT id FROM tracks WHERE name=?", (D21_1_TRACK,)
+    ).fetchone()
+    if not track:
+        return False
+    track_id = track["id"]
+    if cur.execute(
+        "SELECT 1 FROM modules WHERE track_id=? AND name=?",
+        (track_id, D21_1_MODULE),
+    ).fetchone():
+        return False
+    cur.execute(
+        "UPDATE modules SET position = position + 1 "
+        "WHERE track_id=? AND position >= 1", (track_id,),
+    )
+    cur.execute(
+        "INSERT INTO modules (track_id, name, position, archived) "
+        "VALUES (?,?,1,0)", (track_id, D21_1_MODULE),
+    )
+    module_id = cur.lastrowid
+    for r_pos, room_name in enumerate(D21_1_ROOMS):
+        cur.execute(
+            "INSERT INTO rooms (module_id, name, position) VALUES (?,?,?)",
+            (module_id, room_name, r_pos),
+        )
+    cur.execute(
+        "INSERT INTO ledger (ts, kind, ref, text) VALUES (?,?,?,?)",
+        (ist_now(), "system", None,
+         f"D21.1 module seeded — '{D21_1_MODULE}', {len(D21_1_ROOMS)} empty "
+         "rooms (structure only, no lessons — D46)"),
+    )
+    return True
+
+
 def run() -> None:
     with connect() as conn:
         cur = conn.cursor()
         d17_zero(cur)
         board(cur)
+        d21_1_rooms(cur)
         conn.commit()
 
 

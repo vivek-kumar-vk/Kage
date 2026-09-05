@@ -115,7 +115,7 @@ def test_no_steps_no_checkpoints_anywhere(fresh_db):
         conn.commit()
     c = _counts(fresh_db)
     assert c["steps"] == 0 and c["checkpoints"] == 0
-    assert c["rooms"] == 68          # 20 project-side + 48 observability-side
+    assert c["rooms"] == 72          # 24 project-side (+4 D21.1) + 48 observability-side
 
 
 def test_fresh_install_path(fresh_db):

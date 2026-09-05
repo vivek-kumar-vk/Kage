@@ -119,7 +119,6 @@ M0–M5 shipped (D16, D17.1): the Ember Studio shell, schema v2, dynamic Path, T
   if the three picked are wrong.
 - **M8** — Crew live on OmniRoute (Planner, Quizmaster, Tutor, Auditor) plus the SIGNAL verification queue, THM Scout and the Office agents, with per-agent token and cost discipline. **PII routes to local models only** — and there is no local model today, which collides with item 16 D. *10–14 h.* **Gated: plan only until real data is wired; test on dummy data, never the DB.*
 - **Room content** — 101 rooms have 0 steps and 0 cards. **Not a manual task and not now** (owner, 2026-09-05): the M8 crew (Planner/Tutor) drafts lesson content once the owner's real schedule and data are wired. Structure stays empty until then — honest zero, not a gap.
-- **Seed the four "two runtimes, one launcher" rooms** from D21.1 — structure only (names/positions), no content. *~1 h.*
 - **Deferred cards (each an `ENH-n` on the board):** agents drafting full lesson content; Storage-seam note sync; progress backup; a release radar for the project stack; JD-skill radar feeding the Planner; interview-question radar feeding Quizmaster; preference learning from verification choices; Warden and Quill live. **Never: auto-applying to job portals.**
 
 Plan and mockups: `.scratch/learning-redesign/`. The study-seed maintainer prompt lives at `Screens/Learning/LEARNING_SEED_MAINTAINER.md`.
