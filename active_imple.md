@@ -51,11 +51,11 @@ through it, never stop for it.
 
 ## Phase D — Day Plan card agent-owned (item 15)
 
-- [ ] D1. Wire `Day_Planner_Agent`'s real ask path to the Day Plan rows so the card's
+- [x] D1. Wire `Day_Planner_Agent`'s real ask path to the Day Plan rows so the card's
       rows come from the agent's plan, not hand-kept localStorage. Scope-checked against
       the existing card code before touching it; if it grows beyond tonight, honest
       partial + board card.
-- [ ] D2. Board card + commit.
+- [x] D2. Board card + commit.
 
 ## Phase E — Job-hunt agents (item 16 C — after Learning, per owner's order)
 
