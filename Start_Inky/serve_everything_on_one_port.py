@@ -3,7 +3,7 @@ opened port, for any other reason) can reach all of them.
 
 WHY THIS EXISTS
     Every screen already runs on its own port, and that is correct for
-    using INKY on this laptop - a browser here can reach 127.0.0.1:8001
+    using INKY on this laptop - a browser here can reach 127.0.0.1:8002
     directly. It cannot do that from a phone, or through a tunnel, which
     only ever forwards ONE port. This puts one small router in front of
     all of them.
@@ -24,7 +24,7 @@ HOW A REQUEST IS ROUTED
 WHAT THE SCREENS THEMSELVES NEED
     Set INKY_BEHIND_PROXY=1 before starting them (see
     start_everything_behind_one_port.py), so Main Menu's navigation links
-    read "/finance/" instead of "http://127.0.0.1:8001/" - see
+    read "/finance/" instead of "http://127.0.0.1:8002/" - see
     Shared_By_All_Screens\\read_screen_settings.py.
 
 RUN IT ON ITS OWN

@@ -1,0 +1,104 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OpenClaw — Kage</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#12161b; --line:#232a33; --ink:#dfe6ee;
+          --dim:#8b98a8; --ok:#57d9a3; --bad:#ff6b6b; }
+  * { box-sizing:border-box; }
+  html,body { min-height:100%; margin:0; background:var(--bg); color:var(--ink);
+              font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  header { display:flex; align-items:center; gap:12px; padding:10px 16px;
+           border-bottom:1px solid var(--line); background:var(--panel);
+           position:sticky; top:0; z-index:2; }
+  header b { letter-spacing:.14em; font-weight:600; }
+  a { color:var(--dim); text-decoration:none; }
+  a:hover { color:var(--ink); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--dim); }
+  .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
+  #state { color:var(--dim); }
+  .spacer { flex:1; }
+  #frame { width:100%; height:calc(100vh - 45px); border:0; display:none; }
+  main { max-width:1000px; margin:0 auto; padding:20px 16px 60px; }
+  .card { border:1px solid var(--line); border-radius:10px;
+          background:var(--panel); padding:14px 16px; margin-bottom:10px; }
+  .row { display:flex; gap:10px; padding:2px 0; }
+  .row span:first-child { color:var(--dim); min-width:150px; }
+  code { background:#0b0d10; border:1px solid var(--line); border-radius:4px;
+         padding:2px 6px; display:inline-block; font-size:12px; }
+  #down { display:none; max-width:640px; margin:14vh auto;
+          padding:24px; border:1px solid var(--line); border-radius:10px;
+          background:var(--panel); }
+  #down h2 { margin:0 0 10px; font-size:15px; }
+  #down p { color:var(--dim); }
+  ul { padding-left:18px; } li { margin:6px 0; }
+</style>
+
+<header>
+  <b>OPENCLAW</b>
+  <span class="dot" id="dot"></span>
+  <span id="state">probing the gateway…</span>
+  <span class="spacer"></span>
+  <a id="open" href="#" target="_blank" style="display:none">open in a tab ↗</a>
+  <a href="http://127.0.0.1:8000/">← Main Menu</a>
+</header>
+
+<iframe id="frame" title="OpenClaw Control UI"></iframe>
+
+<section id="down">
+  <h2>The OpenClaw gateway is not running.</h2>
+  <p id="why"></p>
+  <p>This screen only <em>reports on</em> OpenClaw — it does not run it.
+     Start the gateway in its own window, then it appears here:</p>
+  <ul>
+    <li><code id="cmd"></code></li>
+    <li>or start everything at once:
+        <code>python Start_Inky\start_every_screen.py</code></li>
+  </ul>
+</section>
+
+<script>
+// Ask our own backend, never the gateway directly from the browser: the
+// backend owns the probe and reports it honestly either way.
+async function check() {
+  const dot = document.getElementById('dot');
+  const state = document.getElementById('state');
+  let info;
+  try {
+    info = await (await fetch('/api/openclaw/overview')).json();
+  } catch (e) {
+    info = { openclaw: 'down', why: String(e) };
+  }
+
+  const frame = document.getElementById('frame');
+  const down = document.getElementById('down');
+  const openLink = document.getElementById('open');
+
+  if (info.openclaw !== 'ok') {
+    dot.className = 'dot bad';
+    state.textContent = 'gateway down';
+    frame.style.display = 'none';
+    openLink.style.display = 'none';
+    document.getElementById('why').textContent = info.why || 'not reachable';
+    document.getElementById('cmd').textContent = info.start_command || '';
+    down.style.display = 'block';
+    return;
+  }
+
+  dot.className = 'dot ok';
+  state.textContent = 'gateway live';
+  down.style.display = 'none';
+  openLink.href = info.base_url;
+  openLink.style.display = 'inline';
+
+  // Only ever assign a DIFFERENT src. Re-assigning the same URL reloads
+  // the iframe, which would throw away whatever was open in the UI.
+  if (frame.dataset.src !== info.base_url) {
+    frame.dataset.src = info.base_url;
+    frame.src = info.base_url;
+  }
+  frame.style.display = 'block';
+}
+check();
+setInterval(check, 15000);
+</script>

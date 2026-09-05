@@ -1,0 +1,18 @@
+# What the OpenClaw screen needs installed.
+#
+# Every screen keeps its own list, so one screen can be installed and run
+# on its own without dragging in the others. Start_Everything.bat installs
+# every one of these files it can find.
+#
+# Install just this one:
+#   cd <repo root>
+#   python -m pip install -r Screens\OpenClaw\Setup\requirements_for_openclaw.txt
+
+# The small web server behind this screen.
+fastapi>=0.110
+uvicorn[standard]>=0.27
+
+# NOT installed here: OpenClaw itself (github.com/openclaw/openclaw). It
+# ships as its own npm package (`npm install -g openclaw`) and keeps its
+# own state outside this repo. Kage reports on that gateway; it does not
+# manage it.

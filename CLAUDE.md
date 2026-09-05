@@ -45,26 +45,29 @@ One screen, one port. Nothing else may take these.
 | Port | What | Where the port is written |
 |------|------|---------------------------|
 | 8000 | **Main Menu** — land here | `Main_Menu/Backend/settings_for_main_menu.py` |
-| 8001 | **Finance** | `Screens/Finance/Backend/settings_for_finance.py` |
-| 8002 | **Learning** | `Screens/Learning/Backend/settings_for_learning.py` |
-| 8003 | OmniRoute gateway (a service, not a screen) | `Start_Inky/run_omniroute.py` |
+| 8001 | **Model** — reports on the gateway | `Screens/Model/Backend/settings_for_model.py` |
+| 8002 | **Finance** | `Screens/Finance/Backend/settings_for_finance.py` |
+| 8003 | **Learning** | `Screens/Learning/Backend/settings_for_learning.py` |
 | 8004 | **Agent Deck** | `Screens/Agents/Backend/settings_for_agents.py` |
-| 8005 | **Model** — reports on the gateway | `Screens/Model/Backend/settings_for_model.py` |
-| 8006 | **Anime** — Node, gitignored, local-only | `Screens/Anime/Backend/settings_for_anime.py` |
-| 8007 | **Deepseek** — reports on the DeepSeek Harness | `Screens/Deepseek/Backend/settings_for_deepseek.py` |
-| 8008 | **Hermes** — reports on the Hermes profile fleet | `Screens/Hermes/Backend/settings_for_hermes.py` |
+| 8005 | **Anime** — Node, gitignored, local-only | `Screens/Anime/Backend/settings_for_anime.py` |
+| 8006 | **OpenClaw** — reports on the local OpenClaw gateway | `Screens/OpenClaw/Backend/settings_for_openclaw.py` |
+| 8007 | **Hermes** — reports on the Hermes profile fleet | `Screens/Hermes/Backend/settings_for_hermes.py` |
+| 8008 | **Deepseek** — reports on the DeepSeek Harness | `Screens/Deepseek/Backend/settings_for_deepseek.py` |
+| 8009 | **Storage** — local-disk seam + hybrid RAG (D11.5, D33) | `Screens/Storage/Backend/settings_for_storage.py` |
+| 8010 | OmniRoute gateway (a service, not a screen) | `Start_Inky/run_omniroute.py` |
 | 3080 | DeepSeek Harness (`dsh web`) — a service, not a screen | `Start_Inky/run_dsh_web.py`; dsh's own default, `DSH_BASE_URL` overrides |
 | 9119 | Hermes dashboard (`hermes dashboard`) — a service, not a screen | `Start_Inky/run_hermes_dashboard.py`; Hermes's own default, `HERMES_DASHBOARD_URL` overrides |
 | 3100 | *free* — was the Drive MCP gateway; D11.5 moved Storage to local disk | — |
 | 3101 | Market-data MCP server | `Start_Inky/run_market_mcp.py` |
-| 8009 | **Storage** — local-disk seam + hybrid RAG (D11.5, D33) | `Screens/Storage/Backend/settings_for_storage.py` |
-| 8010 | *reserved* — Office screen (D17.5), not built | — |
+| 8011 | *reserved* — Office screen (D17.5), not built | — |
 | 8080 / 8081 | *reserved* — local llama.cpp models | — |
 | 9000 | one-port proxy, only for phone / ngrok | `Start_Inky/serve_everything_on_one_port.py` |
 
+Ports renumbered 2026-09-05, owner's call (D43) — Main Menu stays fixed at 8000.
+
 **8000 is the Main Menu and nothing else.** The Finance app used to hard-code 8000
 in its own `main.py`; running it stood Finance up where the Main Menu lives and the
-menu appeared to vanish. It now reads the Finance screen's own port (8001).
+menu appeared to vanish. It now reads the Finance screen's own port (8002).
 
 ## Running it
 

@@ -21,7 +21,7 @@ WHAT THIS FILE MUST NEVER DO
 HOW TO RUN IT ON ITS OWN
     cd <repo root>
     python Screens/Model/Backend/server_for_model.py
-    then open http://127.0.0.1:8005
+    then open http://127.0.0.1:8001
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ def page():
     # Never let the browser cache this shell. It is a few hundred bytes
     # whose whole job is to reflect the gateway's *current* state and
     # forward accordingly; a stale copy (e.g. an older iframe version)
-    # would strand the user on :8005 instead of forwarding to :8003.
+    # would strand the user on :8001 instead of forwarding to :8010.
     return FileResponse(cfg.PAGE, headers={"Cache-Control": "no-store"})
 
 

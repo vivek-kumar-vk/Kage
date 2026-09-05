@@ -25,7 +25,7 @@ WHAT THIS FILE MUST NEVER DO
 HOW TO RUN IT ON ITS OWN
     cd <repo root>
     .venv\Scripts\python Screens\Hermes\Backend\server_for_hermes.py
-    then open http://127.0.0.1:8008
+    then open http://127.0.0.1:8007
 """
 
 from __future__ import annotations

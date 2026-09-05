@@ -3,7 +3,7 @@
 WHAT THIS DOES
     Adds one provider block to dsh's own settings.yaml:
 
-        llm-pi-ai.providers.omniroute -> http://127.0.0.1:8003/v1
+        llm-pi-ai.providers.omniroute -> http://127.0.0.1:8010/v1
 
     and writes a profile overlay (omniroute-deepseek.yml) that makes an
     agent boot on a DeepSeek model through that provider.

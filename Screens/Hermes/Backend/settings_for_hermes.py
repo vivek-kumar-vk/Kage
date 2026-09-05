@@ -26,9 +26,8 @@ SCREEN_LABEL = "Hermes"
 # ---------------------------------------------------------------------
 # SERVING
 # ---------------------------------------------------------------------
-# Own port. 8008 was reserved for an Office screen that was never built;
-# that reservation moved to 8010 when this screen took the slot (D17.5).
-PORT = 8008
+# Own port, see CLAUDE.md's Ports table.
+PORT = 8007
 HOST = "127.0.0.1"          # local means local
 
 PAGE = SCREEN / "Page" / "page_for_hermes.html"
@@ -62,7 +61,7 @@ PROFILE_SOUL_NAME = "SOUL.md"
 # ---------------------------------------------------------------------
 # Hermes profiles reach models through the OmniRoute gateway, declared
 # as a custom_provider so all profiles share one model list (D25.1).
-GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://127.0.0.1:8003")
+GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://127.0.0.1:8010")
 GATEWAY_PROVIDER_NAME = "omniroute"
 
 # ---------------------------------------------------------------------

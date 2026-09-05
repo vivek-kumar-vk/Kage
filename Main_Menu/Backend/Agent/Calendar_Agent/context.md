@@ -24,6 +24,6 @@ reaches Google without a deliberate "Add to calendar" click (or
 
 **Two brains, one prompt** (D23.6): `CALENDAR_AGENT_BACKEND` picks
 `claude_cli` (one `claude -p --model sonnet` per run) or `omniroute`
-(POSTs to the gateway on :8003 - where a Hermes profile would eventually
+(POSTs to the gateway on :8010 - where a Hermes profile would eventually
 arrive, not wired up yet). Either being unreachable reports `offline` and
 the run is skipped, never guessed.

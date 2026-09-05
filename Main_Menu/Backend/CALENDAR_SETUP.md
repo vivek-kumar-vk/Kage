@@ -131,7 +131,7 @@ curl -X POST "http://127.0.0.1:8000/api/main_menu/calendar/agent/run?days=3"
 | `CALENDAR_AGENT_BACKEND` | What runs |
 |---|---|
 | `claude_cli` (default) | one `claude -p` per run — already logged in, no key in `.env` |
-| `omniroute` | the same prompt to the gateway on 8003 (OpenAI-compatible), which is where Hermes and DeepSeek arrive |
+| `omniroute` | the same prompt to the gateway on 8010 (OpenAI-compatible), which is where Hermes and DeepSeek arrive |
 
 Switch with `CALENDAR_AGENT_BACKEND=omniroute` and
 `CALENDAR_AGENT_MODEL=<the gateway's model id>`. A brain that is not

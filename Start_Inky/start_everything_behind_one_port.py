@@ -12,7 +12,7 @@ WHY A SEPARATE FILE
 WHAT INKY_BEHIND_PROXY DOES
     Read by Shared_By_All_Screens\\read_screen_settings.py. With it set,
     Main Menu's navigation links read "/finance/" instead of
-    "http://127.0.0.1:8001/" - a relative address that still works once
+    "http://127.0.0.1:8002/" - a relative address that still works once
     only one port (this proxy's) is actually reachable from outside.
 
 RUN IT

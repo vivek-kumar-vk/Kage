@@ -37,7 +37,7 @@ SCREEN_LABEL = "Model"
 # ---------------------------------------------------------------------
 # Own port, so this screen can be worked on alone. See
 # Start_Inky/ports_for_inky.json for the whole map.
-PORT = 8005
+PORT = 8001
 HOST = "127.0.0.1"          # local means local
 
 # The page this screen serves. The launcher reads this attribute to say
@@ -53,13 +53,13 @@ PAGE = SCREEN / "Page" / "page_for_model.html"
 # Overridable by env for the phone host later.
 import os
 
-GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://localhost:8003")
+GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://localhost:8010")
 
 # The menu links straight to the gateway dashboard, not to this screen's
 # own port. This screen still RUNS on PORT (the launcher starts it there,
 # and it stays reachable directly for the "is the gateway up?" page and
 # the /api/model/overview probe) - but clicking MODEL in the menu should
-# land on the working dashboard, not hop through :8005 first. The old
+# land on the working dashboard, not hop through :8001 first. The old
 # hop showed a blank pane whenever the browser had the pre-forward page
 # cached. D21.3.1.
 MENU_ADDRESS = GATEWAY_BASE_URL.rstrip("/") + "/"

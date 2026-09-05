@@ -158,7 +158,7 @@ CALENDAR_AUTO_WRITE = os.environ.get("CALENDAR_AUTO_WRITE", "") == "1"
 
 # Which brain runs it. "claude_cli" is the Email card's proven path -
 # one `claude -p` per batch, already logged in, no key in .env.
-# "omniroute" sends the same prompt to the gateway on 8003, which is
+# "omniroute" sends the same prompt to the gateway on 8010, which is
 # where Hermes and DeepSeek arrive (PLAN item 3).
 CALENDAR_AGENT_BACKEND = os.environ.get("CALENDAR_AGENT_BACKEND", "claude_cli")
 CALENDAR_AGENT_MODEL = os.environ.get("CALENDAR_AGENT_MODEL", "sonnet")
@@ -166,7 +166,7 @@ CALENDAR_AGENT_TIMEOUT = int(os.environ.get("CALENDAR_AGENT_TIMEOUT", "240"))
 
 # The gateway, read from its own runner's port (Rule 16) with an env
 # override for hosting. Unreachable is a first-class state (Rule 20).
-OMNIROUTE_BASE_URL = os.environ.get("OMNIROUTE_BASE_URL", "http://127.0.0.1:8003")
+OMNIROUTE_BASE_URL = os.environ.get("OMNIROUTE_BASE_URL", "http://127.0.0.1:8010")
 
 # The nightly learning run, local hour of day.
 CALENDAR_AGENT_HOUR = int(os.environ.get("CALENDAR_AGENT_HOUR", "22"))

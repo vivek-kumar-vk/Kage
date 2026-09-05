@@ -1,6 +1,6 @@
 """Stands finance-os up on its own.
 
-PORT — 8001, NOT 8000.
+PORT — 8002, NOT 8000.
     8000 is the Main Menu (`Main_Menu/Backend/settings_for_main_menu.py`).
     Running this on 8000 hijacks the address the Main Menu lives at, and
     the menu then either refuses to bind or is silently replaced by
@@ -13,7 +13,7 @@ PORT — 8001, NOT 8000.
 NORMALLY YOU DO NOT RUN THIS
     `Start_Inky/start_every_screen.py` starts every screen, and the
     Finance screen's `Screens/Finance/Backend/server_for_finance.py`
-    mounts this same app on 8001. Use this file only to work on
+    mounts this same app on 8002. Use this file only to work on
     finance-os alone.
 """
 
@@ -22,7 +22,7 @@ from app_factory import create_app
 app = create_app()
 
 
-def _port(default: int = 8001) -> int:
+def _port(default: int = 8002) -> int:
     """Read PORT out of the Finance screen's settings, or fall back."""
     import pathlib
     import re

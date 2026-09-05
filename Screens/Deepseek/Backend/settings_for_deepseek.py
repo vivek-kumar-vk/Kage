@@ -26,10 +26,8 @@ SCREEN_LABEL = "Deepseek"
 # ---------------------------------------------------------------------
 # SERVING
 # ---------------------------------------------------------------------
-# Own port, so this screen can be worked on alone. 8007 was reserved for
-# a Storage screen that was never built; that reservation moved to 8009
-# when this screen took the slot (D11.1). See Start_Inky/ports_for_inky.json.
-PORT = 8007
+# Own port, see CLAUDE.md's Ports table.
+PORT = 8008
 HOST = "127.0.0.1"          # local means local
 
 PAGE = SCREEN / "Page" / "page_for_deepseek.html"
@@ -57,7 +55,7 @@ START_COMMAND = "dsh web"
 # dsh reaches DeepSeek models through the OmniRoute gateway rather than
 # DeepSeek's cloud API directly, so there is one place model access is
 # configured and no second API key to hold (D24.1).
-GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://127.0.0.1:8003")
+GATEWAY_BASE_URL = os.environ.get("GATEWAY_BASE_URL", "http://127.0.0.1:8010")
 
 
 # The gateway's list endpoints need its API key. It lives in the repo-root

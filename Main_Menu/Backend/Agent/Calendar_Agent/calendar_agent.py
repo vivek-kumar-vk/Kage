@@ -17,7 +17,7 @@ Two brains, one prompt:
 
     claude_cli  one `claude -p` per run, ends when it answers. The Email
                 card's proven path - already logged in, no key in .env.
-    omniroute   the same prompt POSTed to the gateway on 8003, which is
+    omniroute   the same prompt POSTed to the gateway on 8010, which is
                 where Hermes and DeepSeek arrive (PLAN item 3).
 
 A brain that is not there reports "offline" and the run is skipped. It

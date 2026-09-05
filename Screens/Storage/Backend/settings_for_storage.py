@@ -73,7 +73,7 @@ MAX_PATH_DEPTH = 6
 # RAG - embeddings via OmniRoute (D11.5.1), never Ollama (the intended
 # host is Termux, which has neither Node nor Ollama)
 # ---------------------------------------------------------------------
-OMNIROUTE_URL = _env("OMNIROUTE_URL", "http://127.0.0.1:8003")
+OMNIROUTE_URL = _env("OMNIROUTE_URL", "http://127.0.0.1:8010")
 GATEWAY_API_KEY = _env("GATEWAY_API_KEY")
 STORAGE_EMBED_MODEL = _env("STORAGE_EMBED_MODEL")
 

@@ -21,11 +21,11 @@ in, and never imports across the line.
   (`Page/next_app/out`) picked up automatically if you build it. Charts:
   hand-rolled SVG / **Apache ECharts** (vendored).
 - **Backend.** Mixed on purpose. **FastAPI + Uvicorn**: Main Menu `8000`,
-  Finance `8001`, Learning `8002`, Agent Deck `8004`, Model `8005`.
-  **Node + Express**: Anime `8006` (local-only) and the MCP servers. Each screen's port is written in exactly one place —
+  Model `8001`, Finance `8002`, Learning `8003`, Agent Deck `8004`.
+  **Node + Express**: Anime `8005` (local-only) and the MCP servers. Each screen's port is written in exactly one place —
   `Screens/<Name>/Backend/settings_for_<name>.py`; `Start_Inky/ports_for_inky.json`
   is a regenerated snapshot of them.
-- **Model gateway.** An **OmniRoute** instance on `127.0.0.1:8003` (started by
+- **Model gateway.** An **OmniRoute** instance on `127.0.0.1:8010` (started by
   `Start_Inky/run_omniroute.py`); the Model screen reports on it. Config note:
   `Screens/Model/GATEWAY_CONFIG.md`.
 - **Launcher.** Plain Python scripts in `Start_Inky/`.

@@ -11,7 +11,7 @@ WHAT IS BEHIND IT
     auto-routing and fallback across model providers. This screen is the
     place Kage reports on that gateway: the MODEL menu row links straight
     to the gateway's own dashboard (MENU_ADDRESS in settings), and this
-    screen's page - reached by visiting :8005 directly - forwards there
+    screen's page - reached by visiting :8001 directly - forwards there
     when the /api/model/overview health probe says the gateway is up, or
     shows a "gateway is down, start it" panel when it is not (D21.3.1).
 

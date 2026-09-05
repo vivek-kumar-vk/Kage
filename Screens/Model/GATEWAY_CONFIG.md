@@ -4,14 +4,14 @@ The Model screen reports on an **OmniRoute** gateway (npm package `omniroute`, a
 OpenAI-compatible AI gateway). OmniRoute keeps all of its own state in `~/.omniroute/`
 (`storage.sqlite` + `server/`, `supervisor/`, `logs/`) — **not in this repo**. This file
 records the config so a fresh machine can be brought to the same state by hand through
-the dashboard at <http://127.0.0.1:8003>. **No secrets here.**
+the dashboard at <http://127.0.0.1:8010>. **No secrets here.**
 
 ## Process
 
 | | |
 |---|---|
 | Launcher | `Start_Inky/run_omniroute.py` (chained from `Start_Everything.bat`) |
-| Bind | `127.0.0.1:8003` (`PORT=8003`, `OMNIROUTE_SERVER_HOST`/`API_HOST=127.0.0.1`) |
+| Bind | `127.0.0.1:8010` (`PORT=8010`, `OMNIROUTE_SERVER_HOST`/`API_HOST=127.0.0.1`) |
 | Auth | `REQUIRE_API_KEY=true`, dashboard `requireLogin=true` |
 | Secrets | `OMNIROUTE_JWT_SECRET` / `OMNIROUTE_API_KEY_SECRET` / `OMNIROUTE_INITIAL_PASSWORD` generated into repo-root `.env` (gitignored) by `run_omniroute.py` on first run |
 | Health path | `GET /api/monitoring/health` (used by `server_for_model.py`) |
@@ -75,8 +75,8 @@ pipeline · detailed logs.
 ## Rebuild on a fresh machine
 
 1. `npm i -g omniroute`
-2. `python Start_Inky/run_omniroute.py` — generates the `OMNIROUTE_*` secrets into `.env`, starts the gateway on 8003.
+2. `python Start_Inky/run_omniroute.py` — generates the `OMNIROUTE_*` secrets into `.env`, starts the gateway on 8010.
 3. Dashboard → add provider connection `opencode` (no auth).
 4. Dashboard → API keys → create `kage-model-screen`, copy value into `.env` as `GATEWAY_API_KEY=`.
 5. Re-add the model aliases above if you want the short names.
-6. Model screen (`:8005`) → `GET /api/model/overview` should return `state: ok` with the model list.
+6. Model screen (`:8001`) → `GET /api/model/overview` should return `state: ok` with the model list.

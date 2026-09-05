@@ -56,7 +56,7 @@ def _env(key, default=""):
 
 
 # --- OmniRoute gateway (D6 / D12): the one LLM seam for agent asks ---
-OMNIROUTE_URL = _env("OMNIROUTE_URL", "http://127.0.0.1:8003")
+OMNIROUTE_URL = _env("OMNIROUTE_URL", "http://127.0.0.1:8010")
 GATEWAY_API_KEY = _env("GATEWAY_API_KEY")
 OMNIROUTE_MODEL = _env("OMNIROUTE_MODEL")
 

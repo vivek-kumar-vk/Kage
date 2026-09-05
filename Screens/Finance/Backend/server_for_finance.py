@@ -5,7 +5,7 @@ WHAT CHANGED (2026-08-30, cutover)
     hand-written page + Next export. That work was superseded by the
     greenfield app (FastAPI + a Next static export, its own sqlite
     `finance.db`) built at the repo root as `finance-os/`. This file
-    stands that app's `create_app()` up on this screen's port (8001),
+    stands that app's `create_app()` up on this screen's port (8002),
     so clicking FINANCE in the Main Menu lands on it.
 
     Moved 2026-09-03: the app now lives under this screen at
@@ -25,7 +25,7 @@ HOW ROUTING WORKS
 HOW TO RUN IT ON ITS OWN
     cd <repo root>
     python Screens\\Finance\\Backend\\server_for_finance.py
-    then open http://127.0.0.1:8001
+    then open http://127.0.0.1:8002
 """
 
 from __future__ import annotations

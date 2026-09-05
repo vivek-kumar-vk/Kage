@@ -21,7 +21,7 @@ WHAT THIS FILE MUST NEVER DO
 HOW TO RUN IT ON ITS OWN
     cd <repo root>
     .venv\Scripts\python Screens\Deepseek\Backend\server_for_deepseek.py
-    then open http://127.0.0.1:8007
+    then open http://127.0.0.1:8008
 """
 
 from __future__ import annotations

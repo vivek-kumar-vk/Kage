@@ -2,7 +2,7 @@
 
 WHAT IT DOES
     Starts `omniroute` - the npm-installed AI gateway - on
-    127.0.0.1:8003, the port the Model screen expects
+    127.0.0.1:8010, the port the Model screen expects
     (Screens/Model/Backend/settings_for_model.py). The dashboard and
     the OpenAI-compatible /v1 API share that one port.
 
@@ -44,7 +44,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ENV_FILE = PROJECT_ROOT / ".env"
 
 GATEWAY_HOST = "127.0.0.1"
-GATEWAY_PORT = 8003
+GATEWAY_PORT = 8010
 
 # .env name this launcher owns -> the env name the gateway expects.
 # The process env always wins over the .env files omniroute reads
@@ -211,7 +211,7 @@ def main() -> None:
     print(f"  OmniRoute -> http://{GATEWAY_HOST}:{GATEWAY_PORT}"
           "  (dashboard + /v1 API)")
     print("  first start after an install can take a minute; the Model")
-    print("  screen (http://127.0.0.1:8005) reports this gateway's state.")
+    print("  screen (http://127.0.0.1:8001) reports this gateway's state.")
     proc = subprocess.Popen(gateway_command(), cwd=str(PROJECT_ROOT), env=env)
 
     # After the gateway boots, disable the dashboard login so the Model

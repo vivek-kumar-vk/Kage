@@ -76,7 +76,7 @@ def trusted_authorities() -> list[str]:
     """Every screen's host:port, read from the generated snapshot.
 
     Walking the snapshot rather than writing "the Deepseek screen is on
-    8007" keeps this file free of screen names (Rule 17) and means a
+    8008" keeps this file free of screen names (Rule 17) and means a
     screen that moves port keeps working after the snapshot is
     regenerated.
     """

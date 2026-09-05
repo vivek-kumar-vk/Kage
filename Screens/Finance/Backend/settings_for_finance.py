@@ -25,7 +25,7 @@ SCREEN_LABEL = "Finance"
 # ---------------------------------------------------------------------
 # Each screen gets its own port, so you can start one on its own while
 # working on it without the others running.
-PORT = 8001
+PORT = 8002
 HOST = "127.0.0.1"      # 127.0.0.1, not 0.0.0.0 - nothing else on the
                         # network can reach this. Local means local.
 

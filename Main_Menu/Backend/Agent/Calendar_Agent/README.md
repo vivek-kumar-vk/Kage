@@ -64,7 +64,7 @@ curl -X POST "http://127.0.0.1:8000/api/main_menu/calendar/agent/run?days=3"
 `CALENDAR_AGENT_BACKEND` in `settings_for_main_menu.py`:
 
 - `claude_cli` (default) — one `claude -p --model sonnet` per run.
-- `omniroute` — POSTs the same prompt to the gateway on :8003. This is
+- `omniroute` — POSTs the same prompt to the gateway on :8010. This is
   where a Hermes profile would arrive later, once the page-wide agent
   work starts — not wired up for this card yet.
 

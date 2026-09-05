@@ -1,6 +1,6 @@
 """OmniRoute client — the one LLM seam for agent asks (D6 / D12).
 
-The gateway at 127.0.0.1:8003 owns models, keys and routing; this module only
+The gateway at 127.0.0.1:8010 owns models, keys and routing; this module only
 speaks /v1/chat/completions to it. Gateway-down is an honest error the caller
 surfaces as an event — never a fabricated reply.
 """

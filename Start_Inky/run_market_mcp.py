@@ -5,7 +5,7 @@ and market numbers.
 WHAT IT RUNS
     A Streamable-HTTP MCP server (official `mcp` SDK) on 127.0.0.1:3101,
     endpoint /mcp. Every tool is a thin proxy onto the finance-os backend
-    (127.0.0.1:8001, direct-run port 8000) — the SAME seam the Finance
+    (127.0.0.1:8002, direct-run port 8002) — the SAME seam the Finance
     tabs read — so agents see exactly what the user sees, honest pending
     states included. Nothing here touches the LLM gateway (omni.py stays
     the one LLM seam, D12.1).
@@ -44,7 +44,7 @@ sys.stdout.reconfigure(line_buffering=True)
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MCP_HOST = "127.0.0.1"
 MCP_PORT = 3101
-FINANCE_PORTS = (8001, 8000)          # served port first, direct-run second
+FINANCE_PORTS = (8002,)          # served port (screen and direct-run share it now)
 
 
 def port_in_use(port: int) -> bool:

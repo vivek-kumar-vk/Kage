@@ -20,43 +20,50 @@
       "name": "Anime",
       "label": "Anime",
       "host": "127.0.0.1",
-      "port": 8006,
+      "port": 8005,
       "settings_file": "Screens\\Anime\\Backend\\settings_for_anime.py"
     },
     {
       "name": "Deepseek",
       "label": "Deepseek",
       "host": "127.0.0.1",
-      "port": 8007,
+      "port": 8008,
       "settings_file": "Screens\\Deepseek\\Backend\\settings_for_deepseek.py"
     },
     {
       "name": "Finance",
       "label": "Finance",
       "host": "127.0.0.1",
-      "port": 8001,
+      "port": 8002,
       "settings_file": "Screens\\Finance\\Backend\\settings_for_finance.py"
     },
     {
       "name": "Hermes",
       "label": "Hermes",
       "host": "127.0.0.1",
-      "port": 8008,
+      "port": 8007,
       "settings_file": "Screens\\Hermes\\Backend\\settings_for_hermes.py"
     },
     {
       "name": "Learning",
       "label": "Learning",
       "host": "127.0.0.1",
-      "port": 8002,
+      "port": 8003,
       "settings_file": "Screens\\Learning\\Backend\\settings_for_learning.py"
     },
     {
       "name": "Model",
       "label": "Model",
       "host": "127.0.0.1",
-      "port": 8005,
+      "port": 8001,
       "settings_file": "Screens\\Model\\Backend\\settings_for_model.py"
+    },
+    {
+      "name": "OpenClaw",
+      "label": "OpenClaw",
+      "host": "127.0.0.1",
+      "port": 8006,
+      "settings_file": "Screens\\OpenClaw\\Backend\\settings_for_openclaw.py"
     },
     {
       "name": "Storage",

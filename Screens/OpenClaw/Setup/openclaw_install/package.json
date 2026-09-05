@@ -1,0 +1,11 @@
+{
+  "name": "kage-openclaw-install",
+  "private": true,
+  "description": "Local (repo-relative) OpenClaw install for the OpenClaw screen - self-contained for phone/Termux hosting (D40 pattern), not a global npm install.",
+  "dependencies": {
+    "openclaw": "latest"
+  },
+  "allowScripts": {
+    "openclaw@2026.9.1": true
+  }
+}

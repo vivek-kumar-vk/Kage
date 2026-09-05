@@ -22,6 +22,7 @@ Item numbers never change (Rule 11). Gaps mean that item closed.
 | 14 | Calendar card | active |
 | 15 | Day Plan card becomes agent-owned | queued |
 | 16 | Agent roster expansion | blocked (item 4 V2, item 2, item 14) |
+| 19 | OpenClaw — configure real channels/models | queued |
 
 Items 1, 2 and 12 may run in parallel; everything else is sequential.
 Whole backlog: roughly **70–100 focused hours**, excluding the owner's own figures,
@@ -62,7 +63,7 @@ Shipped 2026-09-05 (D32, D33–D33.6): the seam, FTS5 + dense RRF hybrid search,
 
 ## 3 — Wire the finance agents through OmniRoute
 
-Small adapters over `/v1/chat/completions` on `127.0.0.1:8003` with `GATEWAY_API_KEY`: the supervisor needs `complete(question, context) -> str`, specialists need `summarize(payload) -> str`. Model choice stays a gateway routing decision, never code. **Blocked on Q10 and Q12** (item 1). The gateway itself is live (D6, D6.1, D6.2).
+Small adapters over `/v1/chat/completions` on `127.0.0.1:8010` with `GATEWAY_API_KEY`: the supervisor needs `complete(question, context) -> str`, specialists need `summarize(payload) -> str`. Model choice stays a gateway routing decision, never code. **Blocked on Q10 and Q12** (item 1). The gateway itself is live (D6, D6.1, D6.2).
 
 ---
 
@@ -107,7 +108,7 @@ M0–M5 shipped (D16, D17.1): the Ember Studio shell, schema v2, dynamic Path, T
 
 - **M6** — shipped 2026-09-05 (D35–D37) except interview-day preemption
   (D38, blocked on M7 existing).
-- **M7** — OFFICE screen v1 on **port 8010** (D17.5; 8008 is Hermes): applications pipeline, interview prep, work log, machine-enforced resume-defensible flag at ≥2 Good/Easy ratings. *8–12 h.*
+- **M7** — OFFICE screen v1 on **port 8011** (D17.5, moved off 8010 by D43; 8007 is Hermes): applications pipeline, interview prep, work log, machine-enforced resume-defensible flag at ≥2 Good/Easy ratings. *8–12 h.*
 - **M8** — Crew live on OmniRoute (Planner, Quizmaster, Tutor, Auditor) plus the SIGNAL verification queue, THM Scout and the Office agents, with per-agent token and cost discipline. **PII routes to local models only** — and there is no local model today, which collides with item 16 D. *10–14 h.* **Gated: plan only until real data is wired; test on dummy data, never the DB.*
 - **Room content** — 101 rooms have 0 steps and 0 cards. *2–3 h plus your reading.*
 - **Seed the four "two runtimes, one launcher" rooms** from D21.1. *~1 h.*
@@ -154,6 +155,15 @@ Twelve profile folders exist (`description.txt` + `office.json` only) and **none
 3. **The data-sharing tradeoff.** Contributor tier means prompts and outputs may be used to improve the provider's products, which collides head-on with M8's "PII → local models only" when there is no local model here. Either those agents stay off this tier, or the sanitizer (item 2) earns its place first. **Unresolved. It gates C and every Finance agent; it does not gate A or B**, which read only code, build state and timestamps.
 
 **Blocked on:** item 4 V2 (a real `ask_agent`), item 2 (somewhere to write), item 14 (the WakaTime signal), D above, and item 12 M7 for section C.
+
+---
+
+## 19 — OpenClaw: configure real channels/models
+
+Shipped 2026-09-05 (D44): screen at `:8006`, local repo-relative install, gateway live and reporting real health. What's left is real configuration, not code:
+
+- **you** Run `openclaw onboard` (or `configure`) against the local install to add real chat channels and a model provider. Until then the gateway is up but empty — no channels, no models, honest per the screen's own report.
+- Decide whether OpenClaw's model calls should route through OmniRoute (one gateway, one billing surface, same reasoning as Hermes/DeepSeek — D6, D24.1, D25.1) or use OpenClaw's own provider connections directly. Not decided yet.
 
 ---
 
