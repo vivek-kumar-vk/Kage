@@ -58,6 +58,13 @@ const GLYPHS: Record<string, React.ReactNode> = {
       <path d="M9 16h6" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </>
   ),
+  storage: (
+    <>
+      <ellipse cx="12" cy="6" rx="7" ry="3" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M5 6v12c0 1.66 3.13 3 7 3s7-1.34 7-3V6" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M5 12c0 1.66 3.13 3 7 3s7-1.34 7-3" fill="none" stroke="currentColor" strokeWidth="1.4" />
+    </>
+  ),
   dot: <circle cx="12" cy="12" r="3.4" fill="none" stroke="currentColor" strokeWidth="1.4" />,
 };
 

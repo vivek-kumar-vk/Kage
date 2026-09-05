@@ -1,658 +1,210 @@
-# PLAN
+# PLAN — open work only
 
-The single source of truth for everything **not yet done**. One ordered backlog, one
-item at a time. Rules live in [`CLAUDE.md`](CLAUDE.md), numbered decisions in
-[`AGENTS.md`](AGENTS.md). This file replaced `WAYFINDER.md`, `PLANNED_WORK.md`,
-`immediate_plan.md` and `details` (2026-09-02) and absorbed `TOMORROW.md` (2026-09-03).
+One line per thing that is not done. Shipped work is deleted the day it ships (Rule 12);
+the record is git history plus a decision line in [`AGENTS.md`](AGENTS.md). Rules live in
+[`CLAUDE.md`](CLAUDE.md). Whatever is being worked on **right now** is in [`NOW.md`](NOW.md),
+one task at a time — this file is the queue, not the desk.
 
-Rule (`CLAUDE.md` Rule 10): anything named as "later" lands here **and** as a card in
-the AGENT DECK board. When an item ships, delete it from this file — shipped work is
-recorded in git history and `AGENTS.md` decisions, not here.
+Item numbers never change (Rule 11). Gaps mean that item closed.
 
-Status: `queued` | `in progress` | `parked`.
-
----
-
-## Active order
+## Order
 
 | # | Item | Status |
 |---|------|--------|
-| 1 | Finance data migration / backfill | **in progress** (user-led) |
-| 2 | Local private storage seam + hybrid RAG | **mostly shipped 2026-09-05** (D32-D33.5) — only the menu glyph left, deferred on Main Menu WIP |
-| 3 | Wire finance-os agents through OmniRoute | queued |
-| 4 | AGENT DECK chambers (pixel V1.5) + V2 | **mostly shipped 2026-09-05** — TaskBrief panel + live-gateway run left |
-| 6 | finance-os Overview follow-ups | **mostly shipped 2026-09-05** — SMS import + one manual browser check left |
-| 7 | Observability on every tab | **mostly shipped 2026-09-05** — Main Menu panel left (frontend mid-redesign) |
-| 9 | Runtime choice per service | **rescoped by D21.1** — no action item left, just standing discipline |
-| 11 | Repoint the Hermes fleet off the dead local endpoint | **mostly shipped** — 15 per-profile repoints blocked on owner (D25.1, cost/behavior changes per agent) |
-| 12 | Learning OS rebuild (D16): Ember Studio UI + agent crew | **in progress** |
-| 13 | Investments end-to-end (Analyse / Analysis / Trade Desk / market MCP) | **shipped 2026-09-02** — residue tracked below |
-| 14 | Calendar card (D23): Google Calendar + agent + WakaTime | **in progress** |
-| 15 | Day Plan card -> agent-owned: each area's agent (Finance/Learning/Anime/Agents) fetches its real state, plans today, writes rows. Card shipped 2026-09-04 as a hand-kept localStorage checklist (`Main_Menu/.../DayPlanPanel.tsx`); this item is the wiring. | queued |
-| 16 | Agent roster expansion: awareness + autonomous-code + job-hunt agents on Muse Spark contributor — 12 profiles added 2026-09-05, none wired | queued (blocked on item 4 V2) |
+| 1 | Finance data migration / backfill | **active** |
+| 2 | Storage seam + hybrid RAG — tail | active |
+| 3 | Wire finance agents through OmniRoute | blocked (Q10, Q12) |
+| 4 | AGENT DECK — tail + V3 | queued |
+| 6 | finance-os Overview — tail | queued |
+| 7 | Observability — Main Menu panel | queued |
+| 11 | Repoint the Hermes fleet | blocked (owner, per profile) |
+| 12 | Learning OS — M6, M7, M8 | **active** |
+| 14 | Calendar card | active |
+| 15 | Day Plan card becomes agent-owned | queued |
+| 16 | Agent roster expansion | blocked (item 4 V2, item 2, item 14) |
+| 17 | Backup for `KAGE_DATA_DIR` | queued |
+| 18 | A test that runs before a commit | queued |
 
-Items 1, 2 and 12 run in parallel . Everything else is sequential.
-
-### Next up (folded in from `TOMORROW.md`, 2026-09-03)
-
-In order. Hours are focused build hours; **you** marks a step only the owner can do.
-
-**A — Storage seam + RAG (item 2), 9-13 h.** Nothing personal on local disk.
-**you** Google setup (project, Drive API, service account key into the gitignored
-path, folder shared) ~30 min -> adopt the Node Drive MCP as its own process
-(`mcp_servers.json`; Kage never spawns one) -> the seam
-(`read_doc`/`write_doc`/`list_docs`/`delete_doc`/`search`, logical paths) -> RAG on
-top (chunk+overlap, `nomic-embed-text`, cosine, sourced Markdown) -> honest
-"Drive unreachable" everywhere -> wire into the launcher, port snapshot, menu glyph.
-Brief: `.scratch/drive-storage/QWEN_BUILD_PROMPT.md` + `map.md`; decisions D11-D11.4.
-
-**B — Finance data into Drive, pulled back live (items 1 + 13 residue), 9-13 h.**
-Depends on A; starting early writes the data twice. **you** re-import the CAS PDF
-(Investments -> IMPORT CAS PDF) -> rebuild `lots` from `my_investments.csv` units
-(root cause: `backfill_from_old_records.py` §3 calls `upsert_holding(mode="set_snapshot")`;
-only `mode="add_lot"` writes a lot — this one fix unblocks null XIRR *and* the flat
-net-worth ridge) -> move the finance corpus to Drive -> finance-os reads through the
-seam, not the filesystem -> index the corpus into RAG -> verify in a browser.
-Still owed by you: `Screens/Finance/Reference_Data/Human_Checklists/What_To_Fill_In.txt`
-(term life, EPF, Slice balance, dependants, debt ledger, expenses, brokers, tax year)
-and decisions Q10 / Q11 / Q12.
-
-**C — Repo hygiene. Done 2026-09-03.** Rules rewritten for Claude-only into
-`CLAUDE.md`, project memory written, ports fixed, ~430 MB of dead trees deleted,
-the unrunnable root agent layer removed, and the Finance app moved under its own
-screen. Decisions D21 through D21.5.
-Remaining from this block: seed the four "two runtimes, one launcher" Learning rooms
-from D21.1 (~1 h, part of item 12).
-
-### Rough hours on the rest
-
-| # | Item | Hours |
-|---|------|-------|
-| 3 | Wire finance-os agents through OmniRoute (blocked on Q10/Q12) | 2-3 |
-| 9 | Runtime choice per service — rescoped by D21.1 | ~0 |
-| 11 | dsh local-model observability (parked) | 4-6 |
-| 12 | Learning M6 — THM lab, day template, Planner rebalance | 6-8 |
-| 12 | Learning M7 — OFFICE screen (:8008), job hunt | 8-12 |
-| 12 | Learning M8 — crew live on OmniRoute (gated on real data) | 10-14 |
-| 12 | Room content: 101 rooms have 0 steps, 0 cards | 2-3 + your reading |
-
-Whole backlog: roughly **80-120 focused hours** (was 110-170 before D21.1 rescoped
-item 9). Estimates assume Claude writes and verifies, the owner reviews and answers
-the blocking questions; they exclude the CAS import, the owner's figures, the Google
-setup, and the hours spent actually studying the Learning rooms.
+Items 1, 2 and 12 may run in parallel; everything else is sequential.
+Whole backlog: roughly **70–100 focused hours**, excluding the owner's own figures,
+the CAS import, and the hours spent actually studying the Learning rooms.
 
 ---
 
-## 1 — Finance data migration / backfill  *(user-led, ACTIVE)*
+## 1 — Finance data migration / backfill *(active)*
 
-**Brief written 2026-09-02** for the part that needs no input from you:
-`.scratch/glm-briefs/2_FINANCE_backend_lots_history.md`. Measured state — `transactions`
-112, `holdings` 10, `price_history` 27 095 (full daily NAV, all 10 symbols, back to
-2006); `lots` 0, `goals` 0, `benchmarks` 0. `lots` is empty because
-`backfill_from_old_records.py` §3 calls `upsert_holding(mode="set_snapshot")`, and only
-`mode="add_lot"` writes a lot — that is the single root cause of the null XIRR *and* the
-flat ridge (`backfill_snapshots.py` values history from `lots`). Units are already
-recorded per-transaction in `my_investments.csv`, so lots are rebuildable without you.
-Goals still need your figures.
+- **Shipped 2026-09-05:** `lots` rebuilt from `my_investments.csv` — 0 → 52 lots across 8 holdings. XIRR non-null (57.7%), net-worth ridge moves. Verified live at `localhost:8001`. Script: `Screens/Finance/Backend/app/scripts/rebuild_lots_from_csv.py`.
+- **Checked, not a gap:** 15 CSV identifiers didn't match a holding (TATASTEEL, HINDCOPPER, TRIDENT, MODEFENCE, SYLPH$, GATECH, ITBEES, FILATFASH, AONESILVER, GROWWMETAL, JMFINANCIL, HCC, PILITA, CROPSTER$, plus mutual funds 120716/119128) — every one nets to exactly 0 units (bought and fully sold within the CSV window), so `holdings` correctly carries no row for them. One real miss: GOLDBEES nets to 81.0, matching existing holding `INF204KB17I5` exactly — the CSV ticker vs. the ISIN `holdings.symbol`. Fixed with an `ALIASES` map in the rebuild script, not a new holdings row.
+- **The CSV is confirmed stale.** Checked the live Groww account 2026-09-05: it holds 17 shares of GACM Technologies (`GATECH`) that the CSV's GATECH rows (net 0, closed 2026-03-20) don't explain — a trade after the export window is missing. Not fixed (no source data to add it from without guessing). Re-exporting `my_investments.csv` before trusting it further is worth doing alongside the CAS re-import. Detail: `Screens/Finance/finance-datamigration.md` §6.
+- **you** Re-import the CAS PDF (Investments → IMPORT CAS PDF) — fills the unrealised STCG/LTCG buckets the CSV rebuild cannot.
+- **you** Fill `Screens/Finance/Reference_Data/Human_Checklists/What_To_Fill_In.txt` — term life, EPF, Slice balance, salaried vs self-employed, dependants, debt ledger, expenses, brokers, tax year. `goals` stays empty (and the Monte-Carlo path unexercised) until this lands.
+- **you** Decide **Q10** (finance AI agent + cloud LLM routing), **Q11** (port vs rebuild), **Q12** (OmniRoute before or after the migration). Q10 and Q12 block item 3. Locked answers for Q1–Q9: `.scratch/finance-os-port/COLLECTED_ANSWERS.md`.
+- Two Groww pages unresolved (100900 HDFC Children's, 120760 UTI Multi Asset) — sheets show honest `pending`; add a slug override in `services/fund_reference.py` `MANUAL_OVERRIDES` when the page is found.
+- Market-cap split not shown; it needs per-stock facts and is never guessed.
+- AMFI `NAVAll.txt` retires 2026-09-30 — mfapi stays primary, so this is a parser-only change if the fallback is ever needed.
+- `GET /api/finance/market/benchmark` does not exist yet; item 6's ridge overlay renders `NO BENCHMARK LOADED` until it does.
 
-Port the already-solved CAS parsing (`casparser`), market data (mfapi.in / AMFI /
-yfinance), tax + planning rules and ISIN↔AMFI mapping from the old `Screens/Finance`
-UI, and backfill transactions into `Screens/Finance/Backend/app`'s `finance.db`.
+- **SIP schedule now known but not wired.** 7 active SIPs, ₹8,000/mo, checked live on Groww 2026-09-05. `GET /investments/visuals/sip-calendar` is currently an honest `state: "pending"` stub (`routers/investments.py:144`) for exactly this reason — a `sips` table + wiring is a real small build now that the data exists. Detail + full list: `finance-datamigration.md` §7.
+- **Mutual-fund watchlist not snapshotted** — the DB's `watchlist` table has 46 rows, all from the *stocks* watchlist (2026-09-02); the 10-fund MF watchlist was never captured. Minor.
 
-**Inputs / briefs**
-- `Screens/Finance/finance-datamigration.md` — detail (gitignored; PII, local only).
-- `.scratch/finance-os-port/QWEN_PORT_PROMPT.md` — the port brief.
-- `.scratch/finance-os-port/APPLY_PLAN.md`, `COLLECTED_ANSWERS.md` — decisions Q1–Q12,
-  locked 2026-08-31.
-- `qwen_agent_port/1_PORT_PROMPT.md` + `2_`–`5_` old-code extracts (gitignored).
-
-**Still needed from you**
-- Figures: `Screens/Finance/Reference_Data/Human_Checklists/What_To_Fill_In.txt`
-  (term life, EPF, Slice balance, salaried-vs-self-employed, dependants, debt ledger,
-  expenses, brokers, tax year).
-- Decisions owed: **Q10** (finance AI agent + cloud LLM routing), **Q11** (port vs
-  rebuild), **Q12** (OmniRoute before or after the migration).
-
-**Why it blocks other things:** `lots` is empty, so finance-os XIRR is `null` and the
-portfolio-value history is flat; `goals` is empty, so the Monte-Carlo path is
-unexercised. Both fill in from this migration, not from UI work.
+Detail (gitignored, PII): `Screens/Finance/finance-datamigration.md`. Port brief: `.scratch/finance-os-port/`.
 
 ---
 
-## 2 — Local private storage seam + hybrid RAG  *(ACTIVE — build end-to-end)*
+## 2 — Storage seam + hybrid RAG — tail
 
-**Pivot 2026-09-04 (D11.5): Google Drive is dropped.** Store on local disk, in a
-folder **outside the repo** (`KAGE_DATA_DIR`). Why: the intended host is Termux on
-Android — no Node, no Ollama, must run 24/7 — and the Drive-MCP path needed a Node
-gateway + a Google service account + OAuth and hit the "service accounts have no
-Drive storage quota" wall for a consumer Gmail account. Near-term the **laptop is
-the host** and the phone reaches it over LAN (`http://<laptop-ip>:8000`); a
-phone-only deploy later just repoints `KAGE_DATA_DIR` to `/sdcard/kage-data`.
+Shipped 2026-09-05 (D32, D33–D33.5): the seam, FTS5 + dense RRF hybrid search, the sanitizer hook, the append-only trader ledger, and real status panels on 8009. What is left:
 
-Goal is unchanged: **one seam every screen's persistence funnels through**, with a
-retrieval layer on top. Only the backend changes — plain files in a folder instead
-of MCP-to-Drive. This makes the build markedly smaller (no Node, no `mcp` SDK, no
-Google libraries, no `path_map` id-resolution, no gateway process).
-
-Old Drive brief (`.scratch/drive-storage/*`) and decisions **D11–D11.4 / D11.1a**
-are **history**; the in-force decision is **D11.5** (+ D11.5.1–.3) in `AGENTS.md`.
-
-### Shape
-
-`Screens/Storage/` — FastAPI on **8009**, `MENU_ORDER 8`, one Status tab,
-hand-rolled HTML status page (no Next app).
-
-- **The seam** — `Backend/services/seam.py`: module functions + thin routes,
-  `read_doc` / `write_doc` / `list_docs` / `delete_doc` / `search`, logical-path
-  addressed (`finance/blueprint.json`, `knowledge/notes/docker.md`,
-  `trader/ledger/2026-09-04/143005-001.json`). A logical path **is** a real subpath
-  under `KAGE_DATA_DIR`: validate (`^[a-z0-9][a-z0-9._-]*(/…)*$`, ext ∈
-  {.md,.txt,.json}, depth ≤ 6, no `..`), then `open()`. `write_doc` = atomic
-  (tmp + `os.replace`), `mkdir -p` the parent. `delete_doc` moves to
-  `KAGE_DATA_DIR/.trash/<date>/` — recoverable, never annihilation (Rule 8).
-  Routes: `GET /api/storage/docs?prefix=`, `GET /api/storage/doc?path=`,
-  `PUT /api/storage/doc {path,content}`, `DELETE /api/storage/doc?path=`,
-  `GET /api/storage/search?q=` (keyword). RAG + trader call the functions
-  in-process, never over HTTP.
-- **Hybrid RAG** — `Backend/services/rag.py`. Retrieval = **keyword (SQLite FTS5,
-  stdlib) + dense (embeddings) fused** (fusion method — RRF / weighted / rerank —
-  from the owner's research today). Sourced Markdown notes at
-  `knowledge/notes/<slug>.md` via the seam (frontmatter + inline `**Source:**`
-  lines, ported from `add_and_search_the_knowledge_base.py`); sourceless note → 422.
-  Chunks 180 words / 20 overlap. Index `Backend/index/rag.sqlite` (FTS5 table +
-  chunks table with a JSON vector column) — git-ignored, rebuilt from the notes by
-  `reindex` (BackgroundTask).
-  - **Embeddings via OmniRoute** (`127.0.0.1:8003`, OpenAI-compatible
-    `/v1/embeddings`, reuse `GATEWAY_API_KEY`) — a **free** embedding model, id in
-    `.env` as `STORAGE_EMBED_MODEL`. **Not Ollama** (won't exist on the phone).
-    Endpoint unreachable / model isn't an embedder → note still saves, search
-    returns keyword-only, state `partial`, honest "dense search offline" note.
-  - **Sanitizer hook** — `Backend/services/sanitize.py`: `sanitize(text) ->
-    (clean, hits)`, rules the owner maintains at `knowledge/_sanitize_rules.json`
-    via the seam, run on every chunk **before** it is sent to OmniRoute to embed.
-    v1 ships the hook + an empty ruleset; real rules and whether an LLM scrub pass
-    is added come after the owner reviews his actual data. Nothing leaves the
-    device except embedding inputs, and those are scrubbed.
-- **Trader ledger stub** — `Backend/services/trader.py`, unchanged from D11.4:
-  append-only, `POST /api/storage/trader/decisions` writes one
-  `trader/ledger/<IST date>/<HHMMSS>-<seq>.json` via the seam; `GET` newest-first;
-  no update/delete. The trader agent stays unbuilt, in its own screen later.
-- **Status page** — STORE panel (data dir, doc count, free space), KNOWLEDGE
-  (notes / chunks / topics + a working hybrid-search box), EMBEDDINGS (OmniRoute
-  reachable? model? — honest down state), TRADER LEDGER (count + newest, stub
-  copy). Distinct loading / empty / error / degraded branches. Utility/terminal
-  look, one amber accent, red only for delete.
-- **Menu glyph** — add a `storage:` case to `Main_Menu/…/components/TopBar.tsx`
-  `GLYPHS` (a drive/box mark), then rebuild `Main_Menu/Page/next_app`.
-
-### Config (repo-root `.env`; `.env.example` updated)
-
-`KAGE_DATA_DIR` (default `~/kage-data`; phone/Termux → `/sdcard/kage-data`),
-`STORAGE_EMBED_MODEL` (free embedder routed on OmniRoute), reuse `GATEWAY_API_KEY`.
-No Google keys.
-
-### Build phases
-
-1. **Done 2026-09-05 (D32).** Contract files — `screen_definition_for_storage.py`,
-   `settings_for_storage.py` (`_env` loader + `KAGE_DATA_DIR`),
-   `Setup/requirements_for_storage.txt` (`fastapi`, `uvicorn[standard]`, `pydantic`
-   — nothing else), `.gitignore` (`Backend/index/`), `Backend/README_storage.md`.
-2. **Done 2026-09-05 (D32).** `seam.py` — path validation, atomic write, `.trash`,
-   the 5 routes; `server_for_storage.py` boots on 8009, creates the data dir if
-   missing. Verified live: full write/read/list/search/status/delete round-trip on
-   real disk, `../` traversal rejected 422, port snapshot regenerated.
-3. **Done 2026-09-05 (D33).** `db.py` + `rag.sqlite` schema (FTS5 + chunks,
-   trigger-synced) + honest-zero seed (2 generic sourced notes, guarded by a
-   marker file, not by "does the file still exist").
-4. **Done 2026-09-05 (D33-D33.3).** `rag.py` — note CRUD via the seam (a note
-   without `**Source:**` → 422), chunk+overlap (180w/20), FTS5 keyword, an
-   OmniRoute embeddings client (stdlib `urllib`, no new dependency), RRF fusion
-   (D33 — the fusion-method research wasn't findable; RRF picked as the
-   parameter-light default), `reindex`, a sanitizer hook (`sanitize.py`, empty
-   ruleset, D11.5.3).
-5. **Done 2026-09-05 (D33).** `trader.py` — append-only ledger,
-   `POST/GET /api/storage/trader/decisions`, no update/delete.
-6. **Done 2026-09-05 (D33).** Status page — STORE, KNOWLEDGE (note count + a
-   working hybrid-search box), EMBEDDINGS (gateway/model, honest down state),
-   TRADER LEDGER (recent decisions) — real panels, not placeholders.
-7. **Deferred (D33.5).** Glyph in `TopBar.tsx` — that file is still mid the
-   in-progress home-page redesign (same collision risk as item 7's Main Menu
-   deferral, D30.4); a five-minute change once that WIP lands. Port snapshot
-   already regenerated (D32).
-8. **Done 2026-09-05 (D33).** Verify: boots with OmniRoute unreachable
-   (keyword-only, honest, no traceback) ✓; full round-trip incl. `.trash` ✓;
-   sourceless note → 422 ✓; `reindex` rebuilds to the same counts twice running
-   ✓; trader POST lands on disk, newest-first on GET ✓; STORAGE row at menu
-   position 8 (pending the deferred glyph) ; `grep` clean ✓.
-
-### Consumers (own follow-ups, not this item)
-
-finance-os and Learning stop writing their own scattered local files and persist
-through the seam — one place, one backup point. **Finance is the first real user:**
-salary transactions from 2026-09-04 on should land via the seam from day one.
-
-### Open — owner researching today
-
-- **Which free OmniRoute model is an actual embedder** — `STORAGE_EMBED_MODEL` is
-  still unset; until it's picked, embeddings-status honestly reports "no model
-  configured" and search stays keyword-only. Fusion method was decided as RRF
-  (D33) absent the owner's research landing — revisit if that research says
-  otherwise.
-- Sanitizer rules + whether an LLM scrub pass earns its cost — after the data review.
-- **Backup:** local disk is the only copy today. A periodic export (zip → Drive /
-  SD card / another box) is a later PLAN item.
-- **Menu glyph** (build phase 7) — deferred until `Main_Menu/Page/next_app/app/
-  components/TopBar.tsx`'s in-progress redesign lands.
+- **Menu glyph** — shipped 2026-09-05: a stacked-disk `storage:` case in `TopBar.tsx` `GLYPHS`, rebuilt, verified live at `localhost:8000`.
+- **you** Pick a free OmniRoute model that is an actual embedder and set `STORAGE_EMBED_MODEL`. Until then, embeddings report "no model configured" honestly and search stays keyword-only.
+- **you** Write the real sanitizer rules at `knowledge/_sanitize_rules.json`, and decide whether an LLM scrub pass earns its cost — after reviewing your own data.
+- Fusion is RRF (D33) absent your research landing; revisit only if that research says otherwise.
+- **Consumers, later:** finance-os and Learning stop writing scattered local files and persist through the seam. Finance is the first real user — salary transactions from 2026-09-04 on should land via the seam.
 
 ---
 
-## 3 — Wire the finance-os agents through OmniRoute
+## 3 — Wire the finance agents through OmniRoute
 
-Small adapters over `/v1/chat/completions` on `127.0.0.1:8003` with `GATEWAY_API_KEY`.
-Supervisor needs `complete(question, context) -> str`; specialists need
-`summarize(payload) -> str`. Model choice stays a gateway routing decision, not code.
-
-**Blocked on** Q10 and Q12 from item 1. Gateway itself is already configured and live
-(`AGENTS.md` D6/D6.1/D6.2, `Screens/Model/GATEWAY_CONFIG.md`).
+Small adapters over `/v1/chat/completions` on `127.0.0.1:8003` with `GATEWAY_API_KEY`: the supervisor needs `complete(question, context) -> str`, specialists need `summarize(payload) -> str`. Model choice stays a gateway routing decision, never code. **Blocked on Q10 and Q12** (item 1). The gateway itself is live (D6, D6.1, D6.2).
 
 ---
 
-## 4 — AGENT DECK: chambers pass, then V2
+## 4 — AGENT DECK — tail + V3
 
-`Screens/Agents/` (port 8004, `MENU_LABEL="AGENT DECK"`). V1 shipped 2026-08-30; the
-D15 2D pixel-art office replaced the 3D stage 2026-09-02.
+V2 shipped 2026-09-05 (D27–D27.5): real OmniRoute asks through one path, a `runs` table behind a live panel, per-agent model pinning. What is left:
 
-- **Warm Pix-Agents + Agent Deck UI — SHIPPED 2026-09-02** (`AGENTS.md` D18/D19):
-  warm retheme of the whole screen (no dark surfaces), open-wall floor with the
-  spawn/walk/work/leave lifecycle, up-to-3 clouds and ambient life, and the
-  pixel-skinned Agent Deck (rail / 1:1 chat / profile drawer with the FILES editor +
-  DM persistence). The V2 brief below is unchanged and still next.
-- **Chambers — SHIPPED in 2D, not as briefed.** The D15 commit `c2cad1a` built the six
-  furnished chambers on one connected pan/zoom/click-focus plan in a 2D canvas
-  (`PixelOffice.tsx` + `roomPlan.ts`), superseding the three.js `Chamber.tsx` /
-  `furniture.tsx` design in `.scratch/agents-chambers/QWEN_BUILD_PROMPT.md` — that brief
-  is **obsolete**. The only piece of it never built is the bottom-left `TaskBrief`
-  panel, now folded into the V2 brief below.
-- **V2 — real AI agents. Mostly shipped 2026-09-05 (D27–D27.5).** `ask_agent` is a
-  real OmniRoute call through one shared ask path (`/ask`, the DM composer, and
-  agent-kind rooms all use it); a `runs` table backs a live RUNS panel in
-  `/workspace`; per-agent model pinning is two optional `office.json` keys
-  (`model`/`models`) plus `GET /api/agents/models`; `AgentChat.tsx` renders real
-  replies and honest gateway-down errors inline. Verified live: gateway down →
-  the exact "OmniRoute unreachable…" sentence in the chat and in `runs`, no
-  fabricated reply; `npm run build` clean; `package.json`/lock untouched;
-  `Shared_By_All`/`httpx`/SDK greps clean; changes confined to `Screens/Agents/`.
-  **Left from the original brief** (`.scratch/glm-briefs/1_AGENT_DECK_v2_groundwork.md`,
-  now superseded by D27.4's scope note): the bottom-left **TaskBrief** panel — the
-  one D15-chambers piece never built — since the brief assumed a root-page chat
-  panel that doesn't exist; and a real-gateway-up end-to-end run (only the
-  gateway-down path was exercised this pass — OmniRoute wasn't started to avoid
-  generating fresh gateway secrets mid-autonomous-run). 26 agent profiles today
-  (34 once item 16's twelve are counted, still inert). Ties to items 3 and 8.
+- **`TaskBrief` panel** — the one D15-chambers piece never built; dropped from V2 because the original brief assumed a root-page chat panel that does not exist (D27.4). Needs a fresh placement decision.
+- **One end-to-end run with the gateway actually up.** Only the gateway-down path has been exercised; OmniRoute was not started during the autonomous pass to avoid regenerating gateway secrets mid-run.
 - **V3 (optional)** — board × agents: pick an `ENH-n`, ask an agent.
-- **Twelve new agent profiles landed 2026-09-05** — awareness (Context Engine,
-  Time Analyst, Pattern Learner, Focus Guard), autonomous code (UI Builder, Code
-  Explainer, Bug Fix, Regression Watcher) and job hunt (Job Research, Resume,
-  Interview Prep, Application Tracker — these four belong to item 12's OFFICE
-  screen). Folders + `office.json` only; none run until V2 above turns
-  `ask_agent` into a real call, and the per-agent model key they'll need is V2's
-  to introduce. Scope, data sources, the Muse Spark contributor decision and what
-  each one is *not* allowed to do: **item 16**.
-- **Responsive polish (owner-led, later; ENH-19).** D18.7 made the floor
-  re-layout per viewport (fixed 140×128 zones, flex walkways, camera clamped to
-  the plan — no scroll, no backdrop). Owner accepted the current rendering on
-  his 1920×1080 laptop and took the remaining polish himself: on short
-  viewports (canvas under ~790 px tall) the integer scale drops to 2× and rooms
-  read small in wide corridors; very small windows crop the plan edge.
-- **Build method:** Claude, as with everything else since 2026-09-03.
+- **`claude -p` test harness** — a way to exercise agent asks before OmniRoute is in the loop. Written up 2026-09-04, never started; pick it up when agent work resumes.
+- **Responsive polish (owner-led, ENH-19)** — on canvases under ~790 px tall the integer scale drops to 2× and rooms read small in wide corridors; very small windows crop the plan edge. D18.7 accepted the current rendering.
+- 26 profiles today, 34 once item 16's twelve are counted, all still inert.
+
+House-style template for a screen brief: `.scratch/agents-workspace/`.
 
 ---
 
-## 6 — finance-os Overview follow-ups
+## 6 — finance-os Overview — tail
 
-The Aurum rebuild shipped 2026-09-02 (`AGENTS.md` D13/D13.1-3,
-`Screens/Finance/DECISIONS.md` FD5+FD6).
+The Aurum rebuild (D13) and the month selector + benchmark overlay (D28) shipped. Left:
 
-- **Interactive month selector + benchmark ridge overlay — shipped 2026-09-05
-  (D28-D28.4).** Brief: `.scratch/glm-briefs/3_FINANCE_frontend_overview.md`.
-  The header pill is a real accessible dropdown scoped to Overview only,
-  reading its month list off `net-worth`'s own `trend` (never an arithmetic
-  range); the scope lives in `?month=` in the URL. `NetWorthCard` genuinely
-  scopes to a past month (hero, deltas, truncated ridge, projection hidden);
-  every other Overview card appends `?through=` and shows an honest
-  "AS OF \<month\> — not yet historical" marker, since the backend doesn't
-  support it yet. The ridge's benchmark line (Nifty 50, hardcoded symbol) is
-  rebased onto net worth's own scale through one shared normalize call — no
-  double-scaling — and renders `NO BENCHMARK LOADED` honestly since
-  `GET /api/finance/market/benchmark` (item 1's backend brief) doesn't exist
-  on this branch yet; verified live that a 404 there doesn't break the card.
-  `npm run build` clean, zero TS errors, `package.json`/lock untouched,
-  chart/animation-lib and `Shared_By_All` greps clean, changes confined to
-  `Screens/Finance/Page/next_app/`.
-  **Not verified this pass** (no browser extension connected during this
-  autonomous run): the benchmark line actually drawing once the backend
-  endpoint exists, and the three.js WebGL render/draw-in/drag-to-tilt in a
-  real window — folds into the manual check below.
-- SMS import pipeline, so `sms_last_import` stops going stale by hand. **Not briefed** —
-  needs your SMS export format first.
-- **One manual check owed:** the three.js net-worth ridge (now with the
-  benchmark line) was never watched running. Automated Chrome reports
-  `visibilityState: hidden` (freezes `requestAnimationFrame`) and
-  `prefers-reduced-motion: reduce`, so only the SVG fallback was verified.
-  The WebGL path, its draw-in, drag-to-tilt, and the benchmark overlay (once
-  item 1 lands the backend endpoint) need one look in a normal window.
+- **SMS import pipeline**, so `sms_last_import` stops going stale by hand. **Not briefed** — needs your SMS export format first.
+- **One manual browser check owed:** the three.js net-worth ridge, its draw-in, drag-to-tilt, and the benchmark overlay were never watched running. Automated Chrome reports `visibilityState: hidden` and `prefers-reduced-motion: reduce`, so only the SVG fallback has ever been verified. Needs one look in a normal window (Rule 15).
 
 ---
 
-## 7 — Observability on every tab
+## 7 — Observability — Main Menu panel
 
-**Mostly shipped 2026-09-05 (D30–D30.5).** Finance (`DataHealthCard` footnote) and
-Learning (Insights "Ledger" panel header) each got their own request/error-rate
-observability, self-contained per Rule 5 — no shared module, verified live (honest
-zero with no traffic, real counts once requests land). AGENT DECK's `RunsPanel`
-(item 4) got a stats strip (runs/error-rate/avg-latency) — no backend change needed,
-item 4 already built the `runs` table. Model is exempted — it already *is* the
-gateway's observability surface. **Left:** Main Menu already has the backend half
-(full request trace middleware into the trace ledger, `health_check` dependency
-probe, `GET /api/main_menu/live` SSE) — none of it surfaced as a UI panel yet. Not
-done this pass because `Main_Menu/Page/next_app/` was mid-redesign (uncommitted
-home-page rework) when this item was reached; wire `/api/main_menu/live` into a
-small panel once that settles.
-
----
-
-## 8 — Shrink `Shared_By_All_Screens/` to its irreducible core — closed 2026-09-05 (D31-D31.3)
-
-**Closed as this state, not as an empty folder.** The "known heavy pieces" this item
-originally named were already gone: `read_and_write_numbers.py` and `trace_every_action.py`
-are single-owner in `Main_Menu/Backend/`; `add_and_search_the_knowledge_base.py` and
-`the_lease_board.py` don't exist in the repo. This pass moved `Look_And_Feel/` into
-`Main_Menu/Look_And_Feel/` (its one real tracked caller — Finance's reference was dead)
-and deleted the dead `LOOK_AND_FEEL`/`FONTS_DIR`/`WATCHED_FOLDERS` lines from
-`settings_for_finance.py`; also repointed the gitignored `Screens/Anime/` screen's own
-reference (uncommitted, untracked, but a real local dependency a plain grep misses).
-
-**What's left, on purpose:** `read_screen_settings.py`, `restart_signal.py`,
-`clear_every_data_cache.py` — imported only by `Main_Menu/Backend/server_for_main_menu.py`
-and `Start_Inky/*.py`. Neither caller is a screen; `Start_Inky/` is the launcher, which
-Rule 17 already carves out as allowed to know about every screen. Duplicating
-`read_screen_settings.py` would reintroduce the exact "two copies of how-do-I-find-the-port"
-bug its own docstring exists to prevent. `Current_Numbers/` (the noticeboard) is data, not
-logic — the deliberate one channel between screens (ADR-010), not a Rule 6 violation.
-
----
-
-## 9 — Runtime choice per service  *(rescoped by D21.1 — no longer a migration)*
-
-**Not a migration any more.** Per `CLAUDE.md` Rule 4 / D21.1 each service keeps the
-runtime whose libraries its work lives in: Python/FastAPI for finance-os, RAG, the
-Learning backend and the Main Menu; Node/Express for the Agent Deck's SSE fan-out,
-Anime and the MCP servers. Nothing is rewritten for the sake of its language. What is
-left of this item is only the discipline — every cross-language call stays on HTTP,
-and no service imports across the line.
+Finance, Learning and AGENT DECK are done (D30–D30.2); Model is exempt (D30.3). The Main Menu already has the whole backend half — request-trace middleware into the trace ledger, the `health_check` dependency probe, and `GET /api/main_menu/live` SSE — and none of it is surfaced. Wire `/api/main_menu/live` into a small panel once the home-page redesign settles (same wait as item 2's glyph).
 
 ---
 
 ## 11 — Repoint the Hermes fleet off the dead local endpoint
 
-*(Supersedes "dsh local-model observability", parked 2026-08-29. Unparked and
-mostly shipped 2026-09-03 — decisions D24, D25. The blocker it was parked on,
-"no local adapter", was never real: `dsh-llm-pi-ai` takes hand-declared
-OpenAI-compatible providers, so the harness reaches the gateway with no adapter
-written. `.scratch/dsh-local-model/PLAN.md` is now history, not a plan.)*
-
-What shipped: the Deepseek screen (8007) over `dsh`, the Hermes screen (8008)
-over the profile fleet, and an `omniroute` provider declared in both tools'
-configs pointing at the gateway on 8003.
-
-What is left: **all 15 Hermes profiles still name `local-model-a` @
-`localhost:8080`** — a llama-server that is not running and, per the user, not
-coming back. Each profile's `model:` block needs repointing to
-`provider: omniroute`. Deliberately not done in bulk: repointing fifteen agents
-changes what every one of them costs and how it behaves, so it is a decision per
-profile, not a side effect of wiring (D25.1).
-
-Also open: only three DeepSeek routes on the gateway actually answer
-(`cfp/deepseek-ai/…`); the `-free` route reports "Model is unavailable" upstream
-and the `opencode/` ones return 402. If that changes, the model lists in both
-`install_*_provider.py` scripts want revisiting.
+- **All 15 Hermes profiles still name `local-model-a` @ `localhost:8080`**, a llama-server that is not running and not coming back. Each profile's `model:` block needs `provider: omniroute`. Deliberately not bulk-edited: it changes what every agent costs and how it behaves, so it is a decision per profile (D25.1).
+- Only three DeepSeek routes on the gateway answer (`cfp/deepseek-ai/…`); `-free` reports "Model is unavailable" upstream and `opencode/` returns 402. If that changes, revisit the model lists in both `install_*_provider.py` scripts.
 
 ---
 
-## 12 — Learning OS rebuild  *(D16 + D17, ACTIVE)*
+## 12 — Learning OS — M6, M7, M8 *(active)*
 
-**D16 (shipped 2026-09-02):** M0–M3 — Ember Studio shell, schema v2, dynamic Path,
-Today/Focus Session, Room player (4-beat steps, checkpoints), Recall/Card Studio
-(SM-2), INSIGHTS tab, crew shell (roster/SSE feed/proposals on sample data).
+M0–M5 shipped (D16, D17.1): the Ember Studio shell, schema v2, dynamic Path, Today and Focus Session, the room player, Recall and Card Studio, INSIGHTS, the crew shell, the corpus stored, honest zero, and two ground-zero tracks re-seeded.
 
-**D17 v3 — "real-life pass", now ACTIVE.** The owner's corpus (14-week plan, Master
-Context, resume) enters the system; all demo history wipes to an honest zero; two
-ground-0 tracks (Project → DevOps ∥ Observability job-driven, detection track
-dissolved into both); TryHackMe becomes the daily standing lab; a new OFFICE screen
-tracks the job hunt; the crew goes live on OmniRoute. Plan + milestones:
-`.scratch/learning-redesign/PLAN_V3.md`; decisions **D17–D17.8** in `AGENTS.md`.
-Absorbs old item 5 (the example seeds are replaced by the D17 re-seed).
+- **M6** — shipped 2026-09-05: TryHackMe standing lab (`lab_url`/`source`
+  tags + THM-only streak), day-template settings (weekday/weekend minute-
+  blocks seeded from Master_Context.md, Today protects the THM slot), and
+  the Sunday-cadence Planner rebalance (`services/planner_rebalance.py`,
+  files a `proposals` row when a track falls under half its weekly target,
+  the THM slot gets skipped, or session completion drops — tested against
+  synthetic ledger fixtures, `tests/test_planner_rebalance.py`). **Left:
+  interview-day preemption — genuinely blocked on M7 existing** (it reads
+  Office's interview data over HTTP; there is no Office screen yet to read).
+- **M7** — OFFICE screen v1 on **port 8010** (D17.5; 8008 is Hermes): applications pipeline, interview prep, work log, machine-enforced resume-defensible flag at ≥2 Good/Easy ratings. *8–12 h.*
+- **M8** — Crew live on OmniRoute (Planner, Quizmaster, Tutor, Auditor) plus the SIGNAL verification queue, THM Scout and the Office agents, with per-agent token and cost discipline. **PII routes to local models only** — and there is no local model today, which collides with item 16 D. *10–14 h.* **Gated: plan only until real data is wired; test on dummy data, never the DB.*
+- **Room content** — 101 rooms have 0 steps and 0 cards. *2–3 h plus your reading.*
+- **Seed the four "two runtimes, one launcher" rooms** from D21.1. *~1 h.*
+- **Deferred cards (each an `ENH-n` on the board):** agents drafting full lesson content; Storage-seam note sync; progress backup; a release radar for the project stack; JD-skill radar feeding the Planner; interview-question radar feeding Quizmaster; preference learning from verification choices; Warden and Quill live. **Never: auto-applying to job portals.**
 
-- **M5** context in + honest zero + board re-seed — *SHIPPED 2026-09-02: three
-  corpus docs stored verbatim in gitignored `Screens/Learning/Context/` with an
-  allowlisted read router; demo history wiped (`learning.db.bak-preD17` kept);
-  board re-seeded as two ground-0 tracks (68 rooms, empty steps — "planned, not
-  taught"); card reveal parts relabeled to his 5-part format; 6 pytest tests on a
-  temp DB (`Backend/tests/test_honest_zero.py`)*
-- **M6** TryHackMe standing lab (`lab_url`, `source` tags, streak line on Today) +
-  day-template settings + weekly ledger-driven Planner rebalance + interview-day
-  preemption
-- **M7** OFFICE screen v1 (:8008) — applications pipeline, interview prep, work
-  log, machine-enforced resume-defensible flag (≥2 Good/Easy ratings)
-- **M8** Crew live on OmniRoute (Planner/Quizmaster/Tutor/Auditor) + SIGNAL
-  verification queue + THM Scout + Office agents (PII → local models only) +
-  per-agent token/cost discipline — **GATED (owner 2026-09-02): plan only until
-  the real data is wired; where testing is needed, test on dummy data (tests
-  only, never the DB)**
-- Deferred cards (ENH-n on the AGENT DECK board): agents drafting full lesson
-  content (digests + card minting ship in M8); Storage-seam note sync; progress
-  backup; release-radar for the project stack; JD-skill radar feeding the Planner;
-  interview-question radar → Quizmaster; preference learning from verification
-  choices; time-pattern coach (old item 5 idea); Warden/Quill live. **Never:**
-  auto-applying to job portals.
+Plan and mockups: `.scratch/learning-redesign/`. The study-seed maintainer prompt lives at `Screens/Learning/LEARNING_SEED_MAINTAINER.md`.
 
 ---
 
-## 13 — Investments end-to-end  *(SHIPPED 2026-09-02 — decisions D20, finance-os FD7)*
+## 14 — Calendar card *(active)*
 
-Built and verified live in one session, before the Sept-4 salary: the rebuilt
-Investments tab (single Analyse action, value ridge, SIP rhythm, CAS-import
-button), the per-holding Analyse drawer (Groww reference data: facts, published
-portfolio with weights/sectors, returns, risk ratios vs NIFTY 50, peers,
-pros/cons, plain-English explainer), the Analysis tab (look-through X-ray + HHI,
-pair-overlap heatmap, behaviour, allocation vs targets, cost & tax, fact-based
-observations), the Trade Desk tab (WATCHLIST / JOURNAL / IPO / GLOBAL), the
-market-data MCP server (`Start_Inky/run_market_mcp.py`, :3101/mcp) for the Agent
-Deck research agents, and Learning-tab removal from finance-os. Static export
-re-built and served. Residue:
-- **User step:** re-import the CAS PDF via Investments → IMPORT CAS PDF — fills
-  `lots`, XIRR and the unrealised STCG/LTCG buckets (the UI is ready; the old
-  CAS carried no transaction history). Pairs with item 1's lots rebuild.
-- Two Groww pages unresolved (100900 HDFC Children's, 120760 UTI Multi Asset) —
-  sheets show honest `pending`; add a slug override in
-  `services/fund_reference.py` `MANUAL_OVERRIDES` when the page is found.
-- Market-cap split not shown (needs per-stock facts; never guessed).
-- AMFI NAVAll.txt retires 2026-09-30 (old format): mfapi stays primary — watch
-  for a parser-only change if the fallback is ever needed.
-- Agent Deck V2 (items 3/4): point the research agents' tool loop at
-  `127.0.0.1:3101/mcp` (tools already live).
+Google Calendar plus the nightly agent plus WakaTime, on the Main Menu home page (D23.1–D23.7). In progress alongside the home-page redesign. Its WakaTime signal is what item 16's Context Engine reads for office hours.
+
+---
+
+## 15 — Day Plan card becomes agent-owned
+
+The card shipped 2026-09-04 as a hand-kept localStorage checklist (`Main_Menu/.../DayPlanPanel.tsx`). This item is the wiring: each area's agent (Finance, Learning, Anime, Agents) fetches its own real state, plans today, and writes the rows. `Day_Planner_Agent` already exists as the profile that owns it.
 
 ---
 
 ## 16 — Agent roster expansion: awareness layer + autonomous code agents
 
-Raised 2026-09-05 from two sources: the owner's own agent asks this session, and an
-outside "Kage Agent System" draft (Qwen3.8-Max, 2026-09-04) pasted in for sifting.
-**Only the parts that fit this repo are below** — what was dropped, and why, is at the
-end so it isn't re-proposed. Twelve profile folders exist now
-(`Screens/Agents/AI_Agents/*/description.txt` + `office.json`) — eight `deck`/`sub`
-under `Deck_Main_Agent`, four `learning`/`sub` under `Learning_Main_Agent`. **None of
-them run**: `ask_agent` is still the honest `pending` stub, so this whole item is
-blocked on **item 4 V2**. The model they route to is section **D**.
+Twelve profile folders exist (`description.txt` + `office.json` only) and **none of them run** — `ask_agent` has to be live first. Raised 2026-09-05 from the owner's own asks plus an outside draft, sifted.
 
-### A — Awareness layer
+**A — Awareness layer.** The load-bearing idea: no agent knows what the owner is currently doing, so every planner guesses.
+- **`Context_Engine_Agent`** — the collector everything else reads. Polls WakaTime (item 14), Google Calendar (D23), `git log --since` today, and each screen's health endpoint; writes one current-state file into the Storage seam (item 2 owns `KAGE_DATA_DIR` — do not invent a second store). **Rule 8 applies hard:** an unreachable source is written as unreachable, never carried over from the last poll. **Build this first**; the rest of A is worthless without it.
+- **`Time_Analyst_Agent`** — evening pass: planned blocks vs logged time, writes the gap report, hands it to `Day_Planner_Agent` (item 15) rather than planning itself.
+- **`Pattern_Learner_Agent`** — weekly rolling focus score per time-of-day. Needs ~6 weeks of real history; until then it reports "not enough data", not a guess.
+- **`Focus_Guard_Agent`** — one short nudge when current activity has drifted from the planned block. The detection is a comparison, not a judgment — no model call needed for it.
+- **A custom Pomodoro tracker** is the data source for non-office hours: the owner starts and stops by hand (no auto-detection), each session logs start, end and — v2 — a task label, with its own Home card and local table. It feeds the four agents above the way WakaTime feeds them for office hours. What comes out: idle gaps, sessions that miss the plan, length and break patterns vs a baseline, which hours produce finished vs abandoned sessions, streaks, and an honest weekly "where the time actually went". **All of it waits on real logged data** and none of it is specified yet. Supersedes item 12's narrower "time-pattern coach" — same idea, whole-day scope, built once here.
 
-The load-bearing idea from the draft, and the one thing genuinely missing today: no
-agent knows what the owner is *currently doing*, so every planner guesses.
+**B — Autonomous code agents.** `UI_Steward_Agent` finds drift and writes proposals but edits nothing; these four close the loop.
+- **`UI_Builder_Agent`** — plain-English UI request → edits that screen's own `Page/` files → runs its build and lint → reports the diff. One screen per request, never across the HTTP seam (Rule 5).
+- **`Code_Explainer_Agent`** — reads the live source, not the docs. Distinct from `Inky_Knowledge_Agent` (stored knowledge, still unscoped).
+- **`Bug_Fix_Agent`** — stack trace → patch → *runs it* → reports. A fix it could not verify is reported unverified (Rule 8).
+- **`Regression_Watcher_Agent`** — fires after any agent edits a screen, re-runs that screen's tests and build, files a board card on a break. The net under autonomous editing. Overlaps item 18 — build the test gate first.
 
-- **`Context_Engine_Agent`** — the collector everything else reads. Polls WakaTime
-  (item 14 already brings it in), Google Calendar (D23), `git log --since` today, and
-  each screen's own health/activity endpoint; writes one current-state file into the
-  Storage seam (item 2 — it owns `KAGE_DATA_DIR`, don't invent a second store).
-  **Rule 8 applies hard:** an unreachable source is written as unreachable, never
-  silently carried over from the last poll. Build this first; A and B below are
-  worthless without it.
-- **`Time_Analyst_Agent`** — evening pass: planned blocks vs logged time, writes the
-  gap report. Consumes the Context Engine; hands the report to `Day_Planner_Agent`
-  (which already writes tomorrow's plan — item 15) rather than planning itself.
-- **`Pattern_Learner_Agent`** — weekly: rolling per-time-of-day focus score from
-  accumulated gap reports. Needs ~6 weeks of real history before it says anything;
-  until then it reports "not enough data", not a guess.
-- **`Focus_Guard_Agent`** — one short nudge when current activity has drifted from the
-  planned block. Cheap, no LLM needed for the *detection* (a comparison, not a
-  judgment); only the wording of the nudge is worth a model call, if that.
+**C — Job hunt (4 agents).** These belong to the OFFICE screen (item 12 M7) and cannot start before it exists: `Job_Research_Agent` (reads saved JDs, extracts real skill asks — this *is* the deferred "JD-skill radar", one agent not two), `Resume_Agent` (claims only what Learning marked resume-defensible), `Interview_Prep_Agent` (per-interview pack; triggers M6's interview-day preemption), `Application_Tracker_Agent` (staleness over pipeline rows, plain SQL, no model call). **Never auto-apply to job portals.** They are parked in the `learning` department because the Pixel Office floor hard-codes six departments in `Backend/services/office.py` and `roomPlan.ts`; a real `office` department is a later change to both files.
 
-**Data source for non-office hours: a custom Pomodoro tracker.** Owner starts/stops a
-session by hand (no auto-detection); each session logs start, end, and — v2 — a task
-label. Its own small Home card + local table, feeding the four agents above the same
-way WakaTime feeds them for office hours. What the agents get out of it: idle gaps
-between sessions, sessions that don't line up with the plan, session-length and break
-pattern vs a baseline, which hours produce *finished* vs abandoned sessions,
-streak/consistency, and an honest weekly "where the time actually went". **All of it
-waits on real logged data** — none of it is specified yet.
+**D — Model: Muse Spark contributor tier** (owner's call 2026-09-05 — an API key plus a large token budget for a $20 top-up, against a subscription that gives no key). Three things to settle before it is real:
+1. **The exact model id.** `Screens/Model/GATEWAY_CONFIG.md` records `muse-spark-1.2-contributor-free` in the persisted config — **not 1.3**. Check the dashboard, pin the id, update that file.
+2. **Its real per-token price and rate limits.** Neither is verified. A 15-minute Context Engine poll is ~96 calls/day; confirm RPM first and fall back to 30 minutes if it does not fit.
+3. **The data-sharing tradeoff.** Contributor tier means prompts and outputs may be used to improve the provider's products, which collides head-on with M8's "PII → local models only" when there is no local model here. Either those agents stay off this tier, or the sanitizer (item 2) earns its place first. **Unresolved. It gates C and every Finance agent; it does not gate A or B**, which read only code, build state and timestamps.
 
-Supersedes the narrower "time-pattern coach" deferred under item 12 (Learning study
-sessions only). Same idea, whole-day scope: build it once, here.
+**Blocked on:** item 4 V2 (a real `ask_agent`), item 2 (somewhere to write), item 14 (the WakaTime signal), D above, and item 12 M7 for section C.
 
-### B — Autonomous code agents
+---
 
-Today `UI_Steward_Agent` finds drift and writes proposals but edits nothing. These
-four close that loop.
+## 17 — Backup for `KAGE_DATA_DIR`
 
-- **`UI_Builder_Agent`** — plain-English UI request → edits that screen's own `Page/`
-  files → runs its build + lint → reports the diff. One screen per request; never
-  reaches across the HTTP seam (Rule 5).
-- **`Code_Explainer_Agent`** — reads the live source, not the docs, and answers "what
-  does this do / why". Distinct from `Inky_Knowledge_Agent` (stored knowledge;
-  `context.md` still empty and unscoped).
-- **`Bug_Fix_Agent`** — stack trace or breakage report → patch → *runs it* → reports.
-  A fix it could not verify is reported unverified (Rule 8).
-- **`Regression_Watcher_Agent`** — fires after any agent edits a screen, re-runs that
-  screen's tests/build, files a board card on a break. The net under autonomous
-  editing, where no human has reviewed the diff.
+Local disk is the only copy of everything the Storage seam holds (D11.5). A periodic export — zip to an SD card, another box, or cloud — with an honest "last backup" line on the Storage status page. Small, and currently the only single point of data loss in the project.
 
-### C — Job hunt (4 agents) — belongs to the OFFICE screen, item 12 M7
+---
 
-**Correction, same session:** these were first ruled out of scope on the grounds that
-no Job screen was planned. That was wrong. **Item 12 M7 is the OFFICE screen** —
-applications pipeline, interview prep, work log, machine-enforced resume-defensible
-flag (≥2 Good/Easy ratings) — and M8 already lists "Office agents" as crew work.
-D17.5 moved that screen to **port 8010** (CLAUDE.md port table); item 12's own line
-still says `:8008`, which is Hermes. **Fix that line when M7 starts.**
+## 18 — A test that runs before a commit
 
-Four profiles added, `learning`/`sub` under `Learning_Main_Agent`:
-
-- **`Job_Research_Agent`** — reads saved JDs, extracts the real skill/stack asks,
-  aims the Planner at live openings. This *is* the "JD-skill radar" already deferred
-  on the board under item 12 — one agent, not two.
-- **`Resume_Agent`** — claims only what the Learning OS has marked
-  resume-defensible; flags lines that no longer earn their place.
-- **`Interview_Prep_Agent`** — per-interview prep pack; feeds the
-  "interview-question radar → Quizmaster" deferred card and triggers M6's
-  interview-day preemption.
-- **`Application_Tracker_Agent`** — staleness over the pipeline rows. Plain SQL, no
-  model call for the detection.
-
-**Standing constraint, unchanged:** *never* auto-apply to job portals (item 12's own
-"Never"). These four surface and draft; the owner sends.
-
-**Department:** parked under `learning` because the Pixel Office floor has six
-departments hard-coded (`Backend/services/office.py` + `roomPlan.ts`) and OFFICE is
-not one of them. A real `office` department is a later change to both files, not part
-of this item.
-
-### D — Model: Muse Spark contributor
-
-Owner's call, 2026-09-05: route this roster at the **Muse Spark contributor tier**
-rather than burning the Claude subscription on it — an API key plus a large token
-budget for a $20 top-up, against a subscription that gives no key at all.
-
-Three things to settle before it's real:
-
-1. **The exact model id.** `Screens/Model/GATEWAY_CONFIG.md` records
-   `muse-spark-1.2-contributor-free` in the persisted OmniRoute config — **not 1.3**.
-   Check the gateway dashboard, pin the id, update that file. The same file already
-   carries a CONFIRM that no "GLM Flash 5.3" exists there either.
-2. **Its real per-token price and rate limits.** Everything in D depends on these and
-   the repo has verified neither. A 15-minute Context Engine poll is ~96 calls/day;
-   confirm RPM first, fall back to a 30-minute cadence if it doesn't fit.
-3. **The data-sharing tradeoff.** Contributor tier means prompts and outputs may be
-   used to improve the provider's products. That collides directly with item 12 M8's
-   standing rule, **"PII → local models only"** — and there is no local model here
-   today. So: either those agents stay off this tier, or a sanitizer earns its place
-   first (item 2 already asks whether an LLM sanitizer pass is worth its cost).
-   **Unresolved. It gates C and every Finance agent; it does not gate A or B**, which
-   read code, build state and timestamps — no personal data in either.
-
-Per-agent model pinning is an `office.json` key that **item 4 V2 introduces**; the
-twelve new profiles ship without it rather than carrying a key nothing reads.
-
-### Blocked on
-
-1. **Item 4 V2** — until `ask_agent` is a real OmniRoute call, all twelve are folders.
-2. **Item 2 (Storage seam)** — the Context Engine needs somewhere to write.
-3. **Item 14 (WakaTime)** — the Context Engine's main office-hours signal.
-4. **D above** — model id, price, rate limits, and the contributor-tier data question.
-5. **Item 12 M7** for section C specifically — the OFFICE screen has to exist before
-   its four agents have anything to read.
-
-### Sifted out of the pasted draft — do not re-propose
-
-- **The ₹35/month cost table.** Arithmetic on a price the repo has not verified.
-  Keep the *shape* of the estimate (see D below), throw away the numbers until the
-  model id and its real price are confirmed.
-- **Morning Brief + Schedule Optimizer as new agents.** `Day_Planner_Agent` already is
-  both (reads the trace ledger nightly, writes tomorrow's plan). Item 15 is its wiring.
-- **Watch_Dog / Quota Warden / Evolution Analyst as new agents.** All three already
-  exist as profiles.
-- **Architecture / Documentation / Project-Manager agents.** Overlap
-  `Doctrine_Planner_Agent`, `Integration_Expert_Agent`, `Mission_Planner_Agent` and
-  `UI_Steward_Agent`. Revisit only if a real gap shows up in use.
-- **A separate `KAGE_DATA_DIR/planning/` store and a "trigger dispatcher" runtime.**
-  Item 2 owns storage; item 4 V2 owns the runtime. Two owners for one job is how the
-  deleted repo-root `Agents/` pool died.
+Every "verified live" in `AGENTS.md` was a manual check, which is why the same class of regression keeps resurfacing. There are already pytest files (`Screens/Learning/Backend/tests/`) and a reusable set of hygiene gates at `.scratch/finance-os-build/gates/` (import checks, forbidden-dependency greps, build checks) written for the finance-os phase loop. Wire the gates plus the existing tests into one command the launcher and a pre-commit hook both call. Nothing new to design — this is assembly.
 
 ---
 
 ## Reference material kept on disk
 
+Anything in `.scratch/` that is not listed here is deletable (D34.1).
+
 | Path | What it is |
 |------|-----------|
-| `.scratch/drive-storage/` | Item 2 build brief + turn map (paste-ready for Qwen) |
-| `.scratch/glm-briefs/` | The four parallel GLM 5.3 briefs + per-chat context packs (2026-09-02) |
-| `.scratch/finance-os-port/` | Item 1 port brief, apply plan, locked answers |
-| `.scratch/dsh-local-model/PLAN.md` | Item 11 plan |
-| `.scratch/agents-workspace/` | AGENT DECK V1 brief — shipped; kept as the house-style template |
-| `.scratch/finance-os-build/` | finance-os V1 phase specs + gate scripts — shipped; gates reusable |
-| `.scratch/finance-redesign/` | Aurum mockups + PNGs the Overview was built against |
-| `.scratch/finance-telemetry/HARNESS.md` | Shared local-model run harness |
-| `.scratch/lm-ui-gaps/` | Local-model UI-gap ledger + prompt contract |
-| `.scratch/model-page-gateway/` | OmniRoute gateway wayfinder + issues — shipped |
+| `.scratch/qwen/` | Paste-ready Qwen briefs, numbered; `01_rebuild_lots.md` shipped, `02_thm_standing_lab.md` is item 12's current task |
+| `.scratch/finance-os-port/` | Item 1 port brief, apply plan, locked answers Q1–Q9 |
+| `.scratch/glm-briefs/2_FINANCE_backend_lots_history*.md` | Item 1's backend brief and its context pack |
+| `.scratch/learning-redesign/` | Item 12 plan (`PLAN_V3.md`) + the Ember Studio mockups |
+| `.scratch/finance-redesign/mockups/` | Aurum mockups — the reference for any tab not yet re-skinned (Rule 13) |
+| `.scratch/finance-os-build/gates/` | Reusable hygiene gate scripts — item 18 assembles these |
+| `.scratch/agents-workspace/` | The house-style template for writing a screen brief |
+| `.scratch/agent-deck-claude-p/PLAN.md` | Item 4's unstarted `claude -p` test harness |
 | `qwen_agent_port/` | Item 1 old-code extracts (gitignored) |
 
 ---
 
-## Dropped
+## Dropped — do not re-propose
 
-- **Wire Finance telemetry panels to live endpoints** (old P8). Targeted
-  `Screens/Finance/Page/next_app/`, which the V1 rebuild replaced. That rebuild owns
-  Finance data wiring now.
-- **Finance realism pass, F1 two-livery** (old P9). Built (`5b72750`), then superseded
-  by the finance-os V1 cutover (`657774d`). See `AGENTS.md` D7.
-- `finance-os-master-plan-final.md`, `learning-tab-plan.md`, `wire-screens-plan.md` —
-  deleted; the work shipped.
+- **The ₹35/month agent cost table** from the pasted draft — arithmetic on a price the repo has never verified. Keep the shape of the estimate (item 16 D), throw away the numbers until the model id and its real price are confirmed.
+- **Morning Brief and Schedule Optimizer as new agents** — `Day_Planner_Agent` is already both; item 15 is its wiring.
+- **Watch_Dog, Quota Warden, Evolution Analyst as new agents** — all three already exist as profiles.
+- **Architecture, Documentation and Project-Manager agents** — they overlap `Doctrine_Planner_Agent`, `Integration_Expert_Agent`, `Mission_Planner_Agent` and `UI_Steward_Agent`. Revisit only if a real gap shows up in use.
+- **A separate `KAGE_DATA_DIR/planning/` store and a "trigger dispatcher" runtime** — item 2 owns storage and item 4 V2 owns the runtime. Two owners for one job is how the deleted repo-root `Agents/` pool died.
+- **Wiring the old Finance telemetry panels to live endpoints**, and the **F1 two-livery realism pass** — both targeted the frontend that the rebuild replaced (D7).
+- **A 30–50 h whole-repo Node migration** — rescoped to nothing by D21.1: each service keeps the runtime whose libraries its work lives in.

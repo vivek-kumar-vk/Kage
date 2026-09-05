@@ -7,8 +7,8 @@ discovers the rest and links to them.
 Kage is the public code for the **Inky** dashboard (the module names you'll
 see throughout are `inky`). It ships **code only** — no personal data, no
 private notes, no agent memory. Screens that normally show saved data start
-empty; you supply your own. Real data is meant to live outside this repo
-(Google Drive) — see [`PLAN.md`](PLAN.md) for the roadmap.
+empty; you supply your own. Real data lives outside this repo, in a folder
+you point `KAGE_DATA_DIR` at — see [`PLAN.md`](PLAN.md) for the roadmap.
 
 Stack (`CLAUDE.md` Rule 4): **frontend** React 19 + Tailwind + Next.js (+ Three.js
 where it earns it); the **backend runtime is chosen per service** — the seam between
@@ -29,9 +29,9 @@ in, and never imports across the line.
   `Start_Inky/run_omniroute.py`); the Model screen reports on it. Config note:
   `Screens/Model/GATEWAY_CONFIG.md`.
 - **Launcher.** Plain Python scripts in `Start_Inky/`.
-- **Storage.** Local flat files + **SQLite** today; moving to a Google
-  Drive–backed layer ([`PLAN.md`](PLAN.md) item 2). Nothing personal
-  is committed here.
+- **Storage.** One seam every screen persists through (Storage screen, `:8009`):
+  plain files under `KAGE_DATA_DIR` outside the repo, with hybrid keyword +
+  dense retrieval on top. Nothing personal is committed here.
 - Agents live inside the Agent Deck screen (`Screens/Agents/AI_Agents/`). The
   older root-level agent layer was removed in 2026-09-03 — it could not run.
 
@@ -68,9 +68,8 @@ The backend picks up `next_app\out` on its next start.
 ## Status
 
 Active. This is v2 of a private project, rebuilt in the open. See
-[`PLAN.md`](PLAN.md) for what's being worked on next —
-principally moving all private data into Google Drive behind a smart
-retrieval layer.
+[`NOW.md`](NOW.md) for what's being worked on right now, and
+[`PLAN.md`](PLAN.md) for the queue behind it.
 
 ## License
 

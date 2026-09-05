@@ -1,963 +1,174 @@
-# AGENTS.md — Kage
+# AGENTS.md — Kage decision log
 
-> **Rules live in [`CLAUDE.md`](CLAUDE.md), not here.** This repo is built by Claude
-> alone since 2026-09-03; the rules that used to sit in this file were collapsed to
-> one line each and moved there so there is exactly one copy of them. This file is
-> kept for the last in-flight GLM tasks and for the record below.
->
-> - Standing rules -> [`CLAUDE.md`](CLAUDE.md)
-> - What is not done yet -> [`PLAN.md`](PLAN.md)
-> - Why a thing is the way it is -> the numbered decisions below
+One numbered decision, one line. Append-only: a change to `D<n>` is filed as `D<n>.1`;
+the highest sub-number is in force, the parent stays as history. Rationale beyond the
+line lives in git history — this file is the *what*, not the essay.
 
-## Design decisions (CLAUDE.md Rule 11)
+Rules → [`CLAUDE.md`](CLAUDE.md) · Open work → [`PLAN.md`](PLAN.md) · Today's one task → [`NOW.md`](NOW.md)
 
-Numbered, append-only. A change to `D<n>` is filed as `D<n>.1`, `D<n>.2`, …; the
-highest sub-number is the one in force and the parent stays as history.
+**HISTORIC, do not action:** D1, D1.1, D2, D3, D4, D5 governed the pre-rebuild Finance
+frontend that D7 replaced. D10/D10.1, D11.1–D11.3, D12.1, D15.4, D18.1, D21.7 are each
+superseded by a later line below.
 
-> **D1, D1.1, D3, D3.1, D4, D5 are HISTORIC.** They governed the pre-finance-os
-> Finance frontend at `Screens/Finance/Page/next_app/`, which the V1 rebuild
-> replaced (`657774d`). Kept as history per CLAUDE.md Rule 11 — **not to be actioned**. See D7.
+## Finance UI, pre-rebuild (all historic — see D7)
 
-- **D1 — Finance telemetry skin: amber, not crimson.** The F1/"evening race"
-  pass on the Finance screen (2026-08-28) uses warm amber/gold on carbon-black.
-  Red / `--vermilion` / `--p5-red` stays reserved for "act now" state only
-  (`colours_and_fonts.css` states this 3×) — never decoration.
-- **D1.1 — Finance realism pass: two F1 liveries (2026-08-29, supersedes D1 for
-  the realism pass).** Owner asked for a real "F1 broadcast/team-tool feel", not
-  the amber skin. Two livery token sets in `globals.css`: `.liv-ferrari` (red
-  `#DC0000` anchor, evening charcoal-navy, yellow sparing) on the Overview tab,
-  `.liv-rb` (Red Bull blue `#1E5BC6` dominant, midnight navy, red/yellow trim) on
-  Investments; a shared `--f1-*` set carries the broadcast sector-colour delta
-  semantics (purple = best, green = ahead, grey = flat). **CLAUDE.md Rule 9 still holds** —
-  `--f1-alert` (red) is the only "act now" colour and is never decoration; a
-  monetary loss uses `--f1-flat` / `--liv-neg`, not alert-red. No Scuderia
-  wordmark / shield / helmet-car icons / speedo-as-nav / AI-art. Detail:
-  `.scratch/finance-realism-pass/research/f1-feel.md`. Authored by the local
-  model; Claude orchestrated + validated.
-- **D2 — Seed data for the telemetry panels v1.** New Finance panels read
-  `app/lib/blueprintSeed.ts` (blueprint numbers real, rest `SEED`-tagged), not
-  live endpoints. Live wiring was dropped — finance-os owns it (`PLAN.md` ## Dropped).
-- **D3 — CSS/SVG + framer-motion for the telemetry motion.** ~~No Three.js added
-  to the Finance app~~ *(superseded by D3.1)*.
-- **D3.1 — Three.js welcomed on Finance (2026-08-29, supersedes D3).** Use
-  Three.js (via `@react-three/fiber` + `@react-three/drei`) wherever it delivers
-  better animation and interaction than CSS/SVG alone. `framer-motion` stays for
-  page transitions and lightweight motion; Three.js handles 3D scenes, particle
-  effects, and rich interactive visualizations. `output: "export"` is unaffected
-  — Three.js is fully client-side. Install the same trio already in Main Menu's
-  `package.json` (`three`, `@react-three/fiber`, `@react-three/drei`).
-- **D4 — Additive placement.** Enrich the existing Overview tab (blueprint
-  headline blocks) + a new TELEMETRY tab + a new left `SpeedoNav` that replaces
-  the header tab-strip. Existing tabs/panels/endpoints untouched.
-- **D5 — Finance "Neon Command Deck" (2026-08-28).** Vivid multi-hue accent set
-  (`--gold/--cyan-e/--violet-e/--mint` + `--grad-wealth`/`--grad-flow`), glass
-  panels (`.glass` + `backdrop-filter`), an `AuroraBackground` (drifting blobs +
-  grain), `TiltCard` pointer-tilt wrappers, gradient+glow hero numbers, a
-  `PulseCore` radar hero, and a spring page-transition. CLAUDE.md Rule 9 still holds — red
-  is not in the decorative set. All motion freezes under reduced-motion.
-  Authored entirely by the local model; Claude orchestrated + validated.
-- **D6 — OmniRoute is the model gateway (2026-08-30).** The gateway slot on
-  `127.0.0.1:8003` (vacated by the removed LiteLLM tooling) is OmniRoute
-  (npm `omniroute`), bound to 127.0.0.1 only, `REQUIRE_API_KEY=true`. The
-  Model screen reads it live: health `/api/monitoring/health` + `/v1/models`
-  with `GATEWAY_API_KEY` from `.env` (env var wins). Gateway secrets are
-  generated into `.env` by the launcher and never committed. Detail:
-  `Screens/Model/GATEWAY_CONFIG.md` (gateway config shipped 2026-08-30).
-  - **D6.1 — Gateway process ownership.** `Start_Inky/run_omniroute.py` owns
-    starting/stopping the gateway (idempotent: an already-running one is left
-    alone); `Start_Everything.bat` starts it in its own window before the
-    screens. Self-contained — no shared-module imports (CLAUDE.md Rule 5).
-  - **D6.2 — Health path.** OmniRoute's health route is
-    `/api/monitoring/health`. The LiteLLM-era `/health/liveliness` 404s, and
-    since a 404 counts as unreachable on the Model screen, the probe was
-    switched (`Screens/Model/Backend/server_for_model.py`).
-- **D7 — finance-os V1 is the Finance screen of record (2026-08-30).** The
-  greenfield `finance-os/` app (React 19 + FastAPI + SQLite, built via the
-  autonomous phase-gate loop, cut over in `657774d`) replaces
-  `Screens/Finance/Page/next_app/` wholesale. finance-os carries its own
-  "carbon/racing" theme (`racing.red #e10600`); **this supersedes D1.1's
-  two-livery scheme**. All earlier Finance-UI decisions (D1–D5) are historic.
-  finance-os keeps its decisions in `Screens/Finance/DECISIONS.md` and its
-  data-backfill plan in
-  `Screens/Finance/finance-datamigration.md` (gitignored — contains PII).
-- **D8 — Two Learning surfaces, deliberately (2026-08-30).** The standalone
-  **`Screens/Learning/`** screen (terminal/CLI theme; tabs Today/Plan/Recall;
-  SQLite + seed file; `/ask` stubbed) is the canonical personal-learning surface
-  — spec `Screens/Learning/QWEN_BUILD_PROMPT.md`, shipped `ed833dd`. The
-  **finance-os "Learning tab"** (`Screens/Finance/Page/next_app/.../learning/`) is
-  finance-scoped RAG over public finance primers only; it does not duplicate the
-  standalone screen and neither absorbs the other. The old
-  `learning-tab-plan.md` (Model-screen theme, full Drive+FAISS) is dropped.
-- **D9 — The AGENTS screen is the agent workspace (2026-08-30).**
-  `Screens/Enhancement/` → `Screens/Agents/` (`MENU_LABEL="AGENT DECK"`, port 8004).
-  A local 3-pane agent workspace ("Deck" theme — Main-Menu DNA, not Slack). The
-  kanban "ideas" board is **one room** inside it, owned by `Agent_Head`;
-  board card keys stay `ENH-n`. Agent profiles live in
-  `Screens/Agents/AI_Agents/` (the screen owns its own agents — CLAUDE.md Rule 5; V1 seeds
-  21 role-stub profiles, `Agent_Head` first). V1 ships the shell + working board +
-  profiles + honest stubs, **no LLM**. Agent
-  execution (OmniRoute wiring, per-agent model sets, routing) is **V2**. Repo-root
-  `Agents/` (20 stubs) and `Shared_By_All_Agents/` are a **V2 reuse pool — left
-  untouched by V1**, not moved or imported. Plan: `.scratch/agents-workspace/`.
-  Supersedes P3's old "rebuild the kanban" scope.
-- **D10 — Model screen embeds OmniRoute's own dashboard (2026-08-30).** The
-  Model screen at `:8005` **iframes OmniRoute's built-in dashboard** at
-  `127.0.0.1:8003` instead of building custom data-proxy panels. The page
-  keeps its RUBRIC header (title + status dot + "open in new tab" link) and
-  the back-to-menu link; the iframe fills the remaining viewport. The
-  existing `/api/model/overview` health probe gates whether the iframe is
-  shown or a "gateway unreachable" fallback panel is displayed — honest
-  states, no fake data. Auto-retry every 30 s when down. This supersedes
-  the T7 "custom data blocks" plan from `screen_definition_for_model.py`'s
-  original docstring; OmniRoute's dashboard already has models, usage, cost,
-  logs, and latency views built in — duplicating them is waste.
-  - **D10.1 — Model screen direct redirect to OmniRoute (2026-08-30, supersedes D10 iframe wrap).**
-    `GET http://127.0.0.1:8005/` redirects directly (`307`) to OmniRoute's
-    dashboard at `http://127.0.0.1:8003/`. Dashboard login requirement is
-    auto-disabled on gateway startup by `Start_Inky/run_omniroute.py`.
-- **D11 — The Drive-backed private storage layer (P7; 2026-08-31).** `Screens/Storage/`
-  is the repo's **one storage seam** (`read_doc`/`write_doc`/`list_docs`/`delete_doc`/
-  `search`, logical-path addressed under one Drive root folder): FastAPI, port **8009**,
-  `MENU_ORDER 8`, one Status tab, hand-rolled HTML status page (no Next app). Built by
-  Qwen 3-Max from the house brief `.scratch/drive-storage/QWEN_BUILD_PROMPT.md`
-  (map: `.scratch/drive-storage/map.md`); Node migration rides P4 (user chose FastAPI
-  for this service over the old Node-only stack rule — the seam is HTTP, consumers don't care).
-  Nothing personal lives **only** on local disk.
-  - **D11.1 — Adopted gateway.** The Drive transport is npm
-    `@piotr-agier/google-drive-mcp` (MIT; service-account auth via
-    `GOOGLE_APPLICATION_CREDENTIALS`, scope `drive`), run as a **standalone Streamable
-    HTTP server** at `127.0.0.1:3100/mcp` by `Start_Inky/run_drive_mcp.py`
-    (`run_omniroute.py` pattern, idempotent; auto-discovered by
-    `start_every_screen.py`'s `run_*.py` glob — no `Start_Everything.bat` edit).
-    The app is an MCP client (official Python SDK) and **never spawns it** —
-    gateway-down is an honest first-class state. The app carries zero Google client
-    libraries and never opens the SA key.
-    - **D11.1a — Gateway pinned + tool surface verified (2026-09-04, v2.8.0).**
-      Package still MIT, actively released. Standalone HTTP is
-      `... start --transport http --host 127.0.0.1 --port 3100`; endpoint `POST/GET
-      /mcp` with an `mcp-session-id` header after `initialize` (the Python SDK's
-      `streamablehttp_client` handles it). Service-account mode is auto-selected when
-      `GOOGLE_APPLICATION_CREDENTIALS` is set; scopes via `GOOGLE_DRIVE_MCP_SCOPES=drive`.
-      The eight seam tools exist as named in the brief — `search` (`rawQuery:true`),
-      `listFolder`, `readTextFile`, `createTextFile`, `updateTextFile`, `uploadFile`
-      (`contentBase64`), `deleteItem` (→ trash), `createFolder` — **one correction:
-      `createFolder`'s parent arg is `parent`, not `parentFolderId`.** Account/identity
-      for the status panel comes from `authGetStatus` (reports active auth mode +
-      effective Google identity). Open risk: a service account has no Drive storage
-      quota of its own, so writes into a **consumer-Gmail**-owned shared folder can be
-      rejected — a Workspace account with domain-wide delegation
-      (`GOOGLE_DRIVE_MCP_SUBJECT`), a Shared Drive, or local-OAuth/external-token mode
-      is the fallback if the gate hits it.
-  - **D11.2 — Stateless path resolution.** Logical paths resolve by name via Drive
-    `listFolder`/`search` with an in-memory cache only — **no local path→id map**
-    (that map would be personal data on disk). All seam docs are stored as UTF-8
-    `text/plain`; the extension (`.md`/`.txt`/`.json`) carries the format.
-  - **D11.3 — RAG on the seam.** `services/rag.py` ports
-    `add_and_search_the_knowledge_base.py`'s pattern (Ollama `nomic-embed-text`, plain
-    cosine, sourced notes at `knowledge/notes/*.md` in Drive) + chunk overlap
-    (180 words / 20 overlap). The chunk index (`Backend/index/chunks.sqlite`) is a
-    **git-ignored rebuildable cache**, never a copy of record; `reindex` rebuilds it
-    from Drive.
-  - **D11.4 — Trader seam stub.** The future AI-trader lives in its own screen/agent
-    (Finance's no-buy/sell-recommendation rule stays). This build ships only its
-    append-only decisions ledger (`trader/ledger/<IST date>/<HHMMSS>-<seq>.json` via
-    the seam — no update/delete routes); the agent itself is unbuilt.
-  - **D11.5 — Storage goes local-disk; Google Drive is dropped (2026-09-04).**
-    Supersedes the transport half of D11 / D11.1 / D11.1a / D11.2. The seam, the
-    screen (`Screens/Storage/`, FastAPI, **8009**, `MENU_ORDER 8`, one Status tab,
-    hand HTML) and the RAG / trader layers stay; the **backend becomes plain files
-    under `KAGE_DATA_DIR`** (default `~/kage-data`, outside the repo — Rule 7), not
-    MCP-to-Google-Drive. Why: the intended host is Termux on Android (no Node, no
-    Ollama, 24/7), and the Drive-MCP path needed a Node gateway + a service account
-    + OAuth and hit "service accounts have no Drive storage quota" for a consumer
-    Gmail. `Start_Inky/run_drive_mcp.py` is removed; no `mcp` SDK, no Google
-    libraries, no `path_map` (a logical path is now a validated real subpath).
-    `write_doc` is atomic (`os.replace`); `delete_doc` moves to
-    `KAGE_DATA_DIR/.trash/<date>/`. Near-term the laptop hosts and the phone
-    browses over LAN; a phone deploy repoints `KAGE_DATA_DIR` to `/sdcard/kage-data`.
-    Build brief lives in `PLAN.md` item 2 (the `.scratch/drive-storage/` brief is
-    history). Open: a backup path — local disk is the only copy today.
-    - **D11.5.1 — Embeddings via OmniRoute, not Ollama.** Supersedes D11.3's Ollama
-      `nomic-embed-text`. `rag.py` calls the gateway's OpenAI-compatible
-      `/v1/embeddings` (a **free** model, id in `.env` as `STORAGE_EMBED_MODEL`,
-      reuse `GATEWAY_API_KEY`). Unreachable or not-an-embedder → keyword-only
-      `partial`, honest.
-    - **D11.5.2 — Hybrid retrieval.** Keyword (SQLite **FTS5**, stdlib) + dense
-      fused; fusion method (RRF / weighted / + reranker) is an owner decision from
-      research 2026-09-04. Index `Backend/index/rag.sqlite` — git-ignored,
-      rebuildable from the notes.
-    - **D11.5.3 — Sanitizer hook.** `services/sanitize.py` `sanitize(text)` (rules
-      at `knowledge/_sanitize_rules.json` via the seam) runs on every chunk before
-      it is sent to OmniRoute to embed. v1 = hook + empty ruleset; real rules and a
-      possible LLM scrub pass follow the owner's data review.
-- **D12 — AGENT DECK Pixel Office (Screens/Agents/; 2026-08-31).** The Agents screen
-  landing view is a Three.js/react-three-fiber pixel "office stage" driven by an
-  append-only `events` table + one SSE endpoint (`Backend/services/events.py`);
-  characters animate strictly from real events, roster is registry-driven from
-  `AI_Agents/*/office.json` (`{department, tier, parent}`). Old 3-pane workspace
-  moved to `/workspace`.
-  - **D12.1 — LLM still last.** `omni.py` (OmniRoute client, the one LLM seam) is in
-    the tree but `POST /agents/{name}/ask` stays the V1 `{"state":"pending"}` stub.
-    Live agent asks are `PLAN.md` item 3, after all data wiring.
-  - **D12.2 — Demo events opt-in.** Ambient simulated activity is `AGENTS_DEMO_EVENTS`
-    off by default (public repo); every generated event carries `sim=1` and is
-    labeled simulated client-side. Never presented as real work.
-- **D13 — Aurum is the Overview skin (finance-os/; 2026-09-02).** The finance-os
-  Overview wears the "Aurum" private-wealth theme — near-black ground, gold
-  `#E4C07C` accent, Fraunces serif hero numbers, 12-col panel grid, hand-rolled
-  SVG charts (no chart library) — ported from
-  `.scratch/finance-redesign/mockups/overview.html`. The racing palette and
-  `.card` stay for the tabs that have not been re-skinned; the two coexist.
-  - **D13.1 — Red is still act-now only.** Aurum's coral `#FF7A6B` marks a
-    monetary loss (an expense bar, a negative day change, an above-20% APR).
-    Nothing decorative is red, and no card is red at rest.
-  - **D13.2 — The 3D ridge degrades, it does not disappear.** The net-worth
-    ridge is react-three-fiber, dynamically imported, `ssr:false`. It falls back
-    to a static gold SVG drawn from *the same real series* on no-WebGL, on
-    `prefers-reduced-motion`, and when a mounted WebGL context has not painted
-    within 1.5 s. The panel's tag names whichever one actually drew.
-  - **D13.3 — No manufactured market data.** A price row is written only for a
-    date the feed actually published. Carrying the last NAV forward (or stamping
-    a stale NAV as today) fills the series with duplicates and silently flattens
-    every day change to 0.00 — both paths did this and both were fixed. A day
-    with no published quote stays absent, and a card with nothing real to plot
-    says so instead of drawing a curve.
-- **D15 — Pixel Office is 2D, not 3D (Screens/Agents/; 2026-09-02).** The D12 stage
-  was Three.js/r3f. It could not reach the reference art (`Agent-idea.png`, a 16-bit
-  top-down game scene), so the whole 3D pass — including the abandoned
-  `vivek/agent-chambers-wip` chambers branch — is replaced by a **2D pixel-art canvas
-  renderer**. `three`, `@react-three/fiber`, `@react-three/drei` and `@types/three`
-  are out of `package.json`; static export drops ~1.2 MB → ~770 KB.
-  - **D15.1 — Still no binary assets.** Art is code: a palette + string-matrix
-    sprites + painter functions (`components/office/pixelArt.ts`), composed into one
-    468 x 206 plan buffer (`components/office/roomPlan.ts`) blitted at an integer
-    scale with smoothing off. Nothing to license, nothing to ship.
-  - **D15.2 — One attached building.** Six chambers in a 3x2 block with shared walls
-    and doorways (Model server room / Finance trading floor / Learning library /
-    Agent Deck war room / Anime lounge / Lobby reception), not six floating tiles.
-    Desks are generated per occupied seat, so dropping a profile folder in furnishes
-    a desk automatically — the roster stays registry-driven (D12).
-  - **D15.3 — Device-pixel camera.** Pan/wheel-zoom/room-focus all work in *device*
-    pixels so one art pixel is always an exact square of physical pixels on
-    fractional-DPI displays. Text (name plates, room plates, speech bubbles) stays in
-    a DOM overlay above the canvas so it never gets pixel-scaled.
-  - **D15.4 — One bubble at a time.** With a busy event stream every desk would shout
-    at once; the stage speaks for the selected agent, else the hovered one, else
-    whoever was tasked most recently. Dormant subs show no name plate.
-    *(superseded by D18.5 — up to 3 clouds now)*
-- **D16 — Learning OS rebuild (Screens/Learning/; 2026-09-02).** The Learning screen
-  is rebuilt into a personal, agent-driven learning platform that teaches
-  TryHackMe-style (track → module → room → 4-beat steps: explain / real-world /
-  lab / checkpoint → auto-minted recall cards) in an **Ember Studio** design system
-  (warm near-black, bone text, single ember `#E8A851` accent, Fraunces display
-  numerals; jade = success, violet = AI-authored, red stays act-now only). Five tabs:
-  TODAY (focus cockpit + Focus Session) / PATH (fully dynamic tracks, modules, rooms —
-  no A/B enum, archive-not-delete) / RECALL (SM-2 + Card Studio) / INSIGHTS
-  (retention curve, mastery map, weak spots, confidence-vs-reality, rhythm, coverage,
-  append-only ledger) / CREW (six agents on an OmniRoute seam copied from the Agents
-  screen: Planner, Tutor, Quizmaster, Librarian, Guardian, Auditor — every output is
-  an Approve-card; ~~no agent fetches internet content~~ *(superseded by D17.3)*).
-  Plan + milestones: `.scratch/learning-redesign/PLAN.md`, `PLAN.md` item 12.
-  Supersedes D8's terminal/CLI theme for this screen; D8's two-surface split still
-  stands.
-- **D17 — Learning OS v3 "real-life pass" (Screens/Learning/ + Screens/Office/;
-  2026-09-02).** The owner's pasted corpus (14-week plan, Master Context, resume)
-  enters the system and the OS starts tracking his real life: honest zero, two
-  ground-up tracks, a daily TryHackMe lab habit, a job-hunt Office screen, and a
-  live agent crew. Plan: `.scratch/learning-redesign/PLAN_V3.md` (`PLAN.md` item 12
-  v3). Everything in D16 stands except its fetch ban (D17.3 below).
-  - **D17.1 — Honest zero.** All demo history (sessions, attempts, reviews, cards,
-    notes, ledger, proposals, agent_runs) is wiped; rooms re-seed as **empty
-    skeletons** ("planned, not taught" is a visible state). Standing rule, his
-    words: **nothing records work that has not happened.** His PII corpus stores
-    verbatim under gitignored `Screens/Learning/Context/`, served only by a
-    localhost allowlisted read router; never committed.
-  - **D17.2 — Two tracks from ground 0; the detection track dissolves.** Track 1
-    "Project → DevOps" (goal: forward-deployment engineer; KAGE is the lab):
-    Git/GitHub + Linux + networking basics → AI agenting (incl. Hermes agent,
-    DeepSeek harness) → multi-model routing (OmniRoute) → RAG (Storage D11.3, then
-    a finance-data RAG) → containers/CI-CD → Arize. Track 2 "Observability
-    (job-driven)": networking + Linux ground 0 → Splunk SPL/ES → Dynatrace
-    migration story incl. **DQL/DPL** (his differentiator) → real observability →
-    Prometheus/Grafana/OTel/Bindplane labs built ON KAGE. Old detection rooms
-    redistribute into both tracks where they pay; leftovers park archived in a
-    visible Track 2 module — nothing deleted, nothing hidden.
-  - **D17.3 — Agents may fetch; everything starts UNVERIFIED (supersedes D16's fetch
-    ban).** Services fetch whitelisted sources (GitHub AI, Anthropic/OpenAI news,
-    Chinese-AI channels, TryHackMe catalog — editable `Context/SOURCES.md`); the
-    LLM only digests what the service fetched; every fetched/authored item is
-    UNVERIFIED (violet) until his one-click approve. Agents that touch PII
-    (resume, employers, contact) route to **local models only**.
-  - **D17.4 — Office is its own screen (:8008).** The menu's hard `MAX_TABS = 5`
-    bars a sixth Learning tab (ADR-067 precedent: cross-domain = own screen). Tabs:
-    Overview / Applications / Interview Prep / Work Log / Resume Readiness; own
-    FastAPI + SQLite; reads Learning over HTTP. Job-hunt agents prep (tailoring,
-    interview packs, funnel reports); the owner still clicks Apply — **no portal
-    automation, ever**.
-  - **D17.5 — Resume-defensible by machine.** A skill (room `skill_tag`) is
-    resume-ready only at ≥2 Good/Easy recall ratings (his Week-14 rule); the Office
-    RESUME READINESS tab enforces his no-skills-inflation rule mechanically.
-  - **D17.6 — Activity-rebalanced timetable, no dated grid.** The 14-week dated grid
-    is not restored. A settings day-template (his real windows: morning drip,
-    evening core, THM slot, apply block) + weekly Planner rebalance from the ledger
-    (what actually happened). Interview day preempts learning (2–3 h prep insert).
-  - **D17.7 — SIGNAL lives in CREW.** Researcher+Curator digests + his verification
-    queue are a Crew-tab section (agent output pending approve — Crew's existing
-    pattern), not a new tab.
-  - **D17.8 — TryHackMe is the standing lab.** Every track's LAB beat may link a THM
-    room; sessions carry a `source` tag; Today shows a THM streak line + a daily
-    Scout pick (plan-matched THM rooms, honest login-wall fallback with remembered
-    manual mapping). The OS never submits or fakes anything on THM — his streak is
-    his own real activity.
-- **D18 — Pix-Agents: the warm rebuild (Screens/Agents/; 2026-09-02).** The D15 stage
-  and the whole Agents chrome leave the dark theme for warm paper / honey / sand
-  (`pixelArt.ts` palette remapped 1:1 — same char keys, so every sprite matrix
-  survived; `globals.css` tokens re-valued). No near-black anywhere — even outlines
-  are walnut ink `#4A3527`; coral `#D95F43` stays act-now only.
-  - **D18.1 — One open floor, no walls.** Walls, doorways and the outer shell are
-    deleted; six 140×128 zones (plan 476×296 — sized so an integer 3× blit covers a
-    1440×900 viewport; fixed sizing superseded by D18.7) are separated by tinted rugs, floor tone and furniture, linked
-    by one honey walkway loop (apron ring + two vertical corridors + one horizontal).
-    The page backdrop is the same honey as the walkway, so fit-all reads full-bleed;
-    fit-all rounds up to the next integer scale when within 15% (a small apron
-    overflow is invisible). Room plates are clickable to focus the camera; Follow is
-    opt-in, off by default.
-  - **D18.2 — Six identities.** Model = warm server garden (racks, amber LEDs) ·
-    Finance = trading floor (brass ticker) · Learning = library loft (shelves, lamp
-    pools) · Agent Deck = war room (round table, ENH pinboard) · Anime = lounge (CRT,
-    sofas) · Lobby = café reception (espresso, welcome mat). Desks stay
-    registry-generated — D15.2 carries over.
-  - **D18.3 — Spawn → work → leave.** Agents exist only while working: `started` →
-    materialize with a sparkle at their own desk, or **walk in from the Lobby along
-    the honey paths** when `deriveWalkIns()` sees a cross-department handover within
-    30 s (owner chose "Both") → work loops → `done` → stretch-fade + puff with a 6 s
-    linger, then the desk sits empty. Heads follow the same lifecycle — D15's
-    always-awake heads are gone.
-  - **D18.4 — Ambient life.** Coffee steam, dust motes in the lamp pools, amber LED
-    flicker, CRT scanline, lamp-pool pulse, and a cat patrolling the bottom walkway.
-    All of it freezes under prefers-reduced-motion.
-  - **D18.5 — Up to 3 clouds (supersedes D15.4).** Most-recent tasked agents win the
-    bubbles; SIM-tagged when sim=1.
-  - **D18.6 — Livelier demo for review.** The demo generator runs up to three
-    overlapping sim bursts (was one every 6–12 s, which left the stage empty most of
-    the time). Still sim=1 and still `AGENTS_DEMO_EVENTS` opt-in — D12.2 holds.
-  - **D18.7 — Responsive floor (2026-09-02; supersedes D18.1's fixed 476×296
-    plan sizing, keeps its open-floor design).** `buildLayout(vw, vh)` rebuilds
-    the plan per viewport: the six 140×128 zones stay fixed while the
-    walkways/aprons flex to absorb the viewport aspect, so the plan buffer is
-    exactly `ceil(viewport / scale)` and always fills the frame — nothing
-    scrolls and the honey never shows beyond the floor (zoom is floored at the
-    cover scale, pan clamped to the plan; a ResizeObserver re-layouts). Scale
-    is round-to-nearest integer with a feasibility floor (buffer ≥ 434×264,
-    aprons squeeze to 1 px before dropping a step, min 2×). Owner verified on
-    1920×1080-class browser viewports and accepted the current rendering;
-    further responsive polish is his to drive later (ENH-19, PLAN.md item 4).
-- **D19 — Agent Deck tab: Slack workflow, pixel skin (Screens/Agents/ /workspace;
-  2026-09-02).** The D9 three-pane workspace becomes the **AGENT DECK** tab next to
-  **PIX-AGENTS** (`/` ↔ `/workspace` tabs in the header; the floor-tab strip and the
-  floating DeskChat are deleted — chat lives in the deck now; RoomTabs / Navigator /
-  AgentCard deleted, CLAUDE.md Rule 6). Same pixel language as the office — not a flat Slack
-  clone — while chat bodies stay human-readable.
-  - **D19.1 — Pixel UI kit.** `.px-panel/.px-btn/.px-input/.px-tab/.px-chip` +
-    pixel-corner bubbles (edge-bar box-shadows, not borders) on D18's warm tokens;
-    BoardRoom / IdeaDetail / RunsStub re-skin unchanged through the tokens.
-  - **D19.2 — Fonts.** Pixelify Sans (next/font) carries the chrome — wordmark, tabs,
-    rail, section labels, buttons, profile rows; chat bodies and card copy stay IBM
-    Plex. Font stacks live in a plain `:root` block with the next/font variables on
-    `<html>`: `@theme inline` does not emit custom properties, so plain CSS var()
-    references need the real declarations.
-  - **D19.3 — Layout.** Left rail: search + rooms (# board-room, # runs) + the roster
-    grouped by department with SSE presence dots. Center: 1:1 chat per agent (day
-    chips, terracotta user bubbles right, typing indicator while a run is live) or the
-    board/runs room. Right: profile drawer opens on agent click; ✕ or Esc closes.
-  - **D19.4 — Agent files, view + edit.** The profile drawer's FILES tab lists the
-    agent's real files under `AI_Agents/<name>/`, opens any in a monospace editor, and
-    Save writes back. Routes `GET/PUT /agents/{name}/files[/{file}]`; filenames must
-    match `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\.(md|txt|json)$` (no separators — the
-    path can never leave the profile folder), 100 KB cap; missing canonical
-    identity.md / context.md / memory.md are one-click creatable.
-  - **D19.5 — Chat persistence.** `POST /agents/{name}/messages` finally writes the
-    messages table (nothing wrote it before) and emits a `source=ui` note event, so a
-    DM shows up as a cloud on the stage. Replies stay the honest pending stub
-    (D12.1); live wiring is PLAN.md item 4 V2.
+- **D1** — Finance telemetry skin was amber-on-carbon, red reserved for act-now. *(superseded by D1.1)*
+- **D1.1** — Two F1 liveries (Ferrari red Overview / Red Bull blue Investments) plus `--f1-*` sector-delta tokens. *(historic, D7)*
+- **D2** — Telemetry panels read `blueprintSeed.ts`, not live endpoints. *(historic)*
+- **D3** — CSS/SVG + framer-motion only, no Three.js. *(superseded by D3.1)*
+- **D3.1** — Three.js welcomed via `@react-three/fiber` + `drei`; framer-motion keeps page transitions; static export is unaffected because Three.js is client-side.
+- **D4** — Enrich the Overview tab additively, add a TELEMETRY tab and a left SpeedoNav. *(historic)*
+- **D5** — "Neon Command Deck": glass panels, aurora background, tilt cards, pulse-core hero. *(historic)*
 
+## Gateway and models
 
-- **D20 — Investments end-to-end: Analyse drawer, Analysis tab, Trade Desk
-  (finance-os/; 2026-09-02).** The Investments tab is rebuilt on Aurum (hero +
-  value ridge fed by the smoothed portfolio series, holdings table with ONE
-  Analyse action — archive/delete buttons are gone — SIP-rhythm strip from
-  lots, day's leaders), the per-holding ANALYSE drawer (an independent in-tab
-  window: published portfolio with weights/sectors, facts, returns, risk
-  ratios vs NIFTY 50, peers, pros/cons, plain-English explainer + Varsity
-  links), a dedicated Analysis tab (look-through X-ray + HHI, pair-overlap
-  heatmap, behaviour vs the index, allocation vs targets + drift, cost & tax,
-  fact-based observations), and a Trade Desk tab (WATCHLIST / JOURNAL / IPO /
-  GLOBAL). Backend: routers `analysis.py` + `tradedesk.py`; services
-  `fund_reference.py`, `ipo_calendar.py`, `calculations/ratios.py`,
-  `calculations/analysis.py`. The finance-os Learning tab is removed (D8's
-  two-surface split stands; the standalone D16 screen is untouched).
-  - **D20.1 — Fund reference = Groww public pages.** The page's
-    `__NEXT_DATA__` → `mfServerSideData` is fetched once per fund per month
-    into `fund_facts`/`fund_portfolios` (through `ref_cache`). Slug
-    resolution: manual overrides → name-slugified candidates → AMC-page
-    enumeration → mfapi `fund_house`; a page whose `scheme_code` differs from
-    the requested AMFI code is DISCARDED. Unresolved pages (100900, 120760)
-    show honest `pending` — NAV maths still works. mfdata.in was down
-    (2026-09-02) and stays out.
-  - **D20.2 — Advisory-neutral analysis.** Observations are FACTS + the named
-    threshold (pair overlap 40% watch, sector 30%, single fund 25%, top-10
-    25/40, blended TER 1.0%, drift ±5pp — the house
-    `build_the_portfolio_review.py` values); no buy/sell verb appears
-    anywhere. Ratio maths is the ported pure-math `compute_the_ratios.py`.
-    Targets and the risk-free rate carry the settings file's
-    `verified_by_a_person: false` into the UI as [UNVERIFIED].
-  - **D20.3 — The portfolio value series rides each fund's last-known NAV in
-    memory between publications; nothing is written back** (FD6/D13.3
-    intact). The old same-date-only sum made the whole portfolio dive on any
-    day one fund's NAV lagged — fake drawdowns, portfolio volatility read
-    32.4% instead of the real 10.5%.
-  - **D20.4 — Trade Desk rules.** The journal is delivery-only capital
-    gains: a trade closes once and is never rewritten; per-trade STCG/LTCG
-    buckets come from the tax rulebook file. The IPO calendar source is
-    groww.in/ipo's `__NEXT_DATA__` (Chittorgarh dropped), cached 24 h;
-    applying is a user checkbox, never advice. GLOBAL is LRS/TCS math with
-    sources named and an unverified tag; TCS is surfaced as creditable, not
-    lost.
-  - **D20.5 — Market-data MCP server.** `Start_Inky/run_market_mcp.py`
-    (official `mcp` SDK pinned `<2`, Streamable HTTP `127.0.0.1:3101/mcp`,
-    idempotent, chained into `Start_Everything.bat`) proxies the finance
-    backend — the one tool seam for the Agent Deck research agents (V2 ask
-    wiring rides item 3/4). Tool output is bounded structurally (lists
-    capped with a marked `_truncated` row), never string-sliced into invalid
-    JSON.
-  - **D20.6 — `backfill_price_history` writes real points only.** The old
-    straight-line synthetic fill is gone; when no source answers, nothing is
-    written and the UI keeps its honest empty state.
+- **D6** — OmniRoute (npm `omniroute`) is the model gateway on `127.0.0.1:8003`, bound to localhost, `REQUIRE_API_KEY=true`; secrets are generated into `.env` and never committed. Config: `Screens/Model/GATEWAY_CONFIG.md`.
+- **D6.1** — `Start_Inky/run_omniroute.py` owns start/stop, is idempotent, and imports nothing shared; `Start_Everything.bat` starts it before the screens.
+- **D6.2** — Health path is `/api/monitoring/health`; the LiteLLM-era `/health/liveliness` 404s, and a 404 counts as unreachable.
 
-- **D21 — Claude-only, one rules file, one port each (2026-09-03).** The multi-model
-  era (local 7B, Qwen 3-Max, GLM 5.3) ends; Claude builds this repo alone. The rules
-  that lived in this file are collapsed to one line each in
-  [`CLAUDE.md`](CLAUDE.md), which is now the single source of truth for how the repo
-  is worked on. This file keeps only the numbered decision log. `TOMORROW.md` is
-  folded into `PLAN.md` — there is no fourth planning doc.
-  - **D21.1 — Polyglot backend, runtime chosen per service (supersedes the old
-    "Backend: Node.js + Express" letter; owner's call 2026-09-02).** The seam between
-    screens is HTTP, so each screen or service picks the runtime whose libraries the
-    work actually lives in, and never imports across the line — CLAUDE.md Rule 5
-    already enforces the isolation that makes this safe. Python/FastAPI keeps
-    finance-os (casparser, yfinance, AMFI, tax math), RAG (local embeddings), the
-    Learning backend (SQLite + SM-2) and the Main Menu; Node/Express keeps the Agent
-    Deck's SSE fan-out, Anime, and the MCP servers (the ecosystem is Node-first).
-    No screen is rewritten for the sake of its language. This rescopes `PLAN.md`
-    item 9 from a 30-50 h migration to a case-by-case choice — the single biggest
-    hour saving in the backlog. Cost: two toolchains, which
-    `Start_Inky/start_every_screen.py` already handles (the Anime Python launcher
-    shim around a Node server is the proof).
-  - **D21.2 — 8000 is the Main Menu and nothing else.** `finance-os/backend/main.py`
-    hard-coded `port=8000`; running finance-os directly stood Finance up on the Main
-    Menu's address, and the menu appeared to have vanished. It now reads the Finance
-    screen's own `settings_for_finance.py` (8001), so a port is still written in
-    exactly one place. The cutover note's pre-check commands were wrong the same way;
-    that note described a migration finished months earlier and was deleted with the
-    move in D21.5.
-  - **D21.3 — The Model screen serves a page again (supersedes D10.1's redirect,
-    restoring D10's iframe).** `GET :8005/` 307-redirecting straight to the gateway
-    meant that whenever OmniRoute was down the browser left Kage entirely and landed
-    on a connection error with no way back to the menu. The screen now serves
-    `Page/page_for_model.html`: it asks its own `/api/model/overview`, embeds the
-    gateway dashboard when that answers `ok`, and otherwise shows which command
-    starts the gateway. It re-checks every 10 s, so the gateway coming up needs no
-    reload. Honest states, CLAUDE.md Rule 8.
-    - **D21.3.1 — The menu links straight to the gateway (2026-09-04).** D21.3's
-      iframe embed never rendered: the OmniRoute dashboard sends
-      `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'`, so `:8005/` showed
-      the status header over a blank pane and the owner had to type `:8003` by hand.
-      Two changes: (1) the MODEL menu row now points **directly** at the gateway.
-      A screen may declare `MENU_ADDRESS` in its settings; `read_screen_settings.
-      web_address()` returns it for direct access (still the folder path behind the
-      one-port proxy, still no screen named anywhere). The Model screen still runs
-      on `PORT` 8005 — the launcher starts it there and it stays reachable for the
-      `/api/model/overview` probe and the "gateway is down" page. (2) The `:8005`
-      page, when visited directly, forwards to the dashboard with `location.replace`
-      when the probe says `ok` and keeps D21.3's start-it panel when it says down;
-      `GET :8005/` is served `Cache-Control: no-store` so a stale pre-forward copy
-      can't linger. Same "can't be framed, so link out" move D24 made for DeepSeek.
-  - **D21.4 — The old agent layer is deleted (2026-09-03).** Repo-root `Agents/`
-    (20 folders holding one `description.txt` each, every one reporting "not built")
-    and `Shared_By_All_Agents/` were kept as a reuse pool for a future agent version.
-    They cannot run: `the_supervisor.py` imports `do_one_task`, which exists nowhere
-    in the repo, so the three Main Menu endpoints that called it
-    (`agents/home_blocks/refresh`, `calendar/events` GET and POST) returned
-    "the agent layer could not be reached" on every request, and every other file in
-    that folder existed only to serve the supervisor. Both folders are deleted, along
-    with those endpoints, `agents/fleet`, `agents/{name}/files`, `/governor`, and the
-    two plain-page scripts that read them (`home_data.js`, `home_agents_box.js`) plus
-    the agents box markup. The Next export the Main Menu actually serves never called
-    any of them. `Screens/Agents/` is the agent surface; the local-model chain the
-    deleted files implemented ended with D21.
-  - **D21.5 — Finance is one folder again (2026-09-03).** The Finance app was built
-    at the repo root as `finance-os/` while a three-file shim under
-    `Screens/Finance/` mounted it — the only screen split across two locations. It
-    now sits under its screen in the shape the Anime screen already used for its Node
-    server: `Backend/app/` (the FastAPI app + its requirements and data),
-    `Page/next_app/` (the Next source, matching every other screen), `Shared/`, with
-    `Backend/build.py` mirroring `Page/next_app/out` into `Backend/app/static`. The
-    dead pre-rebuild trees (`Screens/Finance/{Page,Calculations,Setup}`, 409 MB) are
-    deleted. `Start_Everything.bat` now installs the app's own `requirements.txt`,
-    which no loop had ever picked up — a fresh clone got a Finance screen that could
-    not import casparser, mftool or pdfplumber, and only said so at the first request.
-  - **D21.6 — `Shared_By_All_Screens/` shrunk to what is actually shared
-    (2026-09-03).** Eight of its twelve modules had exactly one caller, the Main
-    Menu — a shared file with one caller is not shared, it is misplaced. Moved into
-    `Main_Menu/Backend/` with their paths corrected: `format_indian_money`,
-    `health_check`, `read_and_write_numbers`, `trace_every_action` (with its
-    `Trace_Ledger/` and the rotate script), `tail_the_trace_ledger`, and
-    `code_change_monitor` (with its toggle file). Deleted: `mark_unverified_numbers`,
-    `show_not_built_yet` and `Column_Contracts/frozen_column_names.json`, all with no
-    reader at all. `add_and_search_the_knowledge_base.py` — the RAG implementation the
-    unbuilt Storage screen will be ported from — moved to `.scratch/drive-storage/`
-    beside the brief that cites it, since it has no caller until that screen exists.
-    What stays is what two or more trees genuinely use: `read_screen_settings` (the
-    menu + four launcher scripts), `restart_signal` and `clear_every_data_cache` (the
-    menu + the launcher), `Look_And_Feel/` (four screens), and the `Current_Numbers/`
-    noticeboard (the menu + a Finance backfill script). The folder still trends to
-    empty — `PLAN.md` item 8.
-  - **D21.7 — `TREE.md` (2026-09-03).** A root-level map of every file in the repo
-    with one line each, generated and annotated by hand. It is a snapshot, not a
-    source of truth: ports live in each screen's settings file, rules in `CLAUDE.md`,
-    the backlog in `PLAN.md`. Adding a screen means adding its lines here.
+## Screens of record
 
-## D23 — The Calendar card (2026-09-03)
+- **D7** — `Screens/Finance/Backend/app` (React 19 + FastAPI + SQLite, cut over in `657774d`) is the Finance screen of record; its own decisions live in `Screens/Finance/DECISIONS.md`. Supersedes D1–D5.
+- **D8** — Two Learning surfaces on purpose: standalone `Screens/Learning/` is canonical personal learning; finance-os's Learning tab was finance-scoped RAG only, and was removed in D20. Theme half superseded by D16.
+- **D9** — `Screens/Agents/` (`AGENT DECK`, 8004) is the agent workspace; profiles live in `Screens/Agents/AI_Agents/` because the screen owns its own agents (Rule 5); the kanban is one room inside it, card keys `ENH-n`.
+- **D10** — Model screen iframes OmniRoute's own dashboard rather than rebuilding its panels. *(superseded by D10.1, then restored by D21.3)*
+- **D10.1** — `:8005/` 307-redirects straight to the gateway. *(superseded by D21.3 — the redirect stranded the browser outside Kage whenever the gateway was down)*
 
-- **D23.1 — The card gained a switch and lost its decoration.** On the owner's
-  instruction the `OPEN CAL` pill became a two-way switch (`CAL` / `WAKA`), so
-  WakaTime opens *in this card* rather than another tab. The world-clock row
-  (USA PT / USA ET / LONDON) and the Q1–Q4 quarter grid both came out; a real
-  month grid replaced them. The quarter grid was gesturing at "a year's rhythm at
-  a glance" with a decorative pattern — the month grid does that job on real
-  WakaTime seconds (each cell tinted by how much was coded that day) *and* gives
-  every day a real cell to hover. `WHAT'S NEXT` is unchanged in shape and now
-  reads real events.
-- **D23.2 — Hover opens to the right, never over the grid.** A day cell carries a
-  marker only when that day actually has something: a filled amber dot for a real
-  calendar event, a hollow amber ring for a pending agent proposal, a grey dot for
-  an agent note. Hovering (or keyboard-focusing) such a cell opens a popover in
-  the empty gutter between the left column and the centre core — so it never
-  covers the grid being read, and there is room for a real list with buttons.
-  Cells with nothing do not open anything, so hovering is never a guess.
-- **D23.3 — Observations are written, intentions are not.** The nightly agent
-  produces two kinds of output and they are stored in two different tables.
-  *Notes* describe the past and their evidence is the day's real signals
-  (WakaTime seconds, this repo's commits for that day, existing events, what the
-  Email card flagged) — they are written straight to the store. *Proposals* are
-  events it wants to add; they sit as `pending` and are **never** written to
-  Google by a sync. Writing to a real calendar rings a real phone, so it takes a
-  deliberate click on *Add to calendar* in the popover. `CALENDAR_AUTO_WRITE`
-  ships off; it exists so the owner can turn it on after watching a week of
-  proposals. *Dismiss* on an already-written proposal deletes the Google event
-  again — every agent-written event carries
-  `extendedProperties.private.kage_agent = "1"` so it stays findable and undoable.
-- **D23.4 — WakaTime auth is the API key, not OAuth.** One local user reading his
-  own stats has no third party to consent; OAuth would add a redirect URI, a
-  consent tab and refresh tokens, and an app secret is one more thing to leak.
-  The key is base64 over HTTP Basic, read from the gitignored
-  `Calendar_Data/wakatime.json` or the env.
-- **D23.5 — The free plan's 7-day window is snapshotted, not worked around.**
-  WakaTime free exposes only the last week. Every sync writes those seven days
-  into `calendar.sqlite`, so history accumulates from the day the key is added
-  regardless of plan, and the week bars and the month tint read the local
-  snapshot rather than the API. A range that needs a paid plan returns 402; that
-  is reported as a sentence beside the view, and the rest keeps working.
-- **D23.6 — Two brains, one prompt.** `CALENDAR_AGENT_BACKEND=claude_cli`
-  (default) is the Email card's proven path — one `claude -p` per run, already
-  logged in, no key in `.env`. `omniroute` POSTs the same prompt to the gateway on
-  8003, which is where Hermes and DeepSeek arrive (`PLAN.md` item 3). A brain that
-  is unreachable reports `offline` and the run is skipped — it never guesses
-  something onto a real calendar.
-- **D23.7 — Google not being set up is a sentence, not an empty month.** The grid
-  still draws September because the dates are real; underneath it says "Google
-  Calendar not set up" and "Dates are real; event data is not connected", so an
-  empty row is never mistaken for a clear day (Rule 8). Setup for both
-  connections: `Main_Menu/CALENDAR_SETUP.md`.
+## Storage seam
 
-## D24 — The Deepseek screen: DeepSeek Harness, for traces (2026-09-03)
+- **D11** — `Screens/Storage/` is the repo's one storage seam (`read_doc`/`write_doc`/`list_docs`/`delete_doc`/`search`, logical-path addressed): FastAPI, **8009**, `MENU_ORDER 8`, one Status tab, hand-rolled HTML, no Next app.
+- **D11.1 / D11.1a / D11.2 / D11.3** — Google-Drive-MCP transport, stateless name resolution, Ollama `nomic-embed-text` RAG. *(all superseded by D11.5 / D11.5.1)*
+- **D11.4** — The trader seam ships only its append-only ledger (`trader/ledger/<IST date>/<HHMMSS>-<seq>.json`, no update or delete route); the trader agent itself is unbuilt and gets its own screen later.
+- **D11.5** — Storage is **local disk**, not Drive: plain files under `KAGE_DATA_DIR` (default `~/kage-data`, outside the repo). Why: the target host is Termux on Android — no Node, no Ollama — and service accounts have no Drive quota on a consumer Gmail. `write_doc` is atomic via `os.replace`; `delete_doc` moves to `.trash/<date>/`.
+- **D11.5.1** — Embeddings go through OmniRoute's OpenAI-compatible `/v1/embeddings` (free model id in `.env` as `STORAGE_EMBED_MODEL`), never Ollama. Unreachable means keyword-only `partial`, stated honestly.
+- **D11.5.2** — Retrieval is hybrid: SQLite **FTS5** keyword plus dense, fused. The index `Backend/index/rag.sqlite` is git-ignored and rebuildable from the notes.
+- **D11.5.3** — `services/sanitize.py` runs on every chunk before it is sent out to embed; rules live at `knowledge/_sanitize_rules.json`. v1 is the hook plus an empty ruleset.
 
-- **D24 — A nav for the harness, because the point is watching.** `dsh`
-  (DeepSeek AI's agent harness, MIT) shows every prompt, tool call and file
-  write an agent makes, step by step. That is the reason this screen exists:
-  to see what the agents are actually doing rather than trust a summary. The
-  screen embeds dsh's web profile the way the Model screen embeds the
-  gateway dashboard (D10), with an "open in a tab" link beside it because a
-  page that refuses to be framed must still be reachable.
-- **D24.1 — The harness reaches models through the gateway, not DeepSeek's
-  cloud.** The parked plan recorded a blocker: dsh ships only DeepSeek-cloud
-  LLM adapters, so a local or third-party model needed a custom adapter
-  (~half a day) or a baseURL gamble. Neither was necessary.
-  `@deepseek-ai/dsh-llm-pi-ai` accepts hand-declared OpenAI-compatible
-  providers (`api: openai-completions`), and OmniRoute is exactly that. So
-  `llm-pi-ai.providers.omniroute` points at 8003 and the harness reaches
-  `deepseek-v4-*` with no adapter written and no second API key held. A
-  hand-declared route needs all three of `api`, `baseURL` and a non-empty
-  `models` list or dsh rejects it on save.
-- **D24.2 — Kage never starts the harness.** `dsh web` runs in its own
-  window (Rule 20). "not running" is a first-class state that names the
-  command, so a dead harness is never mistaken for an idle one (Rule 8).
-- **D24.3 — The installer edits text, never a YAML round-trip.** The first
-  version dumped the parsed settings back out and silently deleted the
-  comment block documenting the other provider. `install_dsh_provider.py`
-  now inserts its block as text inside the existing `providers:` mapping,
-  backs the file up first, and leaves every other byte alone. Configs are
-  read by people; a writer that eats their documentation is a broken writer.
+## Pixel Office (Agents screen)
 
-## D25 — The Hermes screen: the profile fleet (2026-09-03)
+- **D12** — The landing view is a pixel office stage driven by an append-only `events` table and one SSE endpoint; the roster is registry-driven from `AI_Agents/*/office.json`.
+- **D12.1** — `omni.py` existed but `POST /agents/{name}/ask` stayed a stub in V1. *(closed by D27)*
+- **D12.2** — Ambient simulated activity is `AGENTS_DEMO_EVENTS`, off by default; every generated event carries `sim=1` and is labelled simulated. Never presented as real work.
+- **D15** — The stage is a **2D canvas pixel renderer**, not Three.js — the 3D pass could not reach the reference art. `three`/`fiber`/`drei` removed; static export dropped ~1.2 MB to ~770 KB.
+- **D15.1** — Art is code: a palette plus string-matrix sprites plus painter functions (`pixelArt.ts`). No binary assets, nothing to license.
+- **D15.2** — One attached building; desks are generated per occupied seat, so dropping in a profile folder furnishes a desk automatically.
+- **D15.3** — Pan, zoom and focus work in *device* pixels so one art pixel is an exact square of physical pixels; text lives in a DOM overlay so it is never pixel-scaled.
+- **D15.4** — One speech bubble at a time. *(superseded by D18.5)*
+- **D18** — Warm rebuild: paper, honey and sand, walnut-ink outlines, no near-black anywhere; coral `#D95F43` stays act-now only. The palette was remapped 1:1 on the same char keys, so every sprite matrix survived.
+- **D18.1** — Walls deleted: six zones on one open floor separated by rugs and furniture, linked by a honey walkway loop. Its fixed sizing is superseded by D18.7; the open-floor design stands.
+- **D18.2** — Six identities: Model server garden, Finance trading floor, Learning library loft, Agent Deck war room, Anime lounge, Lobby café.
+- **D18.3** — Agents exist only while working: `started` materialises them at their desk, or walks them in from the Lobby on a cross-department handover; `done` fades them after a 6 s linger. Heads follow the same lifecycle.
+- **D18.4** — Ambient life — steam, dust motes, LED flicker, CRT scanline, a patrolling cat — all of which freezes under `prefers-reduced-motion`.
+- **D18.5** — Up to 3 speech clouds; most-recently-tasked agents win, SIM-tagged when `sim=1`.
+- **D18.6** — The demo generator runs up to three overlapping bursts; still opt-in, still `sim=1`.
+- **D18.7** — `buildLayout(vw, vh)` re-plans per viewport: fixed 140×128 zones, flexing walkways, camera clamped to the plan, so nothing scrolls and no backdrop shows. Remaining polish is owner-led (ENH-19).
+- **D19** — The D9 three-pane workspace becomes the **AGENT DECK** tab at `/workspace` in the same pixel language; the floor-tab strip, floating DeskChat, RoomTabs, Navigator and AgentCard are deleted (Rule 6).
+- **D19.1** — A pixel UI kit (`.px-panel`, `.px-btn`, `.px-input`, `.px-tab`, `.px-chip`) with pixel-corner bubbles built from edge-bar box-shadows, not borders.
+- **D19.2** — Pixelify Sans carries the chrome, IBM Plex carries chat bodies. Font stacks are declared in a plain `:root` block, because `@theme inline` does not emit custom properties and `var()` needs real declarations.
+- **D19.3** — Three panes: rail (search, rooms, roster with SSE presence dots), centre (1:1 chat or the board/runs room), right profile drawer that Esc closes.
+- **D19.4** — The profile drawer's FILES tab reads and writes the agent's real files; filenames must match `^[A-Za-z0-9][A-Za-z0-9._-]{0,63}\.(md|txt|json)$` — no separators, so the path can never leave the profile folder — with a 100 KB cap.
+- **D19.5** — `POST /agents/{name}/messages` writes the messages table and emits a `source=ui` event, so a DM shows up as a cloud on the stage.
 
-- **D25 — The profile is the unit, and its history is the training.** Hermes
-  Agent (Nous Research) keeps a fleet under `%LOCALAPPDATA%\hermes\profiles`,
-  each with a `SOUL.md` persona, a model choice and its own chat history.
-  That history *is* the bot's memory — "training an agent" here means a
-  profile accumulating what it learned across sessions, not fine-tuning
-  weights. The screen reports the fleet: what each profile runs on, whether
-  it has a soul, and the command to run it.
-- **D25.1 — One gateway entry, declared for all, opted into by hand.**
-  `custom_providers.omniroute` is added to the install-wide config so any
-  profile can name it, but no profile's default model is changed. Declaring
-  is additive and reversible; repointing fifteen agents is a separate
-  decision and not one to make as a side effect of wiring.
-- **D25.2 — The screen never runs an agent.** A run costs money and mutates
-  that profile's memory. A page open in a tab must never cause one, so the
-  screen shows `hermes -p <name> chat` to copy rather than a button.
-- **D25.3 — Keys never leave the process.** Profile configs carry literal
-  `api_key` values for custom providers. The overview endpoint redacts every
-  secret-looking key recursively before serialising, so an open tab cannot
-  show one even when the config on disk holds it.
-- **D25.4 — Hermes' `custom_providers` takes a literal key, so one is
-  written.** Unlike dsh's `apiKeyEnv`, Hermes wants the value. The installer
-  copies `GATEWAY_API_KEY` out of the repo's `.env` into
-  `%LOCALAPPDATA%\hermes\config.yaml` — outside the repo and outside git
-  (Rule 7), but a real key at rest on disk, which is worth knowing rather
-  than discovering.
+## Finance rebuild
 
-## D26 — Tab navigation keeps browser history shallow (2026-09-04)
+- **D13** — "Aurum" is the Overview skin: near-black ground, gold `#E4C07C`, Fraunces serif hero numerals, a 12-column grid, hand-rolled SVG charts and no chart library. The racing palette stays on tabs not yet re-skinned; the two coexist.
+- **D13.1** — Aurum's coral `#FF7A6B` marks a monetary loss only. Nothing decorative is red and no card is red at rest.
+- **D13.2** — The 3D net-worth ridge degrades, it does not disappear: it falls back to a static SVG drawn from *the same real series* on no-WebGL, on reduced-motion, and when a mounted context has not painted within 1.5 s. The panel's tag names whichever one drew.
+- **D13.3** — **No manufactured market data.** A price row exists only for a date the feed actually published; carrying the last NAV forward fills the series with duplicates and flattens every day change to 0.00. A day with no quote stays absent.
+- **D20** — Investments rebuilt end-to-end on Aurum: hero plus value ridge, one ANALYSE action per holding, the per-holding drawer, an Analysis tab (look-through X-ray, HHI, overlap heatmap, drift, cost and tax) and a Trade Desk tab (WATCHLIST / JOURNAL / IPO / GLOBAL).
+- **D20.1** — Fund reference comes from Groww public pages (`__NEXT_DATA__` → `mfServerSideData`), cached once per fund per month. A page whose `scheme_code` differs from the requested AMFI code is DISCARDED; unresolved pages show honest `pending`.
+- **D20.2** — Analysis is advisory-neutral: an observation is a fact plus the named threshold, and no buy or sell verb appears anywhere. Unverified settings carry `[UNVERIFIED]` into the UI.
+- **D20.3** — The portfolio series rides each fund's last-known NAV **in memory** between publications and writes nothing back; the old same-date-only sum invented drawdowns and read volatility at 32.4% instead of the real 10.5%.
+- **D20.4** — Trade Desk rules: the journal is delivery-only capital gains and a trade closes once, never rewritten; the IPO source is groww.in/ipo cached 24 h; applying is a checkbox, never advice.
+- **D20.5** — `Start_Inky/run_market_mcp.py` (`mcp` SDK pinned `<2`, Streamable HTTP on `127.0.0.1:3101/mcp`) is the one tool seam for research agents. Output is bounded structurally with a marked `_truncated` row, never string-sliced into invalid JSON.
+- **D20.6** — `backfill_price_history` writes real points only; when no source answers, nothing is written and the UI keeps its honest empty state.
+- **D28** — Two series on one ridge share ONE min/max, never two.
+- **D28.1** — Month scope lives in the URL as `?month=YYYY-MM-DD`, and the month list is read off `net-worth`'s own `trend`, never an arithmetic range.
+- **D28.2** — The month pill is interactive on the Overview tab only.
+- **D28.3** — The backend has no `?through=` yet, so only `NetWorthCard` truly scopes; every other card shows an honest "AS OF \<month\> — not yet historical" marker.
+- **D28.4** — The benchmark symbol is hardcoded `^NSEI` (Nifty 50); a 404 on `GET /api/finance/market/benchmark` renders `NO BENCHMARK LOADED`, not a broken card.
 
-- **D26 — One Back press per level, not per tab.** Every screen's tab bar
-  used `<Link>` (= `router.push`), so visiting Overview → Investments →
-  Analysis → Trade Desk left four history entries and Back walked through
-  every one before reaching the Main Menu. A screen's stack now never
-  grows past `[Main Menu, Overview, current tab]`: a small `useShallowTabNav`
-  in each screen's own nav component (`Finance/…/app/finance/layout.tsx`,
-  `Learning/…/components/Rail.tsx` — copied, not shared, per Rule 5)
-  intercepts the plain left-click and routes it — **to Overview:**
-  `router.back()` (Overview is always the entry just below a tab);
-  **Overview → tab:** `router.push` (the one entry above Overview);
-  **tab → tab:** `router.replace` (swap that one entry). `<Link>` is kept
-  for prefetch and a real href, so middle-/right-click still open a tab.
-  Single-view screens (Model, Deepseek, Hermes) and the two-route Agents
-  deck need nothing. Anime's SPA is out of the repo.
-  - **D26.1 — HTML shells are served `Cache-Control: no-cache`.** The bug
-    hid twice behind stale caches: the exported `*.html` shells point at
-    hash-named `_next/*` chunks, and FastAPI's `FileResponse` sent no
-    cache header, so a browser kept an old shell (and its old JS) for
-    hours and the fix "didn't land." Finance (`app_factory.py`) and
-    Learning (`server_for_learning.py`) now send `no-cache` on every HTML
-    shell; the hashed assets stay cacheable because the hash busts them.
-    Same class of staleness as D21.3.1's Model page.
+## Learning OS
 
-## D27 — AGENT DECK V2: live asks, runs, model sets (2026-09-05)
+- **D16** — Learning is rebuilt as an agent-driven platform teaching TryHackMe-style (track → module → room → explain / real-world / lab / checkpoint → auto-minted recall cards) in the **Ember Studio** system: warm near-black, bone text, ember `#E8A851`, Fraunces numerals, jade for success, violet for AI-authored, red act-now only. Five tabs: TODAY, PATH, RECALL, INSIGHTS, CREW.
+- **D17** — v3 "real-life pass": the owner's real corpus enters the system and the OS starts tracking his actual life.
+- **D17.1** — **Honest zero.** All demo history is wiped and rooms re-seed as empty skeletons, so "planned, not taught" is a visible state. Nothing records work that has not happened. The PII corpus stays in gitignored `Screens/Learning/Context/`, served only by a localhost-allowlisted read router.
+- **D17.2** — Two tracks from ground zero: "Project → DevOps" (Git/Linux/networking → AI agenting → multi-model routing → RAG → containers and CI/CD → Arize) and "Observability, job-driven" (networking/Linux → Splunk → Dynatrace including DQL/DPL → Prometheus/Grafana/OTel labs built on Kage). Old detection rooms redistribute; leftovers park archived and visible, never deleted.
+- **D17.3** — Agents may fetch whitelisted sources (list editable at `Context/SOURCES.md`); the LLM only digests what the service fetched; everything arrives UNVERIFIED in violet until one-click approve. Supersedes D16's fetch ban.
+- **D17.4** — OFFICE is its own screen, because the menu's hard `MAX_TABS = 5` bars a sixth Learning tab: Overview / Applications / Interview Prep / Work Log / Resume Readiness, its own FastAPI and SQLite, reading Learning over HTTP. **No portal automation, ever.**
+- **D17.5** — A skill is resume-ready only at ≥2 Good/Easy recall ratings, and the OFFICE screen enforces the no-inflation rule mechanically. OFFICE's port is **8010**; 8008 is Hermes.
+- **D17.6** — No dated grid. A settings day-template plus a weekly Planner rebalance driven by what actually happened; interview day preempts learning.
+- **D17.7** — SIGNAL is a section inside CREW (agent output pending approve), not a sixth tab.
+- **D17.8** — TryHackMe is the standing lab: LAB beats may link a room, sessions carry a `source` tag, and Today shows a real streak. The OS never submits or fakes anything on THM.
 
-- **D27 — `ask_agent` calls OmniRoute for real; one ask code path.**
-  `services/agents.py` gained `_run_ask(name, message)`, used by all three
-  entry points that can start a run: `POST /agents/{name}/ask`, the DM
-  composer at `POST /agents/{name}/messages`, and `POST
-  /rooms/{room_id}/messages` for a `kind='agent'` room. A `kind='board'` or
-  `'system'` room stores the message and returns `state: "ok"` without
-  calling a model. The system prompt is built per agent, per ask, from that
-  agent's own `description.txt` + role + department + tier — never a global
-  template — and never invents a missing description.
-- **D27.1 — `state: "error"` ships as HTTP 200, not a 5xx.** A failed ask
-  (`OmniError` or otherwise) closes the run, emits `type_="error"` on the
-  SSE stream, inserts a `system`-authored message carrying the gateway's own
-  sentence, and returns `{"state": "error", "problem": "..."}` at HTTP 200 —
-  a 5xx would surface in the UI as a generic network error and lose the
-  specific reason. `unknown agent` stays 404 and `empty message` stays 422,
-  unchanged from V1.
-- **D27.2 — `runs` table, append-only.** Every ask opens a row
-  (`services/runs.py`) and closes it by `UPDATE`, never delete. A row left
-  `status='running'` because the server died is swept to `status='error'`
-  ("interrupted — server restarted") on the next boot if `started_at` is
-  over 10 minutes old — never shown as a false "ok". `tokens_in`/`tokens_out`
-  stay `NULL` (rendered `—`) unless the gateway's response carried a `usage`
-  object; nothing is guessed.
-- **D27.3 — Per-agent model pinning is two optional `office.json` keys**,
-  `model` (pinned) and `models` (preference order), read defensively by
-  `office.read_office` — a bad value is dropped, never raised, since the
-  file is read at boot and the gateway may be down. Resolution order for an
-  ask: `model` → first of `models` → the gateway's own default. No agent's
-  `office.json` was edited to add them; the keys are opt-in, documented in
-  `Backend/README_seed.md`. `GET /api/agents/models` proxies the gateway's
-  `/v1/models`, cached 60s on success and never on failure.
-- **D27.4 — Scope trimmed from the original brief
-  (`.scratch/glm-briefs/1_AGENT_DECK_v2_groundwork.md`).** That brief
-  assumed a `components/office/DeskChat.tsx` chat panel on the root Pixel
-  Office page and briefed `TaskBrief.tsx` / `DMPanel.tsx` to sit alongside
-  it; no such chat panel exists on that page — the actual 1:1 chat, DM
-  history and room list are the `/workspace` route's existing `AgentChat.tsx`
-  / `DeckRail.tsx` / `ProfilePanel.tsx` (D12/D17.3), which this pass wired
-  to real replies instead of duplicating them elsewhere. The bottom-left
-  **TaskBrief panel** (the one D15-chambers piece never built) is still
-  outstanding and stays on `PLAN.md` item 4 rather than being retrofitted
-  onto a page that has nowhere to put it.
-- **D27.5 — `RunsStub.tsx` replaced by `RunsPanel.tsx`**, live, refreshing
-  off the SSE `done`/`error` events already flowing through `workspace/page.tsx`
-  rather than polling — a run only ever closes on one of those two event
-  types, so a timer would mostly re-read the same row.
+## Platform
 
-## D28 — finance-os Overview: month selector + benchmark ridge overlay (2026-09-05)
+- **D21** — Claude builds this repo alone; rules collapse to one line each in `CLAUDE.md`, decisions live here, open work in `PLAN.md`. There is no fourth planning doc.
+- **D21.1** — **Polyglot backend, runtime chosen per service.** The seam between screens is HTTP, so each service picks the runtime whose libraries the work lives in and never imports across the line. Python/FastAPI holds finance-os, Storage/RAG, Learning and the Main Menu; Node holds the Agent Deck's SSE fan-out, Anime and the MCP servers.
+- **D21.2** — 8000 is the Main Menu and nothing else; the Finance app reads its own `settings_for_finance.py` (8001), so a port stays written in exactly one place.
+- **D21.3** — The Model screen serves its own page again, restoring D10 and superseding D10.1: it probes `/api/model/overview`, embeds the dashboard when that answers `ok`, and otherwise names the command that starts the gateway. It re-checks every 10 s, so a gateway coming up needs no reload.
+- **D21.3.1** — The menu links **directly** at the gateway, because OmniRoute sends `X-Frame-Options: DENY` and CSP `frame-ancestors 'none'` and the iframe never rendered. A screen may declare `MENU_ADDRESS`; `:8005` still runs for the probe and the gateway-down page, served `Cache-Control: no-store`.
+- **D21.4** — The repo-root `Agents/` pool and `Shared_By_All_Agents/` are deleted: `the_supervisor.py` imported a `do_one_task` that exists nowhere in the repo, so every endpoint calling it failed on every request. `Screens/Agents/` is the agent surface.
+- **D21.5** — Finance is one folder again (`Screens/Finance/{Backend/app, Page/next_app, Shared}`), matching the shape Anime already used; 409 MB of dead pre-rebuild trees deleted; `Start_Everything.bat` now installs the app's own `requirements.txt`, which no loop had ever picked up.
+- **D21.6** — `Shared_By_All_Screens/` shrunk to what two or more trees genuinely use; eight single-caller modules moved into `Main_Menu/Backend/`. A shared file with one caller is not shared, it is misplaced.
+- **D21.7** — `TREE.md`, a hand-annotated map of every file in the repo. *(reversed 2026-09-05 by D34 — it went stale on every commit, had no reader, and duplicated CLAUDE.md's "Where things are")*
+- **D26** — One Back press per level, not per tab: a screen's tab bar replaces history rather than pushing it.
 
-- **D28 — Two series get ONE shared min/max, never two.** The net-worth
-  ridge's benchmark overlay is rebased onto net worth's own units
-  (`lib/benchmark.ts` `rebaseBenchmark`) rather than min-max scaled on its
-  own — scaling two series independently into the same box makes them look
-  like they track each other regardless of what the numbers say, which is a
-  fabricated chart (Rule 8). Net worth can be negative (a large education
-  loan), so the rebase is an absolute swing off the first trend point sized
-  by that point's own magnitude, not a ratio. `NetWorthRidge.tsx`'s
-  `normalizeWithBenchmark()` normalizes trend and the rebased benchmark
-  together in one call; the plain `normalize()` used by the existing
-  trend/projection tail is untouched (a pre-existing, separate scale — out
-  of scope for this pass). A month the benchmark response doesn't cover is
-  a gap (`null`), never interpolated — both the three.js line and the SVG
-  fallback render it as a broken run, not a straight line across the hole.
-- **D28.1 — The month scope lives in the URL (`?month=YYYY-MM-DD`), not a
-  React context.** The header pill (`app/finance/layout.tsx`) sits above the
-  Overview page in the component tree, so a context provider mounted on the
-  page can't reach it. `lib/useOverviewScope.ts` splits into a read-only
-  `useOverviewScope()` (every Overview card) and a `useMonthPicker(trend)`
-  writer (the header only). Survives a refresh and a shared link for free.
-  Selectable months come only from `net-worth`'s own `trend` array — never
-  an arithmetic range — so a month with no snapshot is never offered.
-- **D28.2 — The month pill is only interactive on the Overview tab.** On
-  every other Finance tab it renders as a plain, non-clickable "LIVE" pill —
-  the `month` query param does nothing outside Overview, so an interactive
-  control there would imply a scope that isn't real.
-- **D28.3 — The backend doesn't support `?through=` yet, so only
-  `NetWorthCard` genuinely scopes.** It already holds the full `trend`
-  client-side and can read a past month straight out of it (hero number,
-  recomputed `month_change_pct`/`all_time_pct`, truncated ridge, projection
-  hidden entirely — a projection from a past month is a fiction). Every
-  other Overview card still appends `?through=` to its own fetch (so a
-  future backend can pick it up) but shows a small `HistoricalMarker`
-  ("AS OF \<month\> — not yet historical") instead of silently rendering
-  live numbers under a back-dated label.
-- **D28.4 — The benchmark symbol is hardcoded to `^NSEI` (Nifty 50)** — no
-  per-user index setting exists yet. `GET /api/finance/market/benchmark`
-  (the contract item 1's backend brief owns) doesn't exist on this branch;
-  a 404 is treated exactly like the endpoint's own `state: "empty"` — the
-  card renders normally with a `NO BENCHMARK LOADED` chip, never a crash.
-  Verified live: `curl .../market/benchmark?...` → 404, Overview still
-  loads, real net-worth trend renders. **Not verified live:** the
-  benchmark-present path (endpoint doesn't exist to test against) and the
-  three.js WebGL render in an actual browser — the Claude-in-Chrome
-  extension wasn't connected during this autonomous pass, only `npm run
-  build` (zero TS errors, static export clean) and the grep/scope checks
-  from §8 of the brief. Owner: give the ridge + benchmark line one look in
-  a normal window per PLAN.md item 6's existing "one manual check owed."
+## Calendar card
 
-## D29 — PLAN item 10 dropped: Anime-removal cleanup was already overtaken (2026-09-05)
+- **D23.1** — The card gained a switch and lost its decoration.
+- **D23.2** — Hover opens to the right, never over the grid.
+- **D23.3** — Observations are written, intentions are not.
+- **D23.4** — WakaTime auth is the API key, not OAuth: one local user reading his own data.
+- **D23.5** — The free plan's 7-day window is snapshotted, not worked around.
+- **D23.6** — Two brains, one prompt: `CALENDAR_AGENT_BACKEND` selects the backend and the prompt is shared.
+- **D23.7** — Google not being set up is a sentence, not an empty month.
 
-- **D29 — Item 10 asked for a pass over "the Next.js and Svelte Main Menu
-  variants" for layout gaps left by removing the Anime dashboard card. Both
-  premises are gone.** `git log --diff-filter=D -- '*svelte*'` shows
-  `Main_Menu/Page/svelte_app/` was deleted in the Claude-only cleanup (PLAN
-  item C, 2026-09-03) — there is no Svelte variant left to clean up. The
-  Next.js variant's `app/page.tsx` has since been rebuilt around the RUBRIC
-  Agentic OS reference (owner layout, 2026-09-02) as flexible `flex flex-col
-  gap-*` columns, not a fixed `grid-cols-N` needing a card-shaped gap filled
-  — and its card roster has already turned over twice since (YouTube Studio
-  → dropped; Routines → dropped; Day Plan added), none of it Anime-shaped.
-  `grep -rniE anime` across both Main Menu UIs turns up only legitimate
-  references to the still-live Anime *screen* in `DayPlanPanel.tsx`'s area
-  list, nothing stale. Item removed from `PLAN.md` (Rule 12) rather than
-  implemented — there was nothing left to do.
+## Deepseek and Hermes screens
 
-## D30 — Observability per tab: three screens wired, two exempted (2026-09-05)
+- **D24** — The Deepseek screen (8007) is a nav for the `dsh` harness, because the point is watching traces.
+- **D24.1** — The harness reaches models through the gateway, not DeepSeek's API directly.
+- **D24.2** — Kage never starts the harness; `dsh web` runs in its own process (Rule 20).
+- **D24.3** — The installer edits config text, never a YAML round-trip.
+- **D25** — Hermes (8008): the profile is the unit, and its history is the training.
+- **D25.1** — One gateway entry declared for all profiles, opted into **by hand** — repointing fifteen agents changes what each one costs and how it behaves, so it is a decision per profile, not a side effect of wiring.
+- **D25.2** — The screen never runs an agent; a run costs money and mutates state.
+- **D25.3** — Keys never leave the process.
+- **D25.4** — Hermes' `custom_providers` takes a literal key, so one is written there.
 
-- **D30 — Finance and Learning each get their own `services/observability.py`**,
-  independently written per Rule 5 (not shared, not imported cross-screen) —
-  an ASGI middleware recording the last 200 requests' status and duration in
-  an in-memory deque, plus a `GET .../observability/summary` route. A
-  restart clears the window; that is the honest behaviour (Rule 8), not a
-  bug — this is a live snapshot, not a stored history. Verified live on
-  both: 0 requests → `error_rate_pct: null`, `avg_duration_ms: null` (never
-  a fake `0`); real requests → real counts.
-- **D30.1 — Folded into an existing block, not a 10th card.** Finance's
-  `DataHealthCard` gained a `SYSTEM · N% ERR · Nms AVG` footnote line;
-  Learning's Insights "Ledger" panel header gained the same, inline next to
-  its entry count. Neither screen lost a card or a feature to make room —
-  "replace the block" is read here as *broaden what the block reports*,
-  not *delete what the user already relies on*.
-- **D30.2 — AGENT DECK already had richer infrastructure from item 4
-  (`runs` table + SSE events)**, so its "observability panel" is a stats
-  strip (runs in the current window, error rate, avg latency) added to the
-  `RunsPanel` built this session — no new backend at all.
-- **D30.3 — Model screen exempted.** It already *is* the observability
-  surface for the OmniRoute gateway (CLAUDE.md port table: "reports on the
-  gateway"), and its three backend/frontend files were mid-edit
-  (uncommitted, another session's D21.3.1 forwarding-logic rework) when
-  this pass reached it — touching them for a second, unrelated reason
-  risked colliding with in-flight work for no real gain.
-- **D30.4 — Main Menu exempted, for now — it's the one screen already ahead
-  of this item.** `server_for_main_menu.py` already runs a full request
-  trace middleware (every API call, with duration/outcome/correlation id,
-  into the trace ledger), a `health_check.register` dependency probe, and
-  a `GET /api/main_menu/live` SSE stream of its own traces — none of it
-  surfaced as a UI block yet. That's a real gap, but `Main_Menu/Page/next_app/`
-  was mid-redesign (uncommitted: `page.tsx`, `TopBar.tsx`, `CalendarPanel.tsx`,
-  `EmailPanel.tsx`, `SkillsDeckPanel.tsx`, two panels deleted, one added)
-  when this pass reached it — adding a new panel into an actively-churning
-  layout is exactly the collision this rule set's "leave WIP alone" guard
-  exists for. Left in `PLAN.md` item 7 as the one remaining piece: wire
-  `/api/main_menu/live` into a small panel once the home-page redesign
-  settles — the backend needs nothing more.
-- **D30.5 — `health_check.py`'s cross-screen-import pattern
-  (`import health_check` "on sys.path") is not extended to any other
-  screen.** It predates the current Rule 4/5/6 (modular to the block, no
-  shared directory) and only Main Menu itself uses it today. Following
-  that pattern elsewhere would recreate the exact `Shared_By_All_*`
-  coupling those rules exist to unwind — each screen's own
-  `observability.py` (D30) is written from scratch instead, on purpose.
+## Agent Deck V2
 
-## D31 — `Shared_By_All_Screens/` down to its irreducible core (2026-09-05)
+- **D27** — `ask_agent` calls OmniRoute for real, through one shared ask path used by `/ask`, the DM composer and agent-kind rooms alike. Closes D12.1.
+- **D27.1** — `state: "error"` ships as HTTP 200, not a 5xx: a failed ask is a result, not a transport failure.
+- **D27.2** — `runs` table, append-only; every ask opens a row.
+- **D27.3** — Per-agent model pinning is two optional `office.json` keys, `model` and `models`, plus `GET /api/agents/models`.
+- **D27.4** — Scope trimmed from the original brief: the TaskBrief panel is dropped from V2 because that brief assumed a root-page chat panel which does not exist.
+- **D27.5** — `RunsStub.tsx` replaced by a live `RunsPanel.tsx`.
 
-- **D31 — The four "known heavy pieces" PLAN item 8 named were already gone
-  before this pass.** `read_and_write_numbers.py` and `trace_every_action.py`
-  live single-owner in `Main_Menu/Backend/` now (an earlier session's work);
-  `add_and_search_the_knowledge_base.py` and `the_lease_board.py` don't
-  exist anywhere in the repo. What was left when this pass started:
-  `Look_And_Feel/` (CSS/fonts/JS), `Current_Numbers/` (the noticeboard,
-  ADR-010), and three Python files.
-- **D31.1 — `Look_And_Feel/` moved to `Main_Menu/Look_And_Feel/`.** Grepping
-  every *tracked* file found exactly one real importer: `Main_Menu/Backend/
-  settings_for_main_menu.py`. `Screens/Finance/Backend/settings_for_finance.py`
-  declared `LOOK_AND_FEEL`/`FONTS_DIR`/`WATCHED_FOLDERS` pointing at it but
-  never actually used any of the three — dead leftovers from before the
-  Aurum Next.js rebuild, which brought its own Tailwind theme. Deleted
-  rather than moved. Verified live: Main Menu boots, `/shared/colours_and_fonts.css`
-  and `/` both 200; Finance boots clean with the dead constants gone.
-  **Caught late:** `Screens/Anime/` (gitignored, untracked, invisible to a
-  normal grep) has its own real dependency on this path in `server.js` and
-  `settings_for_anime.py` — repointed to `Main_Menu/Look_And_Feel/` too
-  (path verified to resolve and exist) so the owner's local Anime screen
-  doesn't quietly break. Those two edits live only on disk; git ignores the
-  whole folder, so they were never at risk of being committed and never
-  will be. **Lesson for next time this repo greps for "every caller":**
-  gitignored screens are real runtime consumers and a plain grep misses
-  them — check `Screens/*/` on disk, not just what git tracks.
-- **D31.2 — The remaining three files
-  (`read_screen_settings.py`, `restart_signal.py`, `clear_every_data_cache.py`)
-  are NOT inlined, and that is the intended end state, not unfinished
-  work.** Their real importers are `Main_Menu/Backend/server_for_main_menu.py`
-  and `Start_Inky/{start_every_screen,serve_everything_on_one_port,
-  write_ports_for_inky}.py` — five importers across two callers, but
-  neither caller is a *screen*. `Start_Inky/` is the launcher, and Rule 17
-  already carves out the launcher and menu discovery as the one place
-  allowed to know about every screen by walking folders. Rule 5/6 targets
-  screen-to-screen coupling; this is launcher-and-menu-discovery
-  infrastructure, which is exactly what Rule 17 says gets to be
-  cross-cutting. `read_screen_settings.py`'s own docstring makes the
-  concrete cost of duplicating it explicit: "two copies of 'how do I find
-  the port' is how the menu ends up linking to a port nothing is listening
-  on." Copying it into both `Start_Inky/` and `Main_Menu/Backend/` would
-  reintroduce the exact bug class it was written to prevent, for a rule
-  whose actual target (screens sharing logic with each other) doesn't
-  apply here. Not done, on purpose — reversed here rather than pushed
-  through on momentum.
-- **D31.3 — `Current_Numbers/` (the noticeboard) is not code and stays.**
-  It is the one deliberate cross-screen channel (ADR-010): Finance writes
-  totals, Main Menu reads them for its home cards. Rule 6 targets shared
-  *logic* folders; a single shared data file is already the
-  minimum-coupling answer to "how do two screens exchange one number", not
-  a violation of it.
-- **Net effect:** `Shared_By_All_Screens/` now holds exactly what has a
-  standing reason to be there: three launcher/menu-discovery Python files
-  and one cross-screen data file. `PLAN.md` item 8 is closed as this state,
-  not as an empty folder.
+## Observability and hygiene
 
-## D32 — Storage screen started: the seam boots (2026-09-05)
+- **D30** — Finance and Learning each get **their own** `services/observability.py`; no shared module (Rule 5).
+- **D30.1** — Folded into an existing block, not a tenth card.
+- **D30.2** — AGENT DECK already had richer infrastructure from the `runs` table, so it got a stats strip and no backend change.
+- **D30.3** — The Model screen is exempt: it already *is* the observability surface.
+- **D30.4** — The Main Menu is exempt for now; its backend half (trace middleware, `health_check`, `/api/main_menu/live` SSE) already exists but is unsurfaced, and the frontend was mid-redesign.
+- **D30.5** — `health_check.py`'s cross-screen-import pattern is not copied any further.
+- **D31** — The four "known heavy pieces" `Shared_By_All_Screens/` was meant to lose were already gone.
+- **D31.1** — `Look_And_Feel/` moved to `Main_Menu/Look_And_Feel/`, its one real caller. The lesson became Rule 21.
+- **D31.2** — `read_screen_settings.py`, `restart_signal.py` and `clear_every_data_cache.py` stay shared **on purpose**: their importers are the Main Menu and `Start_Inky/`, and Rule 17 already carves out launcher and menu discovery. Duplicating "how do I find the port" is the exact bug that file exists to prevent.
+- **D31.3** — `Current_Numbers/` is data, not logic: the one deliberate cross-screen channel, not a Rule 6 violation.
 
-- **D32 — `Screens/Storage/` exists, phases 1-2 of its build.**
-  `Screens/Storage/` was still untouched (Qwen-led per `PLAN.md`, but
-  nothing on disk) when this pass reached item 2, so it started here
-  rather than sit idle. FastAPI on **8009** (`MENU_ORDER 8`), following the
-  Deepseek/Hermes template exactly (`screen_definition_for_storage.py` +
-  `Backend/settings_for_storage.py` + `Backend/server_for_storage.py` +
-  `Page/page_for_storage.html`, no Next app). `services/seam.py` ships
-  `read_doc`/`write_doc`/`list_docs`/`delete_doc`/`search`, addressed by a
-  validated logical path (lowercase `a-z0-9._-` per segment, depth ≤ 6,
-  extension in `{.md,.txt,.json}`, no `..`) under `KAGE_DATA_DIR`
-  (default `~/kage-data`, outside the repo — Rule 7). `write_doc` is
-  atomic; `delete_doc` moves to `.trash/<date>/`, never annihilates
-  (Rule 8). `GET /api/storage/status` reports data dir, doc count, free
-  space, honestly.
-  - Verified live: full round-trip (write → read → list → search →
-    status reflects the new count → delete → 404 on re-read); a `../`
-    traversal attempt rejected with `422 bad path`; the trashed file
-    confirmed on disk, then cleaned out of the real `~/kage-data` (it was
-    test data, not the owner's). Port snapshot regenerated
-    (`write_ports_for_inky.py`) — Storage now lists at 8009.
-    `grep -R "Shared_By_All\|googleapi\|mcp\b" Screens/Storage/` clean
-    (only comments naming what's deliberately absent).
-  - **Not built yet, on purpose (see `Backend/README_storage.md`):**
-    `db.py` + `rag.sqlite` schema, `services/rag.py` (FTS5 + OmniRoute
-    embeddings + sanitizer, D11.5.1-.3), `services/trader.py` (append-only
-    ledger stub), the status page's KNOWLEDGE/EMBEDDINGS/TRADER LEDGER
-    panels (currently honest "not built yet" placeholders, not empty
-    tables pretending to be real), and the Main Menu `storage:` glyph in
-    `TopBar.tsx` — that file is mid the same in-progress home-page
-    redesign D30.4 already deferred around, so the glyph waits for it to
-    settle rather than risk a collision.
+## Storage build
 
-## D33 — Storage screen: hybrid RAG + trader ledger (2026-09-05)
+- **D32** — `Screens/Storage/` boots: the seam with validated logical paths (a segment opens with `[a-z0-9_]`, depth ≤ 6, extension in `{.md,.txt,.json}`, no `..`), atomic write, `.trash`, and an honest `GET /api/storage/status`.
+- **D33** — **RRF is the fusion method**, because it needs no score normalisation between BM25 (unbounded) and cosine (−1..1); a fused score is just `Σ 1/(60 + rank)`. Cheap to swap if the owner's research says otherwise.
+- **D33.1** — Dense search degrades to keyword-only with `state: "partial"` and an honest note, never to broken.
+- **D33.2** — A *knowledge note* needs a `**Source:**` line or it is refused with 422; the generic seam door stays unrestricted, because a trader row or a blueprint is not a citation-bearing note.
+- **D33.3** — System files get a leading underscore, so the path validator allows `[a-z0-9_]` to open a segment.
+- **D33.4** — The honest-zero seed is guarded by a marker file, not by "does the file still exist" — existence-checking would silently recreate a note the owner deliberately deleted.
+- **D33.5** — The Main Menu `storage:` glyph stays deferred while `TopBar.tsx` is mid-redesign, the same collision risk as D30.4.
 
-- **D33 — RRF is the fusion method**, since the owner's own research into
-  RRF vs weighted vs a reranker (flagged open in `PLAN.md` item 2) wasn't
-  findable as a completed decision when this pass reached it. RRF was
-  picked because it needs no score normalization between keyword (BM25,
-  unbounded, lower-is-better) and dense (cosine, -1..1) — a chunk's fused
-  score is just `Σ 1/(60 + rank)` across whichever list(s) it appears in.
-  Revisit if the owner's research lands with a different answer; nothing
-  here is hard to swap.
-- **D33.1 — Dense search degrades to keyword-only, never to broken.**
-  `hybrid_search` returns `state: "partial"` with an honest
-  `"dense search offline — keyword-only results"` note whenever
-  `STORAGE_EMBED_MODEL` is unset or the gateway call fails — verified live
-  with no gateway running and no model configured: real keyword hits came
-  back, no traceback, no fabricated dense score.
-- **D33.2 — A note needs a `**Source:**` line; the raw seam doesn't
-  enforce it.** `PUT /api/storage/knowledge/notes` is a second, stricter
-  door onto the same files the generic `PUT /api/storage/doc` already
-  writes — sourceless content still exists as a plain document (a
-  trader-ledger row, a Finance blueprint) elsewhere in the tree; only
-  things filed as *knowledge* carry the citation requirement.
-- **D33.3 — System files get a leading underscore, which the seam's path
-  validator had to be taught.** `_seed_marker.json`, `_sanitize_rules.json`
-  both start with `_`; the original regex only allowed `[a-z0-9]` to open
-  a segment and rejected both at first boot. Fixed to `[a-z0-9_]`. Caught
-  immediately by the boot-check, not shipped broken.
-- **D33.4 — The honest-zero seed is guarded by a marker, not by
-  "does the file still exist."** Checking existence would silently
-  recreate a seed note the owner deliberately deleted on the next
-  restart — the marker (`knowledge/_seed_marker.json`) records "seeding
-  already happened" once, independent of what's still there.
-- **D33.5 — The Main Menu glyph (build phase 7) stays deferred.**
-  `TopBar.tsx` is still mid the home-page redesign (confirmed dirty again
-  this pass) — same collision risk already logged at D30.4 for the
-  observability panel. Wiring the `storage:` case into `GLYPHS` is a
-  five-minute change once that WIP lands; not worth the risk before then.
-- **Verified live, phase 8's checklist:** boots with OmniRoute unreachable
-  (keyword-only, honest, no traceback); full seam round-trip incl. `.trash`
-  (already D32); a note without `**Source:**` → 422; `reindex` rebuilds to
-  the same counts on a second run (2 notes, 2 chunks both times); a trader
-  POST lands on disk newest-first on `GET`; the `Shared_By_All`/`mcp`/
-  Google grep stays clean. Test artifacts (a probe trader decision) were
-  cleaned from the real `~/kage-data`; the two honest-zero seed notes were
-  left, since they're the intended first-boot state, not test pollution.
+## Repo hygiene
+
+- **D34 — Four root docs, no fifth (2026-09-05).** `CLAUDE.md` (rules), `PLAN.md` (open work only), `AGENTS.md` (this log) and `NOW.md` (the one active task), plus the public `README.md`. Every one of them is one line per item, and nothing is stated in two of them. Deleted as duplication: `TREE.md` (reverses D21.7), and the `.scratch/` context packs that restated these files for other assistants. `LEARNING_SEED_MAINTAINER.md` moved to `Screens/Learning/`, beside the seed file it maintains. Shipped work is deleted from `PLAN.md` on sight (Rule 12) — the record is git history plus the decision line.
+- **D34.1 — `.scratch/` holds only briefs for work that is still open.** A brief whose work shipped is deleted the day it ships; screenshots and mockups of shipped UI go with it. What survives a cleanup is named in `PLAN.md`'s reference table, and anything not in that table is fair game to delete.

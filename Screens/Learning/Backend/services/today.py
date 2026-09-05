@@ -12,6 +12,9 @@ import settings_for_learning as cfg
 from services.common import (
     get_db, today_str, room_mastery, short_name, streak_and_grace, get_setting,
 )
+from services.thm_lab import thm_streak_and_grace, list_thm_rooms
+from services.day_template import today_blocks
+from services.planner_rebalance import run_weekly_rebalance
 
 router = APIRouter()
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -64,6 +67,7 @@ def _pick_hero(conn):
 
 @router.get(cfg.API_PREFIX + "/today")
 def today(conn=Depends(get_db)):
+    run_weekly_rebalance(conn)  # Sunday-cadence, no-op any other day / already-run week
     room, step, counts = _pick_hero(conn)
 
     hero = None
@@ -147,6 +151,23 @@ def today(conn=Depends(get_db)):
                      "meta": "interleaved", "minutes": max(5, round(due * 0.75)),
                      "room_id": None, "color": None, "first": False})
 
+    # day-template: protect the THM slot if today declares one and it hasn't
+    # been touched yet today
+    blocks = today_blocks(conn)
+    thm_block = next((b for b in blocks if b["key"] == "thm"), None)
+    if thm_block:
+        thm_today = conn.execute(
+            """SELECT 1 FROM sessions s JOIN rooms r ON r.id = s.room_id
+               WHERE r.source='thm' AND substr(s.started_at,1,10)=?""",
+            (today_str(),),
+        ).fetchone()
+        if not thm_today:
+            thm_rooms = list_thm_rooms(conn)
+            if thm_rooms:
+                plan.append({"kind": "thm", "label": f"TryHackMe — {thm_rooms[0]['name']}",
+                             "meta": "protects the streak", "minutes": thm_block["minutes"],
+                             "room_id": thm_rooms[0]["id"], "color": None, "first": False})
+
     # crew line (Warden): track balance over the week
     bal = conn.execute(
         """SELECT t.color, t.name, COALESCE(SUM(s.actual_minutes),0) m
@@ -172,6 +193,8 @@ def today(conn=Depends(get_db)):
         "plan": plan,
         "rhythm": rhythm,
         "streak": streak_and_grace(conn),
+        "thm_streak": thm_streak_and_grace(conn),
+        "day_template": blocks,
         "due_cards": due,
         "weak_spot": ({"room_id": weak["id"], "room": short_name(weak["name"]),
                        "accuracy": round(weak["acc"] * 100), "misses": weak["n"]}

@@ -1,8 +1,11 @@
 # CLAUDE.md — Kage
 
 **The single source of truth for how this repo is worked on.** Read it first, every
-session. Built by Claude alone since 2026-09-03. Backlog: [`PLAN.md`](PLAN.md).
-Numbered design decisions (D1…D20): [`AGENTS.md`](AGENTS.md).
+session. Built by Claude alone since 2026-09-03.
+
+Four docs, nothing said twice: **rules here** · today's one task in [`NOW.md`](NOW.md) ·
+the queue in [`PLAN.md`](PLAN.md) · numbered decisions in [`AGENTS.md`](AGENTS.md).
+`README.md` is the public face. There is no fifth (D34).
 
 ## Rules
 
@@ -15,7 +18,7 @@ never as a paragraph, and never into a second file.
 4. **Stack** — frontend is React 19 + Tailwind + Next.js (+ Three.js where it earns it); the backend runtime is chosen per service (the seam between screens is HTTP, so pick the runtime whose libraries the work lives in and never import across the line — see D21.1).
 5. **Modular to the block** — every page, tab and block runs independently and calls its dependencies directly, never through a shared directory.
 6. **Shrink the shared folders** — when you work near `Shared_By_All_*`, move the logic into its one caller and delete the shared file.
-7. **Nothing personal in git** — Kage is public; real data lives outside the repo (Drive, `PLAN.md` item 2).
+7. **Nothing personal in git** — Kage is public; real data lives outside the repo under `KAGE_DATA_DIR`, reached through the Storage seam (D11.5).
 8. **Honest states only** — a thing that is down says it is down; never fake data, never a silent fallback to stale data, never a record of work that did not happen.
 9. **Red is act-now only** — never decorative, in any screen's palette.
 10. **Track future work** — anything named "later" goes to `PLAN.md` and a card on the AGENT DECK board.
@@ -29,6 +32,10 @@ never as a paragraph, and never into a second file.
 18. **Branches are prefixed `vivek/`**; GitHub work goes through the `gh` CLI.
 19. **Be concise** — in replies and commit messages, sacrifice grammar for concision.
 20. **Kage never spawns an MCP server** — gateways run as their own processes; unreachable is a first-class state.
+21. **Grep the disk, not git, when hunting callers** — gitignored screens (Anime, Learning `Context/`) are real runtime consumers that a tracked-files grep silently misses (D31.1).
+22. **Never fill a gap** — a missing price, a lagging NAV, an unreachable poll: the point stays absent and says so. Carrying the last value forward reads as real data and hides the outage (D13.3, D20.3, D20.6).
+23. **One task open at a time** — it goes in `NOW.md` with its "done when" before work starts; `PLAN.md` stays shut until that task closes.
+24. **A brief dies with its build** — when work ships, delete its `.scratch/` folder and its screenshots the same day; what survives is listed in `PLAN.md`'s reference table (D34.1).
 
 ## Ports
 
@@ -49,7 +56,7 @@ One screen, one port. Nothing else may take these.
 | 9119 | Hermes dashboard (`hermes dashboard`) — a service, not a screen | `Start_Inky/run_hermes_dashboard.py`; Hermes's own default, `HERMES_DASHBOARD_URL` overrides |
 | 3100 | *free* — was the Drive MCP gateway; D11.5 moved Storage to local disk | — |
 | 3101 | Market-data MCP server | `Start_Inky/run_market_mcp.py` |
-| 8009 | **Storage** — local-disk storage seam + hybrid RAG (D11.5); in build | `Screens/Storage/Backend/settings_for_storage.py` |
+| 8009 | **Storage** — local-disk seam + hybrid RAG (D11.5, D33) | `Screens/Storage/Backend/settings_for_storage.py` |
 | 8010 | *reserved* — Office screen (D17.5), not built | — |
 | 8080 / 8081 | *reserved* — local llama.cpp models | — |
 | 9000 | one-port proxy, only for phone / ngrok | `Start_Inky/serve_everything_on_one_port.py` |
@@ -80,6 +87,5 @@ that process — a screen that dies quietly is much harder to notice than one th
 | `Screens/<Name>/Backend/app/` | a screen whose app is a whole tree of its own keeps it here — Finance (FastAPI) and Anime (Node) both do |
 | `Screens/<Name>/Page/next_app/` | that screen's Next source; `out/` is the static export the backend serves |
 | `Start_Inky/` | launchers, the port snapshot, gateway runners |
-| `Shared_By_All_Screens/` | only what two or more trees genuinely use; still trending to empty (Rule 6, `PLAN.md` item 8) |
-| `.scratch/` | gitignored working notes; outcomes land in `PLAN.md` |
-| `TREE.md` | every file in the repo with one line each — a snapshot, not a source of truth |
+| `Shared_By_All_Screens/` | its irreducible core: three launcher/menu-discovery modules + the `Current_Numbers/` noticeboard (D31.2, D31.3) |
+| `.scratch/` | gitignored briefs for **open** work only; outcomes land in `PLAN.md` (Rule 24) |

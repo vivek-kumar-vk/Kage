@@ -1,6 +1,8 @@
 import sqlite3
 import pathlib
 import settings_for_learning as cfg
+from services.thm_lab import ensure_schema as ensure_thm_lab_schema
+from services.day_template import ensure_default as ensure_day_template
 
 LEGACY = ("reviews", "cards", "week_plans", "sessions", "topics")
 
@@ -31,3 +33,5 @@ def init_db():
         s_cols = {r["name"] for r in c.execute("PRAGMA table_info(sessions)").fetchall()}
         if "confidence" not in s_cols:
             c.execute("ALTER TABLE sessions ADD COLUMN confidence INTEGER")
+        ensure_thm_lab_schema(c)
+        ensure_day_template(c)
