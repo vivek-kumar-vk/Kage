@@ -5,23 +5,22 @@ Backlog lives in `PLAN.md` — do not open it while a task is open here.
 
 ---
 
-## Task — OpenClaw: configure real channels + a model provider (PLAN item 19)
+## Task — OpenClaw: add one real chat channel (PLAN item 19, second half)
 
-Screen (`:8006`) + `run_openclaw.py` already shipped (D44). The local
-install has **no `node_modules`** yet (`Screens/OpenClaw/Setup/
-openclaw_install/` has only package.json + lock). So: `npm install` there
-→ bring the gateway up on 18789 → run `openclaw onboard`/`configure` to
-add a chat channel + a model provider. Open decision (PLAN item 19):
-route model calls through OmniRoute (`http://127.0.0.1:8010/v1` +
-`GATEWAY_API_KEY`, same as Hermes/DeepSeek — D6/D24.1/D25.1) or use
-OpenClaw's own provider connections. Recommend OmniRoute.
+Model provider is **done** (2026-09-06, D44.2): owner picked his Claude
+Pro subscription directly — `openclaw onboard --auth-choice anthropic-cli`,
+`claude-cli` runtime, verified with a real reply. Gateway moved to token
+auth (`run_openclaw.py --auth token`, token in `openclaw.json
+gateway.auth`, still loopback). PLAN item 19's OmniRoute-vs-own question:
+settled — own providers, Anthropic direct.
 
-**Done when:** local install built; gateway `GET :18789/healthz` →
-`{"ok": true}`; at least one real chat channel + one model provider
-configured (owner supplies channel choice + any tokens); OpenClaw screen
-at `:8006` shows the Control UI live, not "gateway down"; D-line logged;
-PLAN item 19 updated. **Owner input needed:** which chat channel(s), and
-the OmniRoute-vs-own-providers call.
+Left: **one real chat channel**. Owner picks (Telegram botToken easiest,
+WhatsApp QR pairing), adds it via Control UI Settings → Channels or
+`openclaw channels add`. Then send one real message from that channel and
+get the Claude reply back.
+
+**Done when:** a message sent from the chosen channel gets a real Claude
+reply; D-line for the channel logged; PLAN item 19 closed.
 
 Carried: finance item 1 — owner sending the education-loan screenshot
 later. M6 browser check still owed (Claude-in-Chrome offline).

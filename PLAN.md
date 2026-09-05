@@ -167,10 +167,9 @@ Twelve profile folders exist (`description.txt` + `office.json` only) and **none
 
 ## 19 — OpenClaw: configure real channels/models
 
-Shipped 2026-09-05 (D44): screen at `:8006`, local repo-relative install, gateway live and reporting real health. What's left is real configuration, not code:
+Shipped 2026-09-05 (D44): screen at `:8006`, local repo-relative install, gateway live and reporting real health. **Model provider done 2026-09-06 (D44.2):** owner chose his **Claude Pro subscription** directly — `openclaw onboard --auth-choice anthropic-cli`, model refs on the `claude-cli` runtime (OpenClaw reuses the logged-in Claude Code, Pro limits; no setup token stored). This settles the OmniRoute-vs-own-providers question: **own providers, Anthropic direct.** Gateway moved to token auth (`run_openclaw.py` `--auth token`, token in `openclaw.json` `gateway.auth`; still loopback-only). Verified: `openclaw agent -m` returns a real Claude reply; screen reports `openclaw: ok`. What's left:
 
-- **you** Run `openclaw onboard` (or `configure`) against the local install to add real chat channels and a model provider. Until then the gateway is up but empty — no channels, no models, honest per the screen's own report.
-- Decide whether OpenClaw's model calls should route through OmniRoute (one gateway, one billing surface, same reasoning as Hermes/DeepSeek — D6, D24.1, D25.1) or use OpenClaw's own provider connections directly. Not decided yet.
+- **you** Add one real chat channel (Settings → Channels in the Control UI, or `openclaw channels add`): Telegram botToken is the easiest; WhatsApp is QR pairing. The Control UI may ask for the gateway token once — `openclaw config get gateway.auth` prints it.
 
 ---
 

@@ -44,7 +44,10 @@ PAGE = SCREEN / "Page" / "page_for_openclaw.html"
 GATEWAY_BASE_URL = os.environ.get("OPENCLAW_GATEWAY_URL", "http://127.0.0.1:18789")
 
 # The command that starts it, shown verbatim on the page when it is down.
+# Token auth (D44.2): the token lives in ~/.openclaw/openclaw.json
+# gateway.auth, set by `openclaw onboard` — the flag here only selects
+# the mode, and loopback keeps the token on this box.
 GATEWAY_START_COMMAND = ("openclaw gateway run --port 18789 --bind loopback "
-                         "--auth none --allow-unconfigured")
+                         "--auth token")
 
 API_PREFIX = "/api/openclaw"

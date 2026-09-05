@@ -94,10 +94,12 @@ def main() -> None:
         "gateway", "run",               # foreground, not the OS-service installer
         "--port", str(GATEWAY_PORT),
         "--bind", "loopback",           # local means local
-        "--auth", "none",               # loopback-only; same reasoning as
-                                         # the bind choice, nothing leaves this box
-        "--allow-unconfigured",         # no `openclaw setup` run yet - bring the
-                                         # gateway up anyway rather than block on it
+        "--auth", "token",              # token auth from openclaw.json (gateway.auth,
+                                        # set by `openclaw onboard` 2026-09-06) - the
+                                        # CLI/agent paths require it, --auth none
+                                        # locked them out with "device identity
+                                        # required". Still loopback-only, so the
+                                        # token never leaves this box.
     ]
 
     print(f"  OpenClaw gateway -> http://{GATEWAY_HOST}:{GATEWAY_PORT}")

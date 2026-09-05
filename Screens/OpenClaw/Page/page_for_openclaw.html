@@ -18,7 +18,6 @@
   .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
   #state { color:var(--dim); }
   .spacer { flex:1; }
-  #frame { width:100%; height:calc(100vh - 45px); border:0; display:none; }
   main { max-width:1000px; margin:0 auto; padding:20px 16px 60px; }
   .card { border:1px solid var(--line); border-radius:10px;
           background:var(--panel); padding:14px 16px; margin-bottom:10px; }
@@ -39,12 +38,16 @@
   <span class="dot" id="dot"></span>
   <span id="state">probing the gateway…</span>
   <span class="spacer"></span>
-  <a id="open" href="#" target="_blank" style="display:none">open in a tab ↗</a>
   <a href="http://127.0.0.1:8000/">← Main Menu</a>
 </header>
 
-<iframe id="frame" title="OpenClaw Control UI"></iframe>
-
+<!-- The OpenClaw gateway sends X-Frame-Options: DENY (and CSP
+     frame-ancestors 'none'), so its Control UI cannot be embedded here -
+     an iframe renders Chrome's "refused to connect" inside the frame.
+     Same situation as the OmniRoute dashboard (D21.3.1): this screen
+     FORWARDS to the Control UI when the gateway is up, and shows the
+     panel below when it is down so the browser never leaves Kage
+     stranded on a connection error. -->
 <section id="down">
   <h2>The OpenClaw gateway is not running.</h2>
   <p id="why"></p>
@@ -63,6 +66,7 @@
 async function check() {
   const dot = document.getElementById('dot');
   const state = document.getElementById('state');
+  const down = document.getElementById('down');
   let info;
   try {
     info = await (await fetch('/api/openclaw/overview')).json();
@@ -70,34 +74,21 @@ async function check() {
     info = { openclaw: 'down', why: String(e) };
   }
 
-  const frame = document.getElementById('frame');
-  const down = document.getElementById('down');
-  const openLink = document.getElementById('open');
-
   if (info.openclaw !== 'ok') {
     dot.className = 'dot bad';
     state.textContent = 'gateway down';
-    frame.style.display = 'none';
-    openLink.style.display = 'none';
+    down.style.display = 'block';
     document.getElementById('why').textContent = info.why || 'not reachable';
     document.getElementById('cmd').textContent = info.start_command || '';
-    down.style.display = 'block';
     return;
   }
 
   dot.className = 'dot ok';
-  state.textContent = 'gateway live';
+  state.textContent = 'gateway live · opening Control UI…';
   down.style.display = 'none';
-  openLink.href = info.base_url;
-  openLink.style.display = 'inline';
-
-  // Only ever assign a DIFFERENT src. Re-assigning the same URL reloads
-  // the iframe, which would throw away whatever was open in the UI.
-  if (frame.dataset.src !== info.base_url) {
-    frame.dataset.src = info.base_url;
-    frame.src = info.base_url;
-  }
-  frame.style.display = 'block';
+  // Forward to the real Control UI. replace() keeps it out of history,
+  // so Back from the Control UI returns to the Main Menu, not here.
+  window.location.replace(info.base_url);
 }
 check();
 setInterval(check, 15000);
