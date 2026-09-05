@@ -12,22 +12,22 @@ through it, never stop for it.
 
 ## Phase A — Learning Ground Zero + agent training (items 12 + 16, the long pole)
 
-- [ ] A1. Read the corpus (`Screens/Learning/Context/Master_Context.md`, gitignored PII —
+- [x] A1. Read the corpus (`Screens/Learning/Context/Master_Context.md`, gitignored PII —
       never copied into git) to ground the content in the owner's actual level and goals.
-- [ ] A2. Author real room content for **Ground Zero (project)** — rooms 34 (Git & GitHub),
+- [x] A2. Author real room content for **Ground Zero (project)** — rooms 34 (Git & GitHub),
       35 (Linux shell), 36 (Networking: DNS/HTTP/ports/localhost): steps with explain +
       realworld, checkpoints, recall cards. Written as the crew stand-in (owner's call —
       no OmniRoute crew loop tonight).
-- [ ] A3. Author real room content for **Ground Zero (observability)** — rooms 54
+- [x] A3. Author real room content for **Ground Zero (observability)** — rooms 54
       (Networking TCP/IP), 55 (Linux ground 0, THM-linked).
-- [ ] A4. Teach the agents: distill what was authored into the Learning crew profiles —
+- [x] A4. Teach the agents: distill what was authored into the Learning crew profiles —
       `Learning_Coach_Agent`, then `Learning_Research_Agent`, one agent at a time —
       shorter, real, correct description files (no stale nomic/local-model references).
-- [ ] A5. Notes-search agent: point `KB_Librarian_Agent` at the Storage RAG seam
+- [x] A5. Notes-search agent: point `KB_Librarian_Agent` at the Storage RAG seam
       (`:8009` knowledge/search) as its real tool, with honest down-state wording.
-- [ ] A6. Verify in Agent Deck (:8004) — roster shows the trained profiles; one real
+- [x] A6. Verify in Agent Deck (:8004) — roster shows the trained profiles; one real
       `ask_agent` round-trip through OmniRoute (:8010) against the trained agent.
-- [ ] A7. Board room: file ENH card(s) for the Ground Zero content + training pass.
+- [x] A7. Board room: file ENH card(s) for the Ground Zero content + training pass.
 
 ## Phase B — Finance item 1 tail (SIP date = 6th of each month, owner-confirmed)
 
