@@ -31,15 +31,15 @@ through it, never stop for it.
 
 ## Phase B — Finance item 1 tail (SIP date = 6th of each month, owner-confirmed)
 
-- [ ] B1. `sips` table + seed (7 active SIPs, ₹8,000/mo, all due the 6th, monthly).
-- [ ] B2. Replace the `sip-calendar` honest stub (`routers/investments.py:144`) with a
+- [x] B1. `sips` table + seed (7 active SIPs, ₹8,000/mo, all due the 6th, monthly).
+- [x] B2. Replace the `sip-calendar` honest stub (`routers/investments.py:144`) with a
       real endpoint reading `sips` — still honest when empty (Rule 8/22).
-- [ ] B3. `GET /api/finance/market/benchmark` — hardcoded `^NSEI` (D28.4), served from
+- [x] B3. `GET /api/finance/market/benchmark` — hardcoded `^NSEI` (D28.4), served from
       `price_history` via the existing `backfill_benchmark`; 404 path keeps
       `NO BENCHMARK LOADED` on the ridge.
-- [ ] B4. Try resolving the two Groww pages (100900 HDFC Children's, 120760 UTI Multi
+- [x] B4. Try resolving the two Groww pages (100900 HDFC Children's, 120760 UTI Multi
       Asset) — only a verified page lands in `MANUAL_OVERRIDES`; else honest `pending` stays.
-- [ ] B5. Verify live at :8002, board room card, commit.
+- [x] B5. Verify live at :8002, board room card, commit.
 
 ## Phase C — Storage sanitizer rules (item 2)
 
