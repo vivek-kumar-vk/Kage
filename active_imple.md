@@ -66,12 +66,12 @@ through it, never stop for it.
 
 ## Phase F — Bookkeeping
 
-- [ ] F1. PLAN.md: apply owner's calls — drop SMS import + GACM + 3D check (item 6),
+- [x] F1. PLAN.md: apply owner's calls — drop SMS import + GACM + 3D check (item 6),
       drop Main-Menu home redesign (item 14 keeps calendar card only, queued), drop
       Muse Spark (item 16 D), item 3 stays owner-later, item 4 closed as "working".
-- [ ] F2. AGENTS.md: D-lines for tonight's decisions (Ground Zero authored by Claude as
+- [x] F2. AGENTS.md: D-lines for tonight's decisions (Ground Zero authored by Claude as
       crew stand-in; SIP date; sanitizer starter rules; Muse Spark dropped).
-- [ ] F3. NOW.md rewritten for the next session. Final commit.
+- [x] F3. NOW.md rewritten for the next session. Final commit.
 
 ---
 
