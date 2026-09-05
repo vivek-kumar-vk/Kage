@@ -54,7 +54,7 @@ Detail (gitignored, PII): `Screens/Finance/finance-datamigration.md`. Port brief
 
 Shipped 2026-09-05 (D32, D33–D33.6): the seam, FTS5 + dense RRF hybrid search, the sanitizer hook, the append-only trader ledger, real status panels on 8009, and the Main Menu `storage:` glyph. Also shipped 2026-09-05 (D40): `KAGE_DATA_DIR` moved repo-relative (`<repo>/kage-data/`, gitignored, Rule 7.1) for phone/Termux hosting, and the agent library convention (`services/library.py`) — `library/<screen>/<tab>/<card>/<card>_<timestamp>.md`, one dated file per write, a `latest` + history read. What is left:
 
-- **you** Pick a free OmniRoute model that is an actual embedder and set `STORAGE_EMBED_MODEL`. Until then, embeddings report "no model configured" honestly and search stays keyword-only.
+- **Embeddings live 2026-09-06 (D51):** `jina-ai/jina-embeddings-v5-text-nano` (768-dim) through OmniRoute — owner's Jina free-tier key added as the `jina-ai` provider. Storage `embeddings/status` = `ok`, dense search working. OmniRoute has no keyless embedder, so this cost one free key; D11.5.1's "free model id" premise footnoted.
 - **you** Write the real sanitizer rules at `knowledge/_sanitize_rules.json`, and decide whether an LLM scrub pass earns its cost — after reviewing your own data.
 - Fusion is RRF (D33) absent your research landing; revisit only if that research says otherwise.
 - **Consumers, later:** each screen's own agent starts writing its real state into the library as it's built (calendar, schedule, email, finance, learning notes, documents, finance calculations, ...) — the skeleton is ready, nothing writes into it yet. Finance is likely first — salary transactions from 2026-09-04 on should land via the seam.

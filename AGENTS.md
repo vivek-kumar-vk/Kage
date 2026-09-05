@@ -167,6 +167,7 @@ superseded by a later line below.
 - **D33.3** — System files get a leading underscore, so the path validator allows `[a-z0-9_]` to open a segment.
 - **D33.4** — The honest-zero seed is guarded by a marker file, not by "does the file still exist" — existence-checking would silently recreate a note the owner deliberately deleted.
 - **D33.5** — The Main Menu `storage:` glyph stays deferred while `TopBar.tsx` is mid-redesign, the same collision risk as D30.4.
+- **D51 — embeddings live: `jina-ai/jina-embeddings-v5-text-nano` through OmniRoute (2026-09-06).** D11.5.1's "free model id" premise was optimistic — OmniRoute has **no keyless hosted embedder** (the `opencode` free provider serves 676 chat models, 0 embeddings; every provider in `open-sse/config/embeddingRegistry.ts` is `authType: apikey`; only a loopback provider_node is keyless, and that's the local-model path D11.5 rejected for the Termux host). Owner supplied a **Jina free-tier key** (1M tokens, no card); added to OmniRoute as the `jina-ai` apikey provider connection (priority 2), key stored in `~/.omniroute` not `.env`. `.env` gains only `STORAGE_EMBED_MODEL=jina-ai/jina-embeddings-v5-text-nano` (768-dim). Verified: `POST :8010/v1/embeddings` returns a 768-vector; Storage `GET /api/storage/embeddings/status` → `state: ok`; `knowledge/search` now returns `state: ok` (dense path live) instead of `partial`. D11.5.1's "never Ollama / through OmniRoute" rule stands unchanged — this is exactly that path, just with the honest footnote that it costs one free-tier key.
 
 ## Repo hygiene
 

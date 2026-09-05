@@ -18,14 +18,21 @@ the dashboard at <http://127.0.0.1:8010>. **No secrets here.**
 
 ## Provider connections
 
-One connection, the free tier:
+| Field | `opencode` | `jina-ai` |
+|---|---|---|
+| provider | `opencode` (OpenCode Free) | `jina-ai` |
+| auth | none ("noauth") | apikey (Jina free tier, 1M tokens) |
+| active | yes, priority 1 | yes, priority 2 |
+| proxy | enabled | enabled |
+| purpose | 676 chat models | **embeddings only** — the Storage screen's RAG |
 
-| Field | Value |
-|---|---|
-| provider | `opencode` (OpenCode Free) |
-| auth | none ("noauth") |
-| active | yes, priority 1 |
-| proxy | enabled |
+`opencode` serves zero embedding models; `jina-ai` was added 2026-09-06 so
+`STORAGE_EMBED_MODEL=jina-ai/jina-embeddings-v5-text-nano` (768-dim) has a
+provider. The Jina key lives in OmniRoute's own `~/.omniroute` store, not in
+`.env` — `.env` carries only the model id. Every other embedding provider in
+`omniroute/open-sse/config/embeddingRegistry.ts` also needs a key; there is
+no keyless hosted embedder, so a local provider_node is the only alternative
+(ruled out for the phone/Termux host — see AGENTS.md D11.5.1 / D51).
 
 ## Models exposed (via `opencode`, 63)
 
