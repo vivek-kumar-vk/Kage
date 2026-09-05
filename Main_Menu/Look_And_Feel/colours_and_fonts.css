@@ -166,9 +166,9 @@
    If the operating system says "reduce motion", obey it.
    ===================================================================== */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *:not(.ring-track):not(.ring-node-upright),
+  *:not(.ring-track):not(.ring-node-upright)::before,
+  *:not(.ring-track):not(.ring-node-upright)::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }

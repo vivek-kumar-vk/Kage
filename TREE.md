@@ -143,9 +143,8 @@ Page/
     app/components/TopBar.tsx            the header
     app/components/CalendarPanel.tsx     the calendar panel
     app/components/EmailPanel.tsx        the mail panel
-    app/components/RoutinesPanel.tsx     the routines panel
     app/components/SkillsDeckPanel.tsx   the skills panel
-    app/components/YouTubeStudioPanel.tsx  the video panel
+    app/components/DayPlanPanel.tsx      the morning->night to-do timeline (agent-owned later)
     package.json, package-lock.json      its dependencies
     next.config.ts            static export config
     tsconfig.json             TypeScript config

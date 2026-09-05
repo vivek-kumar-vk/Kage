@@ -39,73 +39,14 @@ function useRingSize() {
   return size;
 }
 
-function HeaderIcon({ label, d }: { label: string; d: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className="flex h-7 w-7 items-center justify-center rounded text-dim transition-colors hover:text-white"
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
-        {d}
-      </svg>
-    </button>
-  );
-}
-
-/** The centre column: the utility icon row, then the agent ring spinning
-    around the live 3D particle core - the reference image's focal element.
-    (The Kage.GG title block now lives in the TopBar.) */
+/** The centre column: the agent ring spinning around the live 3D particle
+    core - the reference image's focal element. (The Kage.GG title block
+    now lives in the TopBar.) */
 export function CenterCore() {
   const { box, radius } = useRingSize();
 
   return (
     <div className="flex flex-col items-center gap-6 py-2">
-      <div className="flex items-center gap-2">
-        <HeaderIcon
-            label="edit"
-            d={
-              <path
-                d="M4 20h4L18.5 9.5a2 2 0 0 0-2.83-2.83L5 17v3z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-            }
-          />
-          <HeaderIcon
-            label="search"
-            d={
-              <>
-                <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                <path d="m20 20-4.3-4.3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              </>
-            }
-          />
-          <HeaderIcon
-            label="apps"
-            d={
-              <>
-                <rect x="4" y="4" width="7" height="7" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                <rect x="13" y="4" width="7" height="7" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                <rect x="4" y="13" width="7" height="7" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                <rect x="13" y="13" width="7" height="7" rx="1" fill="none" stroke="currentColor" strokeWidth="1.6" />
-              </>
-            }
-          />
-          <HeaderIcon
-            label="info"
-            d={
-              <>
-                <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                <path d="M12 11v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                <circle cx="12" cy="7.7" r="1.05" fill="currentColor" />
-              </>
-            }
-          />
-      </div>
-
       <div
         className="relative flex items-center justify-center"
         style={{ width: box, height: box, maxWidth: "100%" }}

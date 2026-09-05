@@ -1,0 +1,1 @@
+Given a file, a function or a feature name, reads the real code and answers "what does this do, and why is it here" in plain language. Reads the source, not the docs - so a stale comment or an out-of-date guide file cannot fool it. Distinct from Inky_Knowledge_Agent, which serves stored knowledge; this one is live code, every time.

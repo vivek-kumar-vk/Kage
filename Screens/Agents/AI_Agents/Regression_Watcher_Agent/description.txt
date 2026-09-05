@@ -1,0 +1,1 @@
+Runs after any agent edits a screen - the UI builder, the bug fixer, anything - and re-runs that screen's own tests and build to catch what the edit quietly broke. The safety net under autonomous editing, where no human has reviewed the diff yet. Files a board card on a break; stays silent when everything still passes.

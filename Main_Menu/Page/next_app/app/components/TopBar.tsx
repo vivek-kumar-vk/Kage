@@ -172,7 +172,7 @@ export function TopBar() {
     }`;
 
   return (
-    <header className="mx-auto grid w-full max-w-[1512px] grid-cols-[1fr_auto_1fr] items-center gap-6 px-6 py-4">
+    <header className="mx-auto grid w-full max-w-[1512px] grid-cols-[1fr_auto_1fr] items-center gap-6 px-6 py-2.5">
       {/* left - the name and logo, moved up from the centre column */}
       <div className="flex items-center gap-2.5">
         <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">

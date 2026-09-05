@@ -1,0 +1,1 @@
+Reads job descriptions the owner has saved and pulls out what they actually ask for - the skills, the stack, the seniority - so the Learning Planner can aim the next weeks at real openings instead of a guess. Feeds the JD-skill radar already deferred on the board. Searches and summarises; it never applies to anything, ever.

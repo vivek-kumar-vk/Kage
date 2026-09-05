@@ -184,7 +184,7 @@ export function CalendarPanel() {
   }, []);
 
   const loadNext = useCallback(async () => {
-    const data = await getJSON<NextPayload>(`${API}/calendar/next?limit=3`);
+    const data = await getJSON<NextPayload>(`${API}/calendar/next?limit=1`);
     if (data) setNext(data);
   }, []);
 
@@ -274,8 +274,8 @@ export function CalendarPanel() {
   const notConnected = month && month.state !== "ok";
 
   return (
-    <section aria-label="Calendar" className="rubric-panel relative p-4" ref={cardRef}>
-      <header className="mb-3 flex items-center justify-between">
+    <section aria-label="Calendar" className="rubric-panel relative p-3" ref={cardRef}>
+      <header className="mb-2 flex items-center justify-between">
         <p className="rubric-label flex items-center gap-2">
           <CalendarIcon />
           Calendar
@@ -289,7 +289,7 @@ export function CalendarPanel() {
       {mode === "cal" ? (
         <>
           {/* Month strip - the row the world clocks used to occupy. */}
-          <div className="mb-2 flex items-center justify-between border-y border-[#232323] py-1.5">
+          <div className="mb-1.5 flex items-center justify-between border-y border-[#232323] py-1">
             <button type="button" className="pill px-1.5 py-0.5" onClick={() => step(-1)} aria-label="Previous month">
               &lsaquo;
             </button>
@@ -307,9 +307,9 @@ export function CalendarPanel() {
             ))}
           </div>
 
-          <div className="mb-3 grid grid-cols-7 gap-[3px]">
+          <div className="mb-2 grid grid-cols-7 gap-[3px]">
             {cells.map((day, index) => {
-              if (!day) return <span key={`pad-${index}`} className="h-[26px]" />;
+              if (!day) return <span key={`pad-${index}`} className="h-[22px]" />;
               const cell = month?.days[day];
               const isToday = month?.today === day;
               const hasSomething = Boolean(
@@ -324,7 +324,7 @@ export function CalendarPanel() {
                   onFocus={(e) => hasSomething && openDay(day, e.currentTarget)}
                   onBlur={scheduleClose}
                   aria-label={hasSomething ? `${day} - has activity` : day}
-                  className="flex h-[26px] flex-col items-center justify-center rounded-[2px] border transition-colors"
+                  className="flex h-[22px] flex-col items-center justify-center rounded-[2px] border transition-colors"
                   style={{
                     background: isToday ? AMBER : codingTint(cell?.coding_seconds ?? null),
                     borderColor: hover?.day === day ? AMBER : "transparent",
@@ -408,37 +408,29 @@ export function CalendarPanel() {
             </div>
           ) : null}
 
-          <p className="rubric-sub mb-1.5 text-[8px]">What&rsquo;s Next</p>
+          <p className="rubric-sub mb-1 text-[8px]">What&rsquo;s Next</p>
           {next && next.events.length > 0 ? (
-            <ul className="flex flex-col gap-1.5">
-              {next.events.map((ev) => (
-                <li key={`${ev.day}-${ev.summary}`} className="flex items-baseline justify-between gap-2 text-[11px]">
-                  <span className="truncate text-white">{ev.summary}</span>
-                  <span className="num shrink-0 text-dim">
-                    {/* A date only when it is not today - "all day" on its
-                        own reads as today, which for a November birthday
-                        would be plainly wrong. */}
-                    {ev.today ? (ev.time ?? "—") : `${dayLabel(ev.day)}${ev.time && ev.time !== "all day" ? ` ${ev.time}` : ""}`}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <div className="flex items-baseline justify-between gap-2 text-[11px]">
+              <span className="truncate text-white">{next.events[0].summary}</span>
+              <span className="num shrink-0 text-dim">
+                {/* A date only when it is not today - "all day" on its
+                    own reads as today, which for a November birthday
+                    would be plainly wrong. */}
+                {next.events[0].today
+                  ? (next.events[0].time ?? "—")
+                  : `${dayLabel(next.events[0].day)}${next.events[0].time && next.events[0].time !== "all day" ? ` ${next.events[0].time}` : ""}`}
+              </span>
+            </div>
           ) : (
             <p className="text-[10px] text-dim">
               {next && next.state !== "ok" ? "Not connected." : "Nothing scheduled."}
             </p>
           )}
 
-          {month && month.pending_proposals > 0 ? (
-            <p className="mt-2 text-[9px]" style={{ color: AMBER }}>
-              {month.pending_proposals} agent proposal{month.pending_proposals > 1 ? "s" : ""} awaiting you
-            </p>
-          ) : null}
-
           {/* Footer, same shape as the Email card's: when it is connected it
               says which account and when it last synced; when it is not, it
               says so rather than showing a blank. */}
-          <p className="num mt-3 border-t border-[#232323] pt-2 text-[8px] text-dim">
+          <p className="num mt-2 border-t border-[#232323] pt-1.5 text-[8px] text-dim">
             {month?.state === "ok"
               ? `SYNCED ${clockOf(month.synced_at)} · ${month.event_count} EVENTS`
               : month?.connecting

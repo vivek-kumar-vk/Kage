@@ -15,6 +15,7 @@ DEPARTMENTS = [
     {"id": "learning", "label": "Learning", "color": "#7E9463"},
     {"id": "deck", "label": "Agent Deck", "color": "#C96F4A"},
     {"id": "anime", "label": "Anime", "color": "#C77B9E"},
+    {"id": "main_menu", "label": "Main Menu", "color": "#FF7A00"},
 ]
 
 _DEPT_IDS = {dept["id"] for dept in DEPARTMENTS}

@@ -115,7 +115,16 @@ def main() -> None:
               " - leaving it alone")
         return
 
-    command = harness_command() + [
+    # --patch is a LAUNCHER-level flag: it must precede --profile. Flags
+    # after --profile web reach the web app itself (--host/--port/etc).
+    command = harness_command()
+    if DSH_PATCH.exists():
+        command += ["--patch", DSH_PATCH.as_posix()]
+        print(f"  using patch {DSH_PATCH.name} (models via the gateway)")
+    else:
+        print(f"  no patch at {DSH_PATCH} - starting dsh with its own"
+              " default model config, NOT through the gateway")
+    command += [
         "--profile", "web",
         "--host", HARNESS_HOST,          # local means local
         "--port", str(HARNESS_PORT),
@@ -123,12 +132,6 @@ def main() -> None:
         # not also throw its own browser tab up on every start.
         "--no-open",
     ]
-    if DSH_PATCH.exists():
-        command += ["--patch", DSH_PATCH.as_posix()]
-        print(f"  using patch {DSH_PATCH.name} (models via the gateway)")
-    else:
-        print(f"  no patch at {DSH_PATCH} - starting dsh with its own"
-              " default model config, NOT through the gateway")
     for authority in trusted_authorities():
         command += ["--trusted-host", authority]
 

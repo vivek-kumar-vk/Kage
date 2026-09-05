@@ -48,18 +48,25 @@ app = FastAPI(title=cfg.SCREEN_LABEL)
 def page():
     """This screen's own page.
 
-    NOT a redirect to the gateway. A redirect leaves Kage entirely, and
-    when the gateway is down the browser lands on a connection error
-    with no way back to the menu. The page embeds the gateway dashboard
-    when it is up and says what to start when it is not - it asks
-    /api/model/overview below to find out which.
+    NOT a server-side redirect to the gateway - that leaves Kage
+    entirely, so when the gateway is down the browser lands on a bare
+    connection error with no way back to the menu. Instead the page
+    asks /api/model/overview: when the gateway is up it forwards to the
+    dashboard from the client (Back then returns to the Main Menu); when
+    it is down it stays here and says what to start. The dashboard sends
+    X-Frame-Options: DENY, so embedding it in an iframe is not an option
+    (D21.3.1).
     """
     if not cfg.PAGE.is_file():
         return JSONResponse(
             {"status": "page missing", "expected": str(cfg.PAGE)},
             status_code=503,
         )
-    return FileResponse(cfg.PAGE)
+    # Never let the browser cache this shell. It is a few hundred bytes
+    # whose whole job is to reflect the gateway's *current* state and
+    # forward accordingly; a stale copy (e.g. an older iframe version)
+    # would strand the user on :8005 instead of forwarding to :8003.
+    return FileResponse(cfg.PAGE, headers={"Cache-Control": "no-store"})
 
 
 # =====================================================================

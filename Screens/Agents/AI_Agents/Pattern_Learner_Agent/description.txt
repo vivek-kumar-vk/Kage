@@ -1,0 +1,1 @@
+Reads weeks of gap reports and logged sessions to learn the owner's real rhythm - which hours produce finished work, which ones never do, how long a session lasts before it is abandoned - and keeps a per-time-of-day focus score the planner can place hard tasks against. Runs weekly, refuses to claim a pattern until it has enough weeks to be more than a guess.

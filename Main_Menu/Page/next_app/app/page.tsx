@@ -1,10 +1,9 @@
 import { TopBar } from "./components/TopBar";
 import { CalendarPanel } from "./components/CalendarPanel";
-import { YouTubeStudioPanel } from "./components/YouTubeStudioPanel";
+import { DayPlanPanel } from "./components/DayPlanPanel";
 import { CenterCore } from "./components/CenterCore";
 import { EmailPanel } from "./components/EmailPanel";
 import { SkillsDeckPanel } from "./components/SkillsDeckPanel";
-import { RoutinesPanel } from "./components/RoutinesPanel";
 
 /** The Main Menu home screen - an exact-copy rebuild of the "RUBRIC
     Agentic OS" reference (this type of desing..png): a strict 3-column
@@ -20,18 +19,17 @@ export default function Home() {
   return (
     <>
       <TopBar />
-      <div className="home-grid mx-auto grid w-full max-w-[1512px] flex-1 gap-6 p-6">
-        <div className="flex min-w-0 flex-col gap-5">
+      <div className="home-grid mx-auto grid w-full max-w-[1512px] flex-1 gap-5 px-6 pb-4 pt-2">
+        <div className="flex min-w-0 flex-col gap-4">
           <CalendarPanel />
-          <YouTubeStudioPanel />
+          <DayPlanPanel />
         </div>
 
         <CenterCore />
 
-        <div className="flex min-w-0 flex-col gap-5">
+        <div className="flex min-w-0 flex-col gap-4">
           <EmailPanel />
           <SkillsDeckPanel />
-          <RoutinesPanel />
         </div>
       </div>
     </>

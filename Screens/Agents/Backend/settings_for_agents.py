@@ -19,6 +19,17 @@ USE_NEXT_UI = True
 DB_PATH = HERE / "agents.db"
 AI_AGENTS_DIR = SCREEN / "AI_Agents"
 
+# Agent Deck is the one cross-screen index (D12) - it discovers agent
+# folders by walking, same as the launcher discovers screens (Rule 17).
+# Roster/identity for most agents still lives in AI_Agents/; a screen
+# whose agent is real code, not just an identity card, keeps everything
+# about that agent in one folder under its own Backend/Agent/ and Agent
+# Deck lists it from there too, so there is never a second copy.
+AI_AGENTS_DIRS = [
+    AI_AGENTS_DIR,
+    PROJECT_ROOT / "Main_Menu" / "Backend" / "Agent",
+]
+
 
 def _dotenv_values():
     """Fallback env for runs outside Start_Everything. Real env vars always win (D6)."""

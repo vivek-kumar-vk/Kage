@@ -8,11 +8,12 @@ WHAT THIS FILE IS
 
 WHAT IS BEHIND IT
     A local model gateway (OmniRoute, its own process) that does
-    auto-routing and fallback across model providers, and this screen -
-    the place Kage shows that gateway's own dashboard, embedded in an
-    iframe within a RUBRIC-themed shell (D10). The backend's
-    /api/model/overview health probe gates whether the iframe loads or
-    a "gateway unreachable" fallback is shown.
+    auto-routing and fallback across model providers. This screen is the
+    place Kage reports on that gateway: the MODEL menu row links straight
+    to the gateway's own dashboard (MENU_ADDRESS in settings), and this
+    screen's page - reached by visiting :8005 directly - forwards there
+    when the /api/model/overview health probe says the gateway is up, or
+    shows a "gateway is down, start it" panel when it is not (D21.3.1).
 
     This screen is a complete independent component - it imports nothing
     from Shared_By_All_Screens/ or Shared_By_All_Agents/.

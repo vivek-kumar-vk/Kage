@@ -101,16 +101,16 @@ body {
   to { transform: rotate(-360deg); }
 }
 .ring-track {
-  animation: rubric-ring-spin 90s linear infinite;
+  animation: rubric-ring-spin 24s linear infinite;
 }
 .ring-node-upright {
-  animation: rubric-ring-counter 90s linear infinite;
+  animation: rubric-ring-counter 24s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *:not(.ring-track):not(.ring-node-upright),
+  *:not(.ring-track):not(.ring-node-upright)::before,
+  *:not(.ring-track):not(.ring-node-upright)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

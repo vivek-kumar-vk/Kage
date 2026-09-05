@@ -178,11 +178,14 @@ DEMO_ACTIONS = {
 
 def _demo_roster():
     entries = []
-    root = cfg.AI_AGENTS_DIR
 
-    if root.exists() and root.is_dir():
+    for root in cfg.AI_AGENTS_DIRS:
+        if not (root.exists() and root.is_dir()):
+            continue
         for path in sorted(root.iterdir()):
-            if not path.is_dir() or not (path / "description.txt").exists():
+            if not path.is_dir():
+                continue
+            if not (path / "identity.md").exists() and not (path / "description.txt").exists():
                 continue
             meta = office.read_office(path)
             entries.append((path.name, meta["department"], meta["tier"]))

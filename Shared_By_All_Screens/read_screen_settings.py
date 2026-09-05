@@ -47,6 +47,9 @@ def read_settings(path: Path) -> dict:
         "host": getattr(mod, "HOST", "127.0.0.1"),
         "port": getattr(mod, "PORT", None),
         "page": getattr(mod, "PAGE", None),
+        # Optional: a screen that only *reports on* a separate service can
+        # send the menu straight at that service instead of its own port.
+        "menu_address": getattr(mod, "MENU_ADDRESS", None),
     }
 
 
@@ -76,5 +79,14 @@ def web_address(screen_folder: Path) -> str | None:
 
     if os.environ.get("INKY_BEHIND_PROXY"):
         return f"/{Path(screen_folder).name.lower()}/"
+
+    # A screen that only reports on a separate long-running service can
+    # point the menu straight at that service's own UI (MENU_ADDRESS in
+    # its settings). The screen still runs on its own PORT - the launcher
+    # starts it there and it stays reachable directly - this only changes
+    # where the menu row links. Direct access only; behind the one-port
+    # proxy the folder path above still wins.
+    if info.get("menu_address"):
+        return info["menu_address"]
 
     return f"http://{info['host']}:{info['port']}/"

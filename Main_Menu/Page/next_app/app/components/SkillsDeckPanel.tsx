@@ -80,8 +80,8 @@ function GearIcon() {
 
 export function SkillsDeckPanel() {
   return (
-    <section aria-label="Skills deck" className="rubric-panel p-4">
-      <header className="mb-3 flex items-center justify-between">
+    <section aria-label="Skills deck" className="rubric-panel p-3">
+      <header className="mb-2 flex items-center justify-between">
         <p className="rubric-label flex items-center gap-2">
           <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" className="text-dim">
             <path d="M13 2 5 14h5l-1 8 8-13h-5l1-7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
@@ -94,9 +94,9 @@ export function SkillsDeckPanel() {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2">
         {SKILLS.map((s) => (
-          <div key={s.name} className="flex flex-col gap-2 rounded border border-[#2a2a2a] bg-[#1a1818] p-2.5">
+          <div key={s.name} className="flex flex-col gap-1.5 rounded border border-[#2a2a2a] bg-[#1a1818] p-2">
             <span className="text-dim">
               <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                 {s.glyph}

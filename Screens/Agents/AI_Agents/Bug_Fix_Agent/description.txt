@@ -1,0 +1,1 @@
+Takes a stack trace or a "this is broken" report, finds the cause in the code, patches it, and runs the thing to prove the fix holds before saying it's done. Same closed loop as UI_Builder_Agent, for bugs instead of design asks. A fix it cannot verify is reported as unverified, never as fixed.

@@ -1,7 +1,45 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
+
+const OVERVIEW = "/";
+
+/**
+ * Tab clicks that keep browser history shallow. The stack for this
+ * screen never grows past [main menu, Today, current tab], so one Back
+ * press from any tab lands on Today and one more lands on the main menu
+ * — instead of walking back through every tab visited.
+ *
+ *   -> Today       : step back (Today is always the entry just below a tab)
+ *   Today -> tab   : push (the single entry above Today)
+ *   tab -> tab     : replace (swap that single entry)
+ *
+ * Keeps <Link> for prefetch + real href; only the plain left-click is
+ * intercepted.
+ */
+function useShallowTabNav() {
+  const router = useRouter();
+  const pathname = usePathname();
+  return (event: MouseEvent, href: string) => {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+    event.preventDefault();
+    if (href === pathname) return;
+    if (href === OVERVIEW) router.back();
+    else if (pathname === OVERVIEW) router.push(href);
+    else router.replace(href);
+  };
+}
 
 const ITEMS = [
   { href: "/", label: "Today", key: "1", ico: (
@@ -29,6 +67,7 @@ const ITEMS = [
 
 export default function Rail() {
   const path = usePathname();
+  const onTabClick = useShallowTabNav();
   return (
     <aside className="rail">
       <div className="logo">
@@ -38,6 +77,7 @@ export default function Rail() {
         const active = it.href === "/" ? path === "/" : path.startsWith(it.href);
         return (
           <Link key={it.href} href={it.href}
+            onClick={(e) => onTabClick(e, it.href)}
             className={`nav-item${active ? " active" : ""}`}>
             <span className="nav-ico">{it.ico}</span>
             {it.label}

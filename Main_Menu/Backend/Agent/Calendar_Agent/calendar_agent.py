@@ -31,6 +31,7 @@ import subprocess
 import urllib.error
 import urllib.request
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 import calendar_store as store
 import settings_for_main_menu as cfg
@@ -205,11 +206,60 @@ def has_any_signal(signals):
 
 
 # ---------------------------------------------------------------------
+# THE PROFILE - identity.md / context.md / goal.md / memory.md, read fresh
+# every run so editing the files changes behavior without touching code.
+# ---------------------------------------------------------------------
+def _read_text(path):
+    try:
+        return path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
+def _recent_memory(path, lines=10):
+    text = _read_text(path)
+    if not text:
+        return "(no runs recorded yet)"
+    body = [line for line in text.splitlines() if line and not line.startswith("#")]
+    return "\n".join(body[-lines:]) or "(no runs recorded yet)"
+
+
+def _load_profile():
+    here = Path(__file__).resolve().parent
+    return {
+        "identity": _read_text(here / "identity.md"),
+        "context": _read_text(here / "context.md"),
+        "goal": _read_text(here / "goal.md"),
+        "memory": _recent_memory(here / "memory.md"),
+    }
+
+
+def _append_memory(day, notes, proposals, detail):
+    here = Path(__file__).resolve().parent
+    line = f"- {day}: {notes} note(s), {proposals} proposal(s) - {detail}\n"
+    with open(here / "memory.md", "a", encoding="utf-8") as handle:
+        handle.write(line)
+
+
+# ---------------------------------------------------------------------
 # THE PROMPT
 # ---------------------------------------------------------------------
-PROMPT = """You are the calendar agent for one developer's personal dashboard.
+PROFILE_BLOCK = """# Who you are
+{identity}
 
-Below is EVERYTHING that is known about one day. It is the only evidence
+# What you know about the system you run in
+{context}
+
+# Where this is headed
+{goal}
+
+# Your own recent runs
+{memory}
+
+---
+"""
+
+PROMPT = """Below is EVERYTHING that is known about one day. It is the only evidence
 you have. You have two jobs.
 
 1. NOTES - describe what actually happened that day, one short line each
@@ -252,9 +302,10 @@ def run_for_day(day, propose=True):
                 "detail": f"nothing recorded for {day}",
                 "notes": 0, "proposals": 0}
 
-    answer = _extract_json(_run(PROMPT.format(
+    full_prompt = PROFILE_BLOCK.format(**_load_profile()) + PROMPT.format(
         today=date.today().isoformat(),
-        evidence=json.dumps(signals, indent=2, default=str))))
+        evidence=json.dumps(signals, indent=2, default=str))
+    answer = _extract_json(_run(full_prompt))
 
     written_notes = 0
     for note in answer.get("notes", []) or []:
@@ -288,6 +339,9 @@ def run_for_day(day, propose=True):
             written_proposals += 1
 
     store.set_meta("last_agent_run", datetime.now().isoformat(timespec="seconds"))
+    detail = (f"from {len(signals['commits'])} commit(s), "
+              f"{signals['coding_seconds'] or 0}s coding")
+    _append_memory(day, written_notes, written_proposals, detail)
     return {"state": "ok", "detail": "", "notes": written_notes,
             "proposals": written_proposals}
 

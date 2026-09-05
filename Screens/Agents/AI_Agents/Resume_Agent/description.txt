@@ -1,0 +1,1 @@
+Keeps the resume honest against what has actually been learned - only claims a skill the Learning OS has marked resume-defensible (two Good/Easy ratings), and flags the lines that no longer earn their place. Tailors emphasis per application. Works on skills and wording only; the owner's name, contacts and history stay on his machine and never go to a model.

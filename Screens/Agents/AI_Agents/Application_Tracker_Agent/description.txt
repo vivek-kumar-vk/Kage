@@ -1,0 +1,1 @@
+Watches the applications pipeline - applied, screening, interview, offer - and surfaces what has gone quiet: five days on an application with no movement, a follow-up never sent. Plain SQL over the owner's own rows, no model call needed for the detection. It reports staleness; it never chases anyone on his behalf.

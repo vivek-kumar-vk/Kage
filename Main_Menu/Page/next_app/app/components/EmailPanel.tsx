@@ -161,8 +161,8 @@ export function EmailPanel() {
         : "not synced";
 
   return (
-    <section aria-label="Email" className="rubric-panel p-4">
-      <header className="mb-3 flex items-center justify-between">
+    <section aria-label="Email" className="rubric-panel p-3">
+      <header className="mb-2 flex items-center justify-between">
         <p className="rubric-label flex items-center gap-2">
           <EnvelopeIcon />
           Email
@@ -197,7 +197,7 @@ export function EmailPanel() {
       </div>
 
       {/* ----- window chips ----- */}
-      <div className="mt-2.5 flex items-center gap-1.5">
+      <div className="mt-2 flex items-center gap-1.5">
         {WINDOWS.map((w) => (
           <button
             key={w}
@@ -261,12 +261,12 @@ export function EmailPanel() {
       {/* ----- AI buckets ----- */}
       {ok && (
         <>
-          <p className="rubric-sub mt-3 text-[8px]">Sorted by the agent</p>
+          <p className="rubric-sub mt-2 text-[8px]">Sorted by the agent</p>
           <ul className="mt-1.5 flex flex-col">
             {buckets.map((b) => (
               <li
                 key={b.key}
-                className="border-t border-[#232323] py-2 first:border-t-0"
+                className="border-t border-[#232323] py-1.5 first:border-t-0"
               >
                 <div className="flex items-center gap-2">
                   <span
@@ -299,7 +299,7 @@ export function EmailPanel() {
           </ul>
 
           {/* ----- today's mix ----- */}
-          <p className="rubric-sub mt-3 text-[8px]">Today&rsquo;s Mix</p>
+          <p className="rubric-sub mt-2 text-[8px]">Today&rsquo;s Mix</p>
           <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full">
             {mixSegments.map(
               (s) =>
@@ -348,7 +348,7 @@ export function EmailPanel() {
       )}
 
       {/* ----- footer ----- */}
-      <p className="num mt-3 border-t border-[#232323] pt-2 text-[8px] text-dim">
+      <p className="num mt-2 border-t border-[#232323] pt-1.5 text-[8px] text-dim">
         SYNCED {clockOf(ok ? data?.synced_at : undefined)} &middot;{" "}
         {ok ? data?.owner : "—"} &middot; {ok ? data?.account : "unconnected"}
       </p>

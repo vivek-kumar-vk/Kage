@@ -51,6 +51,19 @@ def _read_description(description_path):
         return ""
 
 
+def _profile_path(agent_dir):
+    """identity.md is the roster-facing profile when an agent keeps one
+    (its own multi-file identity/context/goal/memory split); description.txt
+    is the plain fallback every other agent under AI_Agents/ still uses."""
+    identity_path = agent_dir / "identity.md"
+    if identity_path.exists():
+        return identity_path
+    description_path = agent_dir / "description.txt"
+    if description_path.exists():
+        return description_path
+    return None
+
+
 def _ensure_agent_room(conn, name, position):
     row = conn.execute(
         "SELECT id FROM rooms WHERE kind = 'agent' AND agent_name = ?",
@@ -78,17 +91,21 @@ def _dept_position(department, index):
 
 
 def _agent_entries(conn):
-    """Roster from AI_Agents/ + office.json, each with its own DM room (D12)."""
+    """Roster from every AI_AGENTS_DIRS root + office.json, each with its
+    own DM room (D12). A screen whose agent is real code keeps everything
+    about it in one folder under its own Backend/Agent/ (no copy here);
+    other agents still live entirely under AI_Agents/."""
     agents = []
-    root = cfg.AI_AGENTS_DIR
 
-    if root.exists() and root.is_dir():
+    for root in cfg.AI_AGENTS_DIRS:
+        if not (root.exists() and root.is_dir()):
+            continue
         for path in sorted(root.iterdir()):
             if not path.is_dir():
                 continue
 
-            description_path = path / "description.txt"
-            if not description_path.exists():
+            description_path = _profile_path(path)
+            if description_path is None:
                 continue
 
             meta = office.read_office(path)
@@ -584,7 +601,11 @@ def _known_agent_dir(name: str):
     known = {agent["name"] for agent in _get_agents()}
     if name not in known:
         return None
-    return cfg.AI_AGENTS_DIR / name
+    for root in cfg.AI_AGENTS_DIRS:
+        candidate = root / name
+        if candidate.is_dir():
+            return candidate
+    return None
 
 
 @router.get(cfg.API_PREFIX + "/agents/{name}/files")

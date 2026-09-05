@@ -1,0 +1,1 @@
+Builds the one living picture of what the owner is actually doing right now - editor and project from WakaTime, today's calendar, commits since midnight, which screens are up, which agents ran - and writes it to a single file every other agent reads. Collects, never advises. When a source is unreachable it says so in the file rather than carrying yesterday's value forward.
