@@ -33,5 +33,8 @@ def init_db():
         s_cols = {r["name"] for r in c.execute("PRAGMA table_info(sessions)").fetchall()}
         if "confidence" not in s_cols:
             c.execute("ALTER TABLE sessions ADD COLUMN confidence INTEGER")
+        r_cols = {r["name"] for r in c.execute("PRAGMA table_info(rooms)").fetchall()}
+        if "skill_tag" not in r_cols:
+            c.execute("ALTER TABLE rooms ADD COLUMN skill_tag TEXT")
         ensure_thm_lab_schema(c)
         ensure_day_template(c)

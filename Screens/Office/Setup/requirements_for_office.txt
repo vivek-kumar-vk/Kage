@@ -1,0 +1,15 @@
+# What the OFFICE screen needs installed.
+#
+# Every screen keeps its own list, so one screen can be installed and run
+# on its own. Start_Everything.bat installs every one of these it finds.
+#
+# Install just this one:
+#   cd <repo root>
+#   python -m pip install -r Screens\Office\Setup\requirements_for_office.txt
+
+# The small web server behind this screen.
+fastapi>=0.110
+uvicorn[standard]>=0.27
+
+# Reading the Learning screen's resume-defensibility endpoint over HTTP.
+httpx>=0.27

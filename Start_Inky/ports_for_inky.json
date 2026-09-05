@@ -59,6 +59,13 @@
       "settings_file": "Screens\\Model\\Backend\\settings_for_model.py"
     },
     {
+      "name": "Office",
+      "label": "Office",
+      "host": "127.0.0.1",
+      "port": 8011,
+      "settings_file": "Screens\\Office\\Backend\\settings_for_office.py"
+    },
+    {
       "name": "OpenClaw",
       "label": "OpenClaw",
       "host": "127.0.0.1",

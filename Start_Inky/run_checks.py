@@ -12,10 +12,10 @@ def get_repo_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def run_learning_tests(repo_root: Path) -> Tuple[str, bool, int]:
-    """Run Learning screen's pytest suite via subprocess and return its result."""
-    name = "learning pytest"
-    backend_dir = repo_root / "Screens" / "Learning" / "Backend"
+def run_screen_pytest(repo_root: Path, screen: str) -> Tuple[str, bool, int]:
+    """Run one screen's pytest suite (Screens/<screen>/Backend/tests/)."""
+    name = f"{screen.lower()} pytest"
+    backend_dir = repo_root / "Screens" / screen / "Backend"
     tests_dir = backend_dir / "tests"
 
     if not tests_dir.is_dir():
@@ -90,8 +90,9 @@ def main() -> int:
     repo_root = get_repo_root()
     results: List[Tuple[str, bool, int]] = []
 
-    # 1. Learning pytest suite
-    results.append(run_learning_tests(repo_root))
+    # 1. Per-screen pytest suites
+    results.append(run_screen_pytest(repo_root, "Learning"))
+    results.append(run_screen_pytest(repo_root, "Office"))
 
     # 2. Finance backend hygiene gate
     backend_gate = (

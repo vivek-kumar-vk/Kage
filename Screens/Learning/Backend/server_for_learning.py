@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_for_learning as cfg
 from db import init_db
 import seed
-from services import today, sessions, path, room, recall, insights, crew, observability
+from services import today, sessions, path, room, recall, insights, crew, observability, skills
 
 app = FastAPI(title=cfg.SCREEN_LABEL)
 app.add_middleware(observability.ObservabilityMiddleware)
@@ -17,7 +17,7 @@ app.add_middleware(observability.ObservabilityMiddleware)
 init_db()
 seed.run()
 
-for router in (today, sessions, path, room, recall, insights, crew, observability):
+for router in (today, sessions, path, room, recall, insights, crew, observability, skills):
     app.include_router(router.router)
 
 

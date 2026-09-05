@@ -106,9 +106,15 @@ Finance, Learning and AGENT DECK are done (D30–D30.2); Model is exempt (D30.3)
 
 M0–M5 shipped (D16, D17.1): the Ember Studio shell, schema v2, dynamic Path, Today and Focus Session, the room player, Recall and Card Studio, INSIGHTS, the crew shell, the corpus stored, honest zero, and two ground-zero tracks re-seeded.
 
-- **M6** — shipped 2026-09-05 (D35–D37) except interview-day preemption
-  (D38, blocked on M7 existing).
-- **M7** — OFFICE screen v1 on **port 8011** (D17.5, moved off 8010 by D43; 8007 is Hermes): applications pipeline, interview prep, work log, machine-enforced resume-defensible flag at ≥2 Good/Easy ratings. *8–12 h.*
+- **M6** — shipped 2026-09-05 (D35–D37). Interview-day preemption (D38) is
+  now **unblocked**: Office is live, `GET /api/office/overview` gives
+  `interview_today` and `GET /api/office/interviews` the packs. Small build.
+- **M7** — shipped 2026-09-05 (D45–D45.3): OFFICE screen at :8011, five tabs,
+  `/api/learning/skills` added, resume-defensibility mirrored + recomputed
+  from the ≥2 Good/Easy rule, browser-verified. Rooms 96/95/75 tagged
+  sigma/mitre/splunk-es. Left: **you** decide if `kql` / `terraform` should
+  point at a room (none matches today) or stay untagged; refine the mapping
+  if the three picked are wrong.
 - **M8** — Crew live on OmniRoute (Planner, Quizmaster, Tutor, Auditor) plus the SIGNAL verification queue, THM Scout and the Office agents, with per-agent token and cost discipline. **PII routes to local models only** — and there is no local model today, which collides with item 16 D. *10–14 h.* **Gated: plan only until real data is wired; test on dummy data, never the DB.*
 - **Room content** — 101 rooms have 0 steps and 0 cards. *2–3 h plus your reading.*
 - **Seed the four "two runtimes, one launcher" rooms** from D21.1. *~1 h.*

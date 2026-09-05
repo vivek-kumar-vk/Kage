@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   archived    INTEGER NOT NULL DEFAULT 0,
   est_minutes INTEGER NOT NULL DEFAULT 20,
   feynman     TEXT,                                -- "explain it back" text
+  skill_tag   TEXT,                                -- resume skill this room feeds (D17.5); Office reads it
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

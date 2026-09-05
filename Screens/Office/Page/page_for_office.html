@@ -1,0 +1,348 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Office — Kage</title>
+<style>
+  :root { --bg:#0b0d10; --panel:#12161b; --line:#232a33; --ink:#dfe6ee;
+          --dim:#8b98a8; --ok:#57d9a3; --bad:#ff6b6b; --amber:#e8a851;
+          --violet:#b08be8; }
+  * { box-sizing:border-box; }
+  html,body { height:100%; margin:0; background:var(--bg); color:var(--ink);
+              font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  header { display:flex; align-items:center; gap:12px; padding:10px 16px;
+           border-bottom:1px solid var(--line); background:var(--panel); }
+  header b { letter-spacing:.14em; font-weight:600; color:var(--amber); }
+  a { color:var(--dim); text-decoration:none; }
+  a:hover { color:var(--ink); }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--dim); }
+  .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
+  .spacer { flex:1; }
+  nav { display:flex; gap:2px; padding:0 16px; background:var(--panel);
+        border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  nav button { background:none; border:0; border-bottom:2px solid transparent;
+               color:var(--dim); font:inherit; padding:10px 14px; cursor:pointer;
+               letter-spacing:.08em; text-transform:uppercase; font-size:12px; }
+  nav button.active { color:var(--amber); border-bottom-color:var(--amber); }
+  main { max-width:900px; margin:26px auto; padding:0 16px; display:flex;
+         flex-direction:column; gap:16px; }
+  .panel { border:1px solid var(--line); border-radius:10px; background:var(--panel);
+           padding:16px 18px; }
+  .panel h3 { margin:0 0 12px; font-size:12px; letter-spacing:.14em; color:var(--amber);
+              font-weight:600; }
+  .placeholder { color:var(--dim); font-style:italic; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th,td { text-align:left; padding:7px 8px; border-top:1px solid var(--line);
+          vertical-align:top; }
+  th { color:var(--dim); font-weight:600; text-transform:uppercase;
+       letter-spacing:.06em; font-size:11px; border-top:0; }
+  input,select,textarea { background:var(--bg); border:1px solid var(--line);
+      border-radius:6px; color:var(--ink); padding:6px 8px; font:inherit;
+      font-size:12.5px; }
+  textarea { width:100%; min-height:64px; resize:vertical; }
+  button.act { background:var(--amber); color:#1a1206; border:0; border-radius:6px;
+               padding:6px 12px; font:inherit; font-weight:600; cursor:pointer;
+               font-size:12px; }
+  button.ghost { background:none; border:1px solid var(--line); color:var(--dim);
+                 border-radius:6px; padding:4px 8px; cursor:pointer; font:inherit;
+                 font-size:11px; }
+  .form-row { display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;
+              margin-top:12px; }
+  .form-row label { display:flex; flex-direction:column; gap:3px; font-size:11px;
+                    color:var(--dim); }
+  .tiles { display:flex; gap:12px; flex-wrap:wrap; }
+  .tile { border:1px solid var(--line); border-radius:8px; padding:12px 16px;
+          min-width:130px; background:var(--bg); }
+  .tile .n { font-size:22px; color:var(--ink); }
+  .tile .n.ok { color:var(--ok); } .tile .n.bad { color:var(--bad); }
+  .tile .l { font-size:10.5px; color:var(--dim); text-transform:uppercase;
+             letter-spacing:.06em; margin-top:2px; }
+  .pill { font-size:10px; padding:2px 8px; border-radius:999px; border:1px solid var(--line);
+          color:var(--dim); text-transform:uppercase; letter-spacing:.05em; }
+  .pill.ok { color:var(--ok); border-color:var(--ok); }
+  .pill.bad { color:var(--bad); border-color:var(--bad); }
+  .pill.violet { color:var(--violet); border-color:var(--violet); }
+  .banner { border:1px solid var(--line); border-left:3px solid var(--amber);
+            border-radius:6px; padding:8px 12px; font-size:12px; color:var(--dim);
+            margin-bottom:12px; }
+  .banner.bad { border-left-color:var(--bad); color:var(--bad); }
+  .stale { opacity:.55; }
+</style>
+
+<header>
+  <b>OFFICE</b>
+  <span class="dot" id="dot"></span>
+  <span id="state">checking…</span>
+  <span class="spacer"></span>
+  <a href="http://127.0.0.1:8000/">← Main Menu</a>
+</header>
+
+<nav id="nav">
+  <button data-tab="overview" class="active">Overview</button>
+  <button data-tab="pipeline">Pipeline</button>
+  <button data-tab="prep">Interview Prep</button>
+  <button data-tab="worklog">Work Log</button>
+  <button data-tab="readiness">Resume Readiness</button>
+</nav>
+
+<main id="view"></main>
+
+<script>
+const API = '/api/office';
+const view = document.getElementById('view');
+let TAB = 'overview';
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+async function jget(u) { return (await fetch(u)).json(); }
+async function jsend(method, u, body) {
+  const r = await fetch(u, {
+    method,
+    headers: body ? {'Content-Type':'application/json'} : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!r.ok) { alert(`${method} ${u} → ${r.status}`); throw new Error(r.status); }
+  return r.status === 204 ? {} : r.json();
+}
+
+document.getElementById('nav').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]');
+  if (!b) return;
+  TAB = b.dataset.tab;
+  for (const btn of document.querySelectorAll('#nav button'))
+    btn.classList.toggle('active', btn === b);
+  render();
+});
+
+async function checkHealth() {
+  const dot = document.getElementById('dot'), st = document.getElementById('state');
+  try {
+    const s = await jget(`${API}/status`);
+    const ok = s.state === 'ok';
+    dot.className = ok ? 'dot ok' : 'dot bad';
+    st.textContent = ok ? 'reachable' : (s.problem || 'error');
+  } catch (e) {
+    dot.className = 'dot bad'; st.textContent = 'unreachable';
+  }
+}
+
+// ---------- OVERVIEW ----------
+async function renderOverview() {
+  const o = await jget(`${API}/overview`);
+  const tile = (n, l, cls='') => `<div class="tile"><div class="n ${cls}">${n}</div><div class="l">${l}</div></div>`;
+  const funnel = o.stages.map(s =>
+    `<div class="tile"><div class="n">${o.funnel[s] ?? 0}</div><div class="l">${s}</div></div>`).join('');
+  view.innerHTML = `
+    <section class="panel">
+      <h3>TODAY — ${esc(o.date)}</h3>
+      <div class="tiles">
+        ${tile(`${o.applied_today}/${o.apply_target}`, 'applied today',
+               o.apply_target_met ? 'ok' : 'bad')}
+        ${tile(o.interview_today, 'interview today', o.interview_today ? 'bad' : '')}
+        ${tile(o.interviews_this_week, 'interviews this week')}
+        ${tile(o.prep_due, 'prep packs due', o.prep_due ? 'bad' : '')}
+      </div>
+    </section>
+    <section class="panel">
+      <h3>PIPELINE SNAPSHOT</h3>
+      ${o.empty ? '<p class="placeholder">No applications yet.</p>'
+                : `<div class="tiles">${funnel}</div>`}
+    </section>`;
+}
+
+// ---------- PIPELINE ----------
+async function renderPipeline() {
+  const d = await jget(`${API}/applications`);
+  const stageSel = (cur, id) =>
+    `<select onchange="moveApp(${id}, this.value)">` +
+    d.stages.map(s => `<option ${s===cur?'selected':''}>${s}</option>`).join('') +
+    `</select>`;
+  const rows = d.applications.map(a => `
+    <tr>
+      <td>${esc(a.company)}<br><span class="placeholder">${esc(a.role)}</span></td>
+      <td>${stageSel(a.stage, a.id)}</td>
+      <td>${a.portal ? esc(a.portal) : '—'}${a.link ? ` · <a href="${esc(a.link)}" target="_blank">link</a>` : ''}</td>
+      <td>${esc(a.notes) || '—'}</td>
+      <td><button class="ghost" onclick="delApp(${a.id})">del</button></td>
+    </tr>`).join('');
+  view.innerHTML = `
+    <section class="panel">
+      <h3>PIPELINE</h3>
+      ${d.empty ? '<p class="placeholder">Nothing saved yet.</p>' : `
+      <table><thead><tr><th>Company / role</th><th>Stage</th><th>Portal</th>
+        <th>Notes</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+      <div class="form-row">
+        <label>Company<input id="a-company"></label>
+        <label>Role<input id="a-role"></label>
+        <label>Portal<input id="a-portal"></label>
+        <label>Link<input id="a-link"></label>
+        <label>Stage<select id="a-stage">${d.stages.map(s=>`<option>${s}</option>`).join('')}</select></label>
+        <label>Notes<input id="a-notes"></label>
+        <button class="act" onclick="addApp()">Add</button>
+      </div>
+    </section>`;
+}
+async function addApp() {
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('a-company') || !g('a-role')) return alert('company and role required');
+  await jsend('POST', `${API}/applications`, {
+    company:g('a-company'), role:g('a-role'), portal:g('a-portal')||null,
+    link:g('a-link')||null, stage:g('a-stage'), notes:g('a-notes')||null });
+  render();
+}
+async function moveApp(id, stage) { await jsend('PATCH', `${API}/applications/${id}`, {stage}); render(); }
+async function delApp(id) { await jsend('DELETE', `${API}/applications/${id}`); render(); }
+
+// ---------- INTERVIEW PREP ----------
+async function renderPrep() {
+  const d = await jget(`${API}/interviews`);
+  const rows = d.interviews.map(iv => `
+    <tr class="${iv.is_upcoming ? '' : 'stale'}">
+      <td>${esc(iv.scheduled_at)}${iv.is_today ? ' <span class="pill bad">today</span>' : ''}</td>
+      <td>${esc(iv.company)}<br><span class="placeholder">${esc(iv.role||'')} ${esc(iv.round||'')}</span></td>
+      <td>${esc(iv.mode)||'—'}</td>
+      <td>${iv.prep_missing ? '<span class="pill bad">no pack</span>' : '<span class="pill ok">packed</span>'}</td>
+      <td>
+        <select onchange="ivOutcome(${iv.id}, this.value)">
+          ${d.outcomes.map(o=>`<option ${o===iv.outcome?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </td>
+      <td><button class="ghost" onclick="editPack(${iv.id})">pack</button>
+          <button class="ghost" onclick="delIv(${iv.id})">del</button></td>
+    </tr>
+    <tr id="pack-${iv.id}" hidden><td colspan="6">
+      <textarea id="packtext-${iv.id}">${esc(iv.prep_pack||'')}</textarea>
+      <div class="form-row"><button class="act" onclick="savePack(${iv.id})">Save pack</button></div>
+    </td></tr>`).join('');
+  view.innerHTML = `
+    <section class="panel">
+      <h3>INTERVIEW PREP</h3>
+      ${d.empty ? '<p class="placeholder">No interviews scheduled.</p>' : `
+      <table><thead><tr><th>When</th><th>Company</th><th>Mode</th><th>Prep</th>
+        <th>Outcome</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+      <div class="form-row">
+        <label>Company<input id="i-company"></label>
+        <label>Role<input id="i-role"></label>
+        <label>Round<input id="i-round"></label>
+        <label>When<input id="i-when" placeholder="YYYY-MM-DD HH:MM"></label>
+        <label>Mode<select id="i-mode"><option value="">—</option><option>phone</option><option>video</option><option>onsite</option></select></label>
+        <button class="act" onclick="addIv()">Add</button>
+      </div>
+    </section>`;
+}
+async function addIv() {
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('i-company') || !g('i-when')) return alert('company and when required');
+  await jsend('POST', `${API}/interviews`, {
+    company:g('i-company'), role:g('i-role')||null, round:g('i-round')||null,
+    scheduled_at:g('i-when'), mode:g('i-mode')||null });
+  render();
+}
+function editPack(id) { const r = document.getElementById(`pack-${id}`); r.hidden = !r.hidden; }
+async function savePack(id) {
+  await jsend('PATCH', `${API}/interviews/${id}`, {prep_pack: document.getElementById(`packtext-${id}`).value});
+  render();
+}
+async function ivOutcome(id, outcome) { await jsend('PATCH', `${API}/interviews/${id}`, {outcome}); render(); }
+async function delIv(id) { await jsend('DELETE', `${API}/interviews/${id}`); render(); }
+
+// ---------- WORK LOG ----------
+async function renderWorklog() {
+  const d = await jget(`${API}/work-log`);
+  const list = (d.known_techs || []).map(t => `<option value="${esc(t)}">`).join('');
+  const rows = d.entries.map(e => `
+    <tr>
+      <td>${esc(e.log_date)}</td>
+      <td>${e.tech ? `<span class="pill">${esc(e.tech)}</span>` : '—'}</td>
+      <td>${esc(e.summary)}${e.detail ? `<br><span class="placeholder">${esc(e.detail)}</span>` : ''}</td>
+      <td>${e.minutes ?? '—'}</td>
+      <td><button class="ghost" onclick="delLog(${e.id})">del</button></td>
+    </tr>`).join('');
+  view.innerHTML = `
+    <section class="panel">
+      <h3>WORK LOG</h3>
+      ${d.empty ? '<p class="placeholder">No entries yet.</p>' : `
+      <table><thead><tr><th>Date</th><th>Tech</th><th>What</th><th>Min</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table>`}
+      <datalist id="techs">${list}</datalist>
+      <div class="form-row">
+        <label>Date<input id="w-date" placeholder="today" value="${esc(d.today || '')}"></label>
+        <label>Tech<input id="w-tech" list="techs" placeholder="free text"></label>
+        <label>Summary<input id="w-summary"></label>
+        <label>Minutes<input id="w-min" type="number" style="width:80px"></label>
+        <button class="act" onclick="addLog()">Add</button>
+      </div>
+      <div class="form-row" style="width:100%">
+        <label style="flex:1">Detail<textarea id="w-detail"></textarea></label>
+      </div>
+    </section>`;
+}
+async function addLog() {
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('w-summary')) return alert('summary required');
+  await jsend('POST', `${API}/work-log`, {
+    summary:g('w-summary'), log_date:g('w-date')||null, tech:g('w-tech')||null,
+    detail:g('w-detail')||null, minutes:g('w-min') ? Number(g('w-min')) : null });
+  render();
+}
+async function delLog(id) { await jsend('DELETE', `${API}/work-log/${id}`); render(); }
+
+// ---------- RESUME READINESS ----------
+async function renderReadiness() {
+  const d = await jget(`${API}/resume-readiness`);
+  const up = d.learning_state === 'ok';
+  const banner = up
+    ? `<div class="banner">Rule: <b>${esc(d.rule)}</b>. Live from ${esc(d.learning_url)}.</div>`
+    : `<div class="banner bad">Learning: <b>${esc(d.learning_state)}</b> — numbers below are last-known, not live. (${esc(d.learning_url)})</div>`;
+  const rows = d.skills.map(s => `
+    <tr class="${up ? '' : 'stale'}">
+      <td>${esc(s.name)}<br><span class="placeholder">tag: ${esc(s.skill_tag)}</span></td>
+      <td>${s.good_easy} <span class="placeholder">/ ${s.rooms_tagged} room(s)</span></td>
+      <td>${s.defensible ? '<span class="pill ok">defensible</span>' : '<span class="pill">not yet</span>'}</td>
+      <td>
+        <label class="pill ${s.inflated ? 'bad' : ''}">
+          <input type="checkbox" ${s.on_resume?'checked':''} onchange="setResume(${s.id}, this.checked)">
+          on resume</label>
+        ${s.inflated ? ' <span class="pill bad">inflated</span>' : ''}
+      </td>
+      <td><span class="placeholder">${esc(s.fetched_at || 'never')}</span></td>
+      <td><button class="ghost" onclick="delSkill(${s.id})">del</button></td>
+    </tr>`).join('');
+  view.innerHTML = `
+    <section class="panel">
+      <h3>RESUME READINESS ${d.inflated_count ? `<span class="pill bad">${d.inflated_count} inflated</span>` : ''}</h3>
+      ${banner}
+      ${d.empty ? '<p class="placeholder">No skills tracked yet.</p>' : `
+      <table><thead><tr><th>Skill</th><th>Good/Easy</th><th>Defensible</th>
+        <th>Claim</th><th>Checked</th><th></th></tr></thead><tbody>${rows}</tbody></table>`}
+      <div class="form-row">
+        <label>Skill name<input id="s-name"></label>
+        <label>Learning tag<input id="s-tag" placeholder="defaults to name"></label>
+        <button class="act" onclick="addSkill()">Track</button>
+      </div>
+    </section>`;
+}
+async function addSkill() {
+  const g = id => document.getElementById(id).value.trim();
+  if (!g('s-name')) return alert('name required');
+  await jsend('POST', `${API}/skills`, {name:g('s-name'), skill_tag:g('s-tag')||null});
+  render();
+}
+async function setResume(id, on) { await jsend('PATCH', `${API}/skills/${id}?on_resume=${on}`); render(); }
+async function delSkill(id) { await jsend('DELETE', `${API}/skills/${id}`); render(); }
+
+// ---------- router ----------
+const RENDERERS = {
+  overview: renderOverview, pipeline: renderPipeline, prep: renderPrep,
+  worklog: renderWorklog, readiness: renderReadiness,
+};
+async function render() {
+  view.innerHTML = '<p class="placeholder">loading…</p>';
+  try { await RENDERERS[TAB](); }
+  catch (e) { view.innerHTML = `<section class="panel"><p class="placeholder">failed to load: ${esc(e)}</p></section>`; }
+}
+checkHealth();
+render();
+setInterval(checkHealth, 15000);
+</script>

@@ -1,0 +1,6 @@
+# office.db holds real job-hunt data - companies, notes, interview packs.
+# Nothing personal in git (Rule 7).
+office.db
+office.db-wal
+office.db-shm
+__pycache__/

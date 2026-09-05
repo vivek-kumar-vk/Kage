@@ -59,7 +59,7 @@ One screen, one port. Nothing else may take these.
 | 9119 | Hermes dashboard (`hermes dashboard`) — a service, not a screen | `Start_Inky/run_hermes_dashboard.py`; Hermes's own default, `HERMES_DASHBOARD_URL` overrides |
 | 3100 | *free* — was the Drive MCP gateway; D11.5 moved Storage to local disk | — |
 | 3101 | Market-data MCP server | `Start_Inky/run_market_mcp.py` |
-| 8011 | *reserved* — Office screen (D17.5), not built | — |
+| 8011 | **Office** — job-hunt workbench (D17.4, D45) | `Screens/Office/Backend/settings_for_office.py` |
 | 8080 / 8081 | *reserved* — local llama.cpp models | — |
 | 9000 | one-port proxy, only for phone / ngrok | `Start_Inky/serve_everything_on_one_port.py` |
 
