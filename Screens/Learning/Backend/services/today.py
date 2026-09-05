@@ -15,6 +15,7 @@ from services.common import (
 from services.thm_lab import thm_streak_and_grace, list_thm_rooms
 from services.day_template import today_blocks
 from services.planner_rebalance import run_weekly_rebalance
+from services import office_client
 
 router = APIRouter()
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -187,10 +188,21 @@ def today(conn=Depends(get_db)):
         else:
             crew_line = f"Only “{bal[0]['name']}” is moving — Planner says touch the other."
 
+    # interview-day preemption (D38): ask Office. Office down => say so,
+    # never infer "no interview" from silence (Rule 22).
+    office_state, office_interviews = office_client.fetch_interviews_today()
+
     return {
         "greeting": greeting,
         "hero": hero,
         "plan": plan,
+        "office": {
+            "state": office_state,
+            "interview_today": (office_state == office_client.OK
+                                and len(office_interviews) > 0),
+            "interviews": office_interviews,
+            "url": cfg.OFFICE_URL,
+        },
         "rhythm": rhythm,
         "streak": streak_and_grace(conn),
         "thm_streak": thm_streak_and_grace(conn),

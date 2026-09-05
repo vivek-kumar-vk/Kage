@@ -20,6 +20,15 @@ type Today = {
   crew_line: string;
   week_minutes: number;
   week_budget: number;
+  office: {
+    state: string;
+    interview_today: boolean;
+    interviews: {
+      company: string; role: string | null; round: string | null;
+      scheduled_at: string; mode: string | null; prep_pack: string;
+    }[];
+    url: string;
+  };
 };
 
 const DURATIONS = [15, 25, 45];
@@ -57,8 +66,76 @@ export default function TodayPage() {
   const prime = d.getHours() >= 17 || d.getHours() < 4 ? "evening" :
     d.getHours() >= 12 ? "afternoon" : "morning";
 
+  const office = data.office;
+  const preempt = office.state === "ok" && office.interviews.length > 0;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
+      {preempt && (
+        <section className="panel raised" style={{
+          padding: "22px 26px", marginBottom: 18,
+          borderColor: "rgba(242,169,59,.4)",
+          background: "linear-gradient(135deg, #1e1710 0%, #151210 60%)",
+        }}>
+          <div className="panel-label" style={{ color: "var(--amber)" }}>
+            Interview {office.interviews.length > 1 ? `× ${office.interviews.length}` : ""} today
+            &nbsp;·&nbsp; protect 2–3h for prep
+          </div>
+          {office.interviews.map((iv, i) => (
+            <div key={i} style={{
+              marginTop: 14, paddingTop: i ? 14 : 0,
+              borderTop: i ? "1px solid var(--hairline)" : "none",
+            }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <strong style={{ fontSize: 15 }}>{iv.company}</strong>
+                {iv.role && <span className="chip">{iv.role}</span>}
+                {iv.round && <span className="chip">{iv.round}</span>}
+                <span className="mono-micro" style={{ marginLeft: "auto" }}>
+                  {(iv.scheduled_at || "").slice(11) || "time TBD"}
+                  {iv.mode ? ` · ${iv.mode}` : ""}
+                </span>
+              </div>
+              <pre style={{
+                marginTop: 10, marginBottom: 0, whiteSpace: "pre-wrap",
+                fontFamily: "var(--font-mono)", fontSize: 12.5, lineHeight: 1.5,
+                color: iv.prep_pack ? "var(--bone)" : "var(--faint)",
+                background: "rgba(0,0,0,.25)", border: "1px solid var(--hairline)",
+                borderRadius: 8, padding: "12px 14px", overflowX: "auto",
+              }}>
+                {iv.prep_pack || "No prep pack yet — add one in Office."}
+              </pre>
+            </div>
+          ))}
+          <a href={office.url} target="_blank" rel="noreferrer" style={{
+            display: "inline-block", marginTop: 14, color: "var(--amber)",
+            fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: ".08em",
+            textDecoration: "none",
+          }}>
+            OPEN OFFICE →
+          </a>
+        </section>
+      )}
+
+      {!preempt && office.state !== "ok" && (
+        <div style={{
+          marginBottom: 16, display: "flex", alignItems: "center", gap: 10,
+          padding: "11px 16px", border: "1px dashed var(--hairline)",
+          borderRadius: 10, color: "var(--faint)", fontSize: 12.5,
+        }}>
+          <span className="track-dot dim" style={{ width: 6, height: 6 }} />
+          Couldn’t reach Office ({office.state}) — can’t check for interviews today.
+        </div>
+      )}
+
+      <div style={{
+        opacity: preempt ? 0.5 : 1, transition: "opacity .2s",
+        display: "flex", flexDirection: "column", flex: 1,
+      }}>
+      {preempt && (
+        <div className="panel-label" style={{ marginBottom: 10 }}>
+          Study plan · fit it around prep
+        </div>
+      )}
       <div className="page-head">
         <div>
           <div className="kicker">{fmtDate(d.toISOString().slice(0, 10))} · {prime}</div>
@@ -236,6 +313,7 @@ export default function TodayPage() {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

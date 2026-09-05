@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -17,3 +18,8 @@ USE_NEXT_UI = True
 # a fully working screen unbuilt on every start.
 PAGE = NEXT_DIST / "index.html"
 DB_PATH = HERE / "learning.db"
+
+# The OFFICE screen (M7, :8011) — read over HTTP for interview-day
+# preemption (D38). A real env var wins; the default is Office's own port.
+OFFICE_URL = os.getenv("OFFICE_URL", "http://127.0.0.1:8011")
+OFFICE_TIMEOUT_S = 4.0

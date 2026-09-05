@@ -106,9 +106,11 @@ Finance, Learning and AGENT DECK are done (D30–D30.2); Model is exempt (D30.3)
 
 M0–M5 shipped (D16, D17.1): the Ember Studio shell, schema v2, dynamic Path, Today and Focus Session, the room player, Recall and Card Studio, INSIGHTS, the crew shell, the corpus stored, honest zero, and two ground-zero tracks re-seeded.
 
-- **M6** — shipped 2026-09-05 (D35–D37). Interview-day preemption (D38) is
-  now **unblocked**: Office is live, `GET /api/office/overview` gives
-  `interview_today` and `GET /api/office/interviews` the packs. Small build.
+- **M6** — shipped 2026-09-05 (D35–D37, D38.1). Interview-day preemption
+  done: Learning's Today shows a pinned prep card and dims the study plan
+  when Office has a `pending` interview today; honest "office offline"
+  state. Browser check owed (extension offline) — a test interview is
+  left in `office.db` for the owner's look, deletable from Office.
 - **M7** — shipped 2026-09-05 (D45–D45.3): OFFICE screen at :8011, five tabs,
   `/api/learning/skills` added, resume-defensibility mirrored + recomputed
   from the ≥2 Good/Easy rule, browser-verified. Rooms 96/95/75 tagged
