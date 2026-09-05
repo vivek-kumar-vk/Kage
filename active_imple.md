@@ -59,7 +59,7 @@ through it, never stop for it.
 
 ## Phase E — Job-hunt agents (item 16 C — after Learning, per owner's order)
 
-- [ ] E1. Train `Job_Research_Agent`, `Resume_Agent`, `Interview_Prep_Agent`,
+- [x] E1. Train `Job_Research_Agent`, `Resume_Agent`, `Interview_Prep_Agent`,
       `Application_Tracker_Agent` profiles with real, correct, short briefs grounded in
       the OFFICE screen's actual API (built and testable — not gated anymore). Light
       training only, per owner. One agent at a time.
