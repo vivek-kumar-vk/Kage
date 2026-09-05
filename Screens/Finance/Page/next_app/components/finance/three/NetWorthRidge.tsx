@@ -5,13 +5,18 @@
 // Falls back to the mockup's static gold SVG (same real data) when WebGL is
 // missing or the user prefers reduced motion.
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Line as DreiLine } from "@react-three/drei";
+import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { Line as DreiLine, Html } from "@react-three/drei";
 import * as THREE from "three";
+import { inr } from "@/lib/format";
 
 export interface RidgeProps {
   trend: number[]; // actual net-worth points (solid)
+  /** Same length as `trend` — a date per point, for the hover readout. */
+  trendLabels?: string[];
   projection: number[]; // 12-month projected points (dashed tail)
+  /** Same length as `projection` — a month per point, for the hover readout. */
+  projectionLabels?: string[];
   /** Benchmark, already rebased onto net worth's own units and aligned
    * point-for-point with `trend` (same length; null = no snapshot that
    * month — a gap, never interpolated). Omitted or too short => no line. */
@@ -90,48 +95,49 @@ function runsOf(points: ({ x: number; y: number } | null)[]): { x: number; y: nu
   return runs.filter((run) => run.length >= 2);
 }
 
-function useDragTilt() {
-  const ref = useRef<THREE.Group>(null);
-  const target = useRef({ x: 0, y: 0 });
-  const drag = useRef<{ on: boolean; x: number; y: number }>({ on: false, x: 0, y: 0 });
+interface RidgePoint {
+  x: number;
+  y: number;
+  value: number;
+  label?: string;
+}
+
+/** Nearest-point readout on hover — no drag, no tilt, just a value. */
+function useHoverReadout(points: RidgePoint[]) {
+  const [hovered, setHovered] = useState<RidgePoint | null>(null);
 
   const handlers = {
-    onPointerDown: (e: React.PointerEvent) => {
-      drag.current = { on: true, x: e.clientX, y: e.clientY };
-      (e.target as Element).setPointerCapture?.(e.pointerId);
+    onPointerMove: (e: ThreeEvent<PointerEvent>) => {
+      if (points.length === 0) return;
+      let nearest = points[0];
+      let best = Math.abs(points[0].x - e.point.x);
+      for (const p of points) {
+        const d = Math.abs(p.x - e.point.x);
+        if (d < best) {
+          best = d;
+          nearest = p;
+        }
+      }
+      setHovered(nearest);
     },
-    onPointerMove: (e: React.PointerEvent) => {
-      if (!drag.current.on || !ref.current) return;
-      const dx = e.clientX - drag.current.x;
-      const dy = e.clientY - drag.current.y;
-      drag.current.x = e.clientX;
-      drag.current.y = e.clientY;
-      target.current.y = THREE.MathUtils.clamp(
-        target.current.y + dx * 0.004, -0.55, 0.55);
-      target.current.x = THREE.MathUtils.clamp(
-        target.current.x + dy * 0.002, -0.25, 0.25);
-    },
-    onPointerUp: () => {
-      drag.current.on = false;
-    },
-    onPointerLeave: () => {
-      drag.current.on = false;
-    },
+    onPointerLeave: () => setHovered(null),
   };
 
-  useFrame((_, delta) => {
-    const g = ref.current;
-    if (!g) return;
-    g.rotation.y += (target.current.y - g.rotation.y) * Math.min(delta * 6, 1);
-    g.rotation.x += (target.current.x - g.rotation.x) * Math.min(delta * 6, 1);
-  });
+  return { hovered, handlers };
+}
 
-  return { ref, handlers };
+function formatMonthLabel(label: string): string {
+  // "YYYY-MM" (projection) or a full date (trend) — both parse fine here.
+  const d = new Date(label.length <= 7 ? `${label}-01` : label);
+  if (Number.isNaN(d.getTime())) return label;
+  return d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
 }
 
 function RidgeScene({
   trend,
+  trendLabels,
   projection,
+  projectionLabels,
   benchmark,
   onFirstFrame,
 }: RidgeProps & { onFirstFrame: () => void }) {
@@ -154,7 +160,27 @@ function RidgeScene({
   const fillRef = useRef<THREE.Mesh>(null);
   const progress = useRef(0);
   const drawn = useRef(false);
-  const { ref: tiltRef, handlers } = useDragTilt();
+  const settled = useRef(false);
+
+  // Same points the lines are drawn from, carrying the real value + date for
+  // the hover readout — tail's first point duplicates the last solid point
+  // (line continuity), so it's labelled from trend, not projection.
+  const hoverPoints = useMemo((): RidgePoint[] => {
+    const solidPoints = solid.map((p, i) => ({
+      x: p.x,
+      y: p.y,
+      value: trend[i],
+      label: trendLabels?.[i],
+    }));
+    const tailPoints = tail.slice(1).map((p, i) => ({
+      x: p.x,
+      y: p.y,
+      value: projection[i],
+      label: projectionLabels?.[i],
+    }));
+    return [...solidPoints, ...tailPoints];
+  }, [solid, tail, trend, projection, trendLabels, projectionLabels]);
+  const { hovered, handlers } = useHoverReadout(hoverPoints);
 
   // geometry for the fill surface (triangle strip under the solid line)
   const fillGeometry = useMemo(() => {
@@ -210,6 +236,9 @@ function RidgeScene({
     onFirstFrame();
     const g = groupRef.current;
     if (!g) return;
+    // Once the draw-in sweep finishes, the ridge holds its final pose — no
+    // idle breathing/pulsing — until the page is reloaded or revisited.
+    if (settled.current) return;
     const t = state.clock.elapsedTime;
     // Draw-in: sweep the strip out of the left edge. Driven off the clock, not
     // accumulated delta, so a dropped or throttled frame loop leaves the ridge
@@ -221,20 +250,23 @@ function RidgeScene({
       g.scale.x = 1 - Math.pow(1 - progress.current, 3); // easeOutCubic
       if (progress.current >= 1) drawn.current = true;
     }
-    g.scale.y = 1 + (drawn.current ? Math.sin(t * 0.9) * 0.012 : 0);
 
-    if (tailRef.current) {
-      tailRef.current.visible = drawn.current;
-      const mat = (tailRef.current.children[0] as THREE.Line & { material: THREE.LineDashedMaterial })
-        ?.material;
-      if (mat) mat.opacity = 0.55 + Math.sin(t * 1.6) * 0.25;
-    }
-    if (ringRef.current) {
-      ringRef.current.visible = drawn.current;
-      const s = 1 + Math.sin(t * 1.6) * 0.28;
-      ringRef.current.scale.set(s, s, s);
-      (ringRef.current.material as THREE.MeshBasicMaterial).opacity =
-        0.4 + Math.sin(t * 1.6) * 0.2;
+    if (tailRef.current) tailRef.current.visible = drawn.current;
+    if (ringRef.current) ringRef.current.visible = drawn.current;
+
+    if (drawn.current) {
+      // Final static values — set once, then stop touching this frame's refs.
+      g.scale.y = 1;
+      if (tailRef.current) {
+        const mat = (tailRef.current.children[0] as THREE.Line & { material: THREE.LineDashedMaterial })
+          ?.material;
+        if (mat) mat.opacity = 0.7;
+      }
+      if (ringRef.current) {
+        ringRef.current.scale.set(1, 1, 1);
+        (ringRef.current.material as THREE.MeshBasicMaterial).opacity = 0.5;
+      }
+      settled.current = true;
     }
   });
 
@@ -242,7 +274,32 @@ function RidgeScene({
   const last = solid[solid.length - 1];
 
   return (
-    <group ref={tiltRef} {...handlers} scale={[1, yScale, 1]}>
+    <group scale={[1, yScale, 1]}>
+      {/* Invisible hit-plane for the hover readout — static, no drag/tilt. */}
+      <mesh position={[W / 2, H / 2, 0.02]} {...handlers}>
+        <planeGeometry args={[W, H * 1.6]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {hovered && (
+        <Html position={[hovered.x, hovered.y, 0.05]} center style={{ pointerEvents: "none" }}>
+          <div
+            style={{
+              transform: "translateY(-130%)",
+              whiteSpace: "nowrap",
+              background: "rgba(10,10,14,.92)",
+              border: "1px solid rgba(228,192,124,.35)",
+              borderRadius: 4,
+              padding: "4px 8px",
+              fontSize: 11,
+              fontFamily: "monospace",
+              color: "#F5DCA4",
+            }}
+          >
+            {hovered.label ? `${formatMonthLabel(hovered.label)} · ` : ""}
+            {Number.isFinite(hovered.value) ? inr(hovered.value) : "—"}
+          </div>
+        </Html>
+      )}
       <group ref={groupRef}>
         {benchmarkRuns.map((run, i) => (
           <DreiLine
@@ -406,7 +463,9 @@ function RidgeFallback({ trend, projection, benchmark }: RidgeProps) {
 
 export default function NetWorthRidge({
   trend,
+  trendLabels,
   projection,
+  projectionLabels,
   benchmark,
   onMode,
 }: RidgeProps & { onMode?: (mode: RidgeMode) => void }) {
@@ -448,7 +507,9 @@ export default function NetWorthRidge({
       >
         <RidgeScene
           trend={trend}
+          trendLabels={trendLabels}
           projection={projection}
+          projectionLabels={projectionLabels}
           benchmark={benchmark}
           onFirstFrame={() => {
             framed.current = true;

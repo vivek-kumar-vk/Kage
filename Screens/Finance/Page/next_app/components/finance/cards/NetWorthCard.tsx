@@ -65,11 +65,13 @@ export default function NetWorthCard() {
   const selectedIndex = scope.through ? trend.findIndex((t) => t.date === scope.through) : -1;
   const scoped = scope.isHistorical && selectedIndex >= 0;
 
-  const visibleTrend = (scoped ? trend.slice(0, selectedIndex + 1) : trend).map(
-    (t) => t.net_worth
-  );
+  const visibleTrendPoints = scoped ? trend.slice(0, selectedIndex + 1) : trend;
+  const visibleTrend = visibleTrendPoints.map((t) => t.net_worth);
+  const visibleTrendLabels = visibleTrendPoints.map((t) => t.date);
   // A projection from a past month is a fiction — hide it entirely (§3.2).
-  const visibleProjection = scoped ? [] : (data?.projection ?? []).map((p) => p.net_worth);
+  const visibleProjectionPoints = scoped ? [] : (data?.projection ?? []);
+  const visibleProjection = visibleProjectionPoints.map((p) => p.net_worth);
+  const visibleProjectionLabels = visibleProjectionPoints.map((p) => p.month);
 
   const heroNetWorth = scoped ? trend[selectedIndex].net_worth : data?.net_worth;
   const monthChangePct = scoped
@@ -154,7 +156,9 @@ export default function NetWorthCard() {
           <div className="pointer-events-auto absolute inset-x-0 bottom-0 h-[150px]">
             <NetWorthRidge
               trend={visibleTrend}
+              trendLabels={visibleTrendLabels}
               projection={visibleProjection}
+              projectionLabels={visibleProjectionLabels}
               benchmark={hasBenchmarkLine ? synthetic : undefined}
               onMode={onMode}
             />

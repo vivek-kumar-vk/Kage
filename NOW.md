@@ -5,15 +5,21 @@ Backlog lives in `PLAN.md` — do not open it while a task is open here.
 
 ---
 
-## No task open
+## Item 6 — net-worth ridge: drop drag-to-tilt, add hover readout, stop the idle pulse
 
-Item 6's ridge check: confirmed 2026-09-05 this is not doable by Claude at
-all (any AI-driven Chrome tab reports hidden/reduced-motion, so the app's
-own mode check always picks the SVG fallback) — needs the owner's own eyes.
-Filed in `PLAN.md` item 6 as a **you** item.
+Root cause of "ridge · still" was the owner's own Windows "Animation
+effects" setting (off) — confirmed live, three.js path does render. New
+feedback from watching it run for real:
+- drag-to-tilt reads as a broken zoom effect — remove it, no interactivity
+  via drag.
+- hovering the line shows nothing — add a tooltip with the date + value at
+  the nearest point.
+- after the draw-in sweep it should go fully static (no breathing scale
+  pulse, no ring/tail opacity pulse) until reload or next visit.
 
-Pick the next item off `PLAN.md`'s Order table, state its "done when" here,
-then start.
+**Done when:** dragging does nothing, hovering shows a real date+value
+readout, and the ridge holds still after drawing in — verified live at
+localhost:8001 (owner's own eyes, since automation can't see three.js mode).
 
 If you catch yourself opening another screen's folder — stop, come back here.
 
