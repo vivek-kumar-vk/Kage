@@ -26,11 +26,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_for_storage as cfg  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from db import init_db  # noqa: E402
 import seed  # noqa: E402
 from services import seam, rag, trader, library  # noqa: E402
 
 app = FastAPI(title=cfg.SCREEN_LABEL)
+
+# GET-only CORS for the Main Menu page (8000) and the one-port proxy (9000):
+# the Day Plan card reads its agent plan from the library seam cross-origin.
+# Everything else about the seam stays same-origin / localhost-only; the
+# service binds loopback, so this never leaves the box.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"https?://(127\.0\.0\.1|localhost)(:\d+)?",
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
 
 cfg.KAGE_DATA_DIR.mkdir(parents=True, exist_ok=True)
 init_db()

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 /** Left column, bottom module - "DAY PLAN". Replaces the old YouTube
     Studio card (owner, 2026-09-04).
@@ -9,11 +9,13 @@ import { useMemo, useRef, useState, useSyncExternalStore } from "react";
     areas - Finance, Learning, Anime, Agents. Each row is a time, an area
     tag and a line of text; tap the dot to mark it done.
 
-    FOR NOW this is a hand-kept checklist that lives in the browser
-    (localStorage). LATER, once the AI agents are running, they own this
-    card end to end - each agent fetches its own area's real state,
-    plans the day and writes the rows here (PLAN.md item 15: "Day Plan
-    card -> agent-owned"). The Task shape below is what those agents fill. */
+    AGENT-OWNED (PLAN item 15, wired 2026-09-06): the card first asks the
+    Storage library seam for Day_Planner_Agent's plan for TODAY
+    (library/main_menu/day_plan, latest snapshot). When today's plan
+    exists its rows take over the timeline - toggling writes a local
+    done-map, rows cannot be hand-added (the agent owns them). No plan
+    for today (agent never ran, seam down, plan is stale) falls back to
+    the old hand-kept localStorage checklist, honestly labelled. */
 
 type Area = "FIN" | "LEARN" | "ANIME" | "AGENT";
 
@@ -24,6 +26,18 @@ type Task = {
   text: string;
   done: boolean;
 };
+
+type AgentPlan = {
+  date: string;
+  source: string;
+  items: Task[];
+};
+
+/** Storage screen base (D43 port table; the port itself is written in
+    Screens/Storage/Backend/settings_for_storage.py). Loopback only. */
+const STORAGE_BASE = "http://127.0.0.1:8009";
+
+const DONE_KEY = "kage.dayplan.agentdone.v1";
 
 const AREA_COLOUR: Record<Area, string> = {
   FIN: "#ff7a00",
@@ -107,6 +121,56 @@ function useDayPlan(): Task[] {
   return useSyncExternalStore(subscribe, readSnapshot, () => SEED);
 }
 
+function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Day_Planner_Agent's plan for today, via the Storage library seam.
+    null = no plan for today (never ran / stale / seam down) — the card
+    falls back to the hand-kept list and says so. */
+function useAgentPlan(): AgentPlan | null {
+  const [plan, setPlan] = useState<AgentPlan | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch(`${STORAGE_BASE}/api/storage/library/main_menu/day_plan/today/latest`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => {
+        if (!alive) return;
+        try {
+          const parsed = JSON.parse(d.content);
+          const areas = ["FIN", "LEARN", "ANIME", "AGENT"];
+          if (
+            parsed?.date === localToday() &&
+            Array.isArray(parsed.items) &&
+            parsed.items.every(
+              (t: Task) => t.id && t.time && areas.includes(t.area) && t.text,
+            )
+          ) {
+            setPlan({ date: parsed.date, source: parsed.source ?? "agent", items: parsed.items });
+          }
+        } catch {
+          /* not a plan document — stay on the hand-kept list */
+        }
+      })
+      .catch(() => {
+        /* seam down — stay on the hand-kept list */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return plan;
+}
+
+function readDoneMap(): Record<string, boolean> {
+  try {
+    return JSON.parse(window.localStorage.getItem(DONE_KEY) ?? "{}") ?? {};
+  } catch {
+    return {};
+  }
+}
+
 function DayPlanIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" className="text-dim">
@@ -117,7 +181,15 @@ function DayPlanIcon() {
 }
 
 export function DayPlanPanel() {
-  const tasks = useDayPlan();
+  const localTasks = useDayPlan();
+  const agentPlan = useAgentPlan();
+  const [doneMap, setDoneMap] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    if (agentPlan) setDoneMap(readDoneMap());
+  }, [agentPlan]);
+  const tasks: Task[] = agentPlan
+    ? agentPlan.items.map((t) => ({ ...t, done: !!doneMap[t.id] })).sort(byTime)
+    : localTasks;
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState<{ time: string; area: Area; text: string }>({
     time: "09:00",
@@ -126,8 +198,22 @@ export function DayPlanPanel() {
   });
   const textRef = useRef<HTMLInputElement | null>(null);
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    if (agentPlan) {
+      // agent-owned day: the rows are the agent's, only done-ness is mine
+      setDoneMap((m) => {
+        const next = { ...m, [id]: !m[id] };
+        try {
+          window.localStorage.setItem(DONE_KEY, JSON.stringify(next));
+        } catch {
+          /* quota - in-memory state still updates */
+        }
+        return next;
+      });
+      return;
+    }
     writeItems(tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
+  };
 
   const remove = (id: string) => writeItems(tasks.filter((t) => t.id !== id));
 
@@ -155,17 +241,19 @@ export function DayPlanPanel() {
           <span className="rubric-sub text-[8px] normal-case tracking-normal text-dim">
             {done}/{tasks.length} done
           </span>
-          <button
-            type="button"
-            className="pill"
-            aria-expanded={adding}
-            onClick={() => {
-              setAdding((v) => !v);
-              setTimeout(() => textRef.current?.focus(), 0);
-            }}
-          >
-            {adding ? "Close" : "+ Add"}
-          </button>
+          {!agentPlan && (
+            <button
+              type="button"
+              className="pill"
+              aria-expanded={adding}
+              onClick={() => {
+                setAdding((v) => !v);
+                setTimeout(() => textRef.current?.focus(), 0);
+              }}
+            >
+              {adding ? "Close" : "+ Add"}
+            </button>
+          )}
         </div>
       </header>
 
@@ -256,21 +344,25 @@ export function DayPlanPanel() {
                 &#9670; {t.area}
               </span>
 
-              <button
-                type="button"
-                onClick={() => remove(t.id)}
-                aria-label={`remove ${t.text}`}
-                className="text-[12px] leading-none text-[#3a3a3a] opacity-0 transition-opacity hover:text-[#ff7a00] group-hover:opacity-100"
-              >
-                &times;
-              </button>
+              {!agentPlan && (
+                <button
+                  type="button"
+                  onClick={() => remove(t.id)}
+                  aria-label={`remove ${t.text}`}
+                  className="text-[12px] leading-none text-[#3a3a3a] opacity-0 transition-opacity hover:text-[#ff7a00] group-hover:opacity-100"
+                >
+                  &times;
+                </button>
+              )}
             </li>
           ))}
         </ul>
       )}
 
       <p className="num mt-2 border-t border-[#232323] pt-1.5 text-[8px] text-dim">
-        HAND-KEPT FOR NOW &middot; AGENT-OWNED LATER
+        {agentPlan
+          ? `AGENT PLAN · ${agentPlan.source.toUpperCase()} · ${agentPlan.date}`
+          : "HAND-KEPT FOR NOW · AGENT-OWNED LATER"}
       </p>
     </section>
   );
