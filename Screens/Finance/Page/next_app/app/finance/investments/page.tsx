@@ -211,6 +211,12 @@ function HoldingsTable({ onAnalyse }: { onAnalyse: (id: number) => void }) {
 function SipStrip() {
   const { data, isLoading } = useFinanceData<{ state: string; months: SipMonth[]; reason?: string }>(
     "/investments/sip-calendar");
+  // The standing plan (sips table) vs the recorded buys below it — plan is
+  // what he committed to, buys are what actually landed.
+  const { data: schedule } = useFinanceData<{
+    state: string; monthly_total?: number; active_count?: number;
+    day_of_month?: number; next_due?: string | null;
+  }>("/investments/visuals/sip-calendar");
   const months = (data?.months ?? []).slice(-12);
   const max = Math.max(1, ...months.map((m) => m.amount));
   const total12 = months.reduce((s, m) => s + (m.amount ?? 0), 0);
@@ -240,6 +246,12 @@ function SipStrip() {
         </div>
       ) : (
         <>
+          {schedule?.state === "ok" && (
+            <p className="footnote mb-2 text-aurum-muted">
+              STANDING PLAN · {schedule.active_count} SIPS · {inrCompact(schedule.monthly_total ?? 0)}/MO ·
+              DUE THE {schedule.day_of_month}TH · NEXT {schedule.next_due}
+            </p>
+          )}
           <div className="flex h-24 items-end gap-1.5">
             {months.map((m) => (
               <div key={m.month} className="group flex flex-1 flex-col items-center justify-end gap-1">

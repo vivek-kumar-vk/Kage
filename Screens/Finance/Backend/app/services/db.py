@@ -97,6 +97,29 @@ _MIGRATIONS = (
            payload TEXT NOT NULL,
            fetched_at TEXT NOT NULL
        )"""),
+    ("sips", """CREATE TABLE IF NOT EXISTS sips (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           fund_name TEXT NOT NULL,
+           amfi_code TEXT,
+           amount REAL NOT NULL,
+           frequency TEXT NOT NULL DEFAULT 'monthly',
+           day_of_month INTEGER NOT NULL DEFAULT 6,
+           active INTEGER NOT NULL DEFAULT 1,
+           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+       )"""),
+)
+
+# The owner's standing SIP schedule, checked live on Groww 2026-09-05
+# (finance-datamigration.md §7): 7 active SIPs, ₹8,000/month, all due the
+# 6th. amfi_code matches holdings.symbol so each row links to its holding.
+_SIP_SEED = (
+    ("ICICI Prudential NASDAQ 100 Index Fund Direct Growth", "149219", 2500),
+    ("Bandhan Small Cap Fund Direct Growth", "147946", 1000),
+    ("Parag Parikh Flexi Cap Fund Direct Growth", "122639", 1000),
+    ("UTI Nifty Next 50 Index Fund Direct Growth", "143341", 1000),
+    ("UTI Multi Asset Allocation Fund Direct Growth", "120760", 1000),
+    ("HDFC Mid Cap Fund Direct Growth", "118989", 1000),
+    ("JioBlackRock Sector Rotation Fund Direct Growth", "154082", 500),
 )
 
 
@@ -114,6 +137,14 @@ def _migrate(conn) -> None:
         "INSERT OR IGNORE INTO benchmarks(name, symbol, type) "
         "VALUES ('NIFTY 50', '^NSEI', 'index')"
     )
+    # SIP schedule seed — once, into an empty table; hand-edits after that
+    # are the owner's and are never overwritten.
+    if conn.execute("SELECT COUNT(*) FROM sips").fetchone()[0] == 0:
+        conn.executemany(
+            "INSERT INTO sips(fund_name, amfi_code, amount, day_of_month) "
+            "VALUES (?, ?, ?, 6)",
+            _SIP_SEED,
+        )
 
 
 def init_db():

@@ -5,6 +5,8 @@ a holding with zero lots, else 409 -> use archive.  [P]
 """
 from __future__ import annotations
 
+from datetime import date
+
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from services.calculations import portfolio
@@ -23,6 +25,40 @@ def _db():
 
 def _holding_row(conn, hid: int):
     return conn.execute("SELECT * FROM holdings WHERE id = ?", (hid,)).fetchone()
+
+
+def _next_due(today, day: int):
+    """Next calendar date with day-of-month == day that is today or later.
+    All current SIP days are ≤ 28, so month lengths never clip this."""
+    if today.day <= day:
+        return today.replace(day=day)
+    year, month = (today.year + 1, 1) if today.month == 12 else (today.year, today.month + 1)
+    return date(year, month, day)
+
+
+def sip_schedule(conn) -> dict:
+    rows = conn.execute(
+        "SELECT s.fund_name, s.amfi_code, s.amount, s.frequency, "
+        "s.day_of_month, s.active, h.name AS holding_name "
+        "FROM sips s LEFT JOIN holdings h "
+        "  ON h.symbol = s.amfi_code AND h.archived_at IS NULL "
+        "ORDER BY s.amount DESC, s.fund_name"
+    ).fetchall()
+    if not rows:
+        return {"state": "pending", "sips": [], "monthly_total": 0,
+                "next_due": None,
+                "reason": "no SIPs recorded"}
+    active = [r for r in rows if r["active"]]
+    today = date.today()
+    day = active[0]["day_of_month"] if active else 6
+    return {
+        "state": "ok",
+        "sips": [{k: r[k] for k in r.keys()} for r in rows],
+        "monthly_total": sum(r["amount"] for r in active),
+        "active_count": len(active),
+        "day_of_month": day,
+        "next_due": _next_due(today, day).isoformat(),
+    }
 
 
 @router.get("/investments/holdings")
@@ -138,10 +174,18 @@ def v_conc(conn=Depends(_db)):
     return portfolio.concentration(conn)
 
 
+@router.get("/investments/visuals/sip-calendar")
+def v_sip_calendar(conn=Depends(_db)):
+    """The standing SIP schedule from the `sips` table — the owner's real
+    plan (7 active, ₹8,000/mo, due the 6th), not derived from lots. The
+    lots-derived buy rhythm lives at /investments/sip-calendar (analysis)."""
+    return sip_schedule(conn)
+
+
 @router.get("/investments/visuals/{name}")
 def v_other(name: str, conn=Depends(_db)):
-    """geography, target-vs-actual, treemap, fund-overlap, expense-ratio,
-    sip-calendar — no data source yet, so an explicit pending state."""
+    """geography, target-vs-actual, treemap, fund-overlap, expense-ratio —
+    no data source yet, so an explicit pending state."""
     fn = _VISUALS.get(name)
     if fn:
         return fn(conn)

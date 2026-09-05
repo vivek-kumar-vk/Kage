@@ -50,8 +50,9 @@ export default function NetWorthCard() {
   const trend = data?.trend ?? [];
   const fromDate = trend[0]?.date;
   const toDate = trend[trend.length - 1]?.date;
-  // The backend endpoint doesn't exist yet (PLAN item 1) — a 404 here renders
-  // exactly like state: "empty" (D28.5), never a crash or a fabricated line.
+  // Served from the local ledger (D28.4) — until the ^NSEI closes are
+  // backfilled this 404s, which renders exactly like state: "empty",
+  // never a crash or a fabricated line.
   const benchmarkPath =
     fromDate && toDate
       ? `/market/benchmark?symbol=${BENCHMARK_SYMBOL}&from=${fromDate}&to=${toDate}`
