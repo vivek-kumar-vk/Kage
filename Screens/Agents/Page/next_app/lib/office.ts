@@ -95,6 +95,43 @@ export function useWorkspace() {
   return { data, loading, error, reload };
 }
 
+export interface UnreadResponse {
+  state: string;
+  agents: Record<string, number>;
+  rooms: Record<string, number>;
+  total: number;
+}
+
+/** Slack-style unread counts per agent, from the Agents backend read-marker
+ * spine. Polls on a slow interval; `refresh()` after marking a room read. */
+export function useUnread() {
+  const [counts, setCounts] = useState<Map<string, number>>(new Map());
+  const [total, setTotal] = useState(0);
+
+  const refresh = useCallback(() => {
+    fetch("/api/agents/unread")
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`unread HTTP ${res.status}`);
+        return (await res.json()) as UnreadResponse;
+      })
+      .then((data) => {
+        setCounts(new Map(Object.entries(data.agents ?? {})));
+        setTotal(data.total ?? 0);
+      })
+      .catch(() => {
+        // Backend unreachable: keep the last known counts, never fabricate.
+      });
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const timer = setInterval(refresh, 15000);
+    return () => clearInterval(timer);
+  }, [refresh]);
+
+  return { counts, total, refresh };
+}
+
 export function useLiveEvents() {
   const [events, setEvents] = useState<OfficeEvent[]>([]);
   const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");

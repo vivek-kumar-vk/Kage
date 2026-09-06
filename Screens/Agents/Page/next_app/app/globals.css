@@ -334,6 +334,73 @@ body {
   color: var(--deck-dim);
 }
 
+/* Parent-collapsible roster: main agents are headers over their crews. */
+.rail-row-main {
+  padding-right: 4px;
+}
+
+.rail-row-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 2px solid transparent;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+.rail-row-label:hover {
+  border-color: var(--deck-line);
+}
+
+.rail-row-sub {
+  padding-left: 26px;
+}
+
+.rail-chevron {
+  flex: 0 0 auto;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--deck-dim);
+  background: transparent;
+  border: 2px solid transparent;
+  padding: 3px 5px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.rail-chevron:hover {
+  color: var(--deck-ink);
+  border-color: var(--deck-line);
+}
+
+.rail-chevron-closed {
+  transform: rotate(-90deg);
+}
+
+/* Slack-style numeric unread badge — a count, never a blink. */
+.unread-badge {
+  flex: 0 0 auto;
+  min-width: 18px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 10px;
+  padding: 1px 5px;
+  color: #FAF3E3;
+  background: var(--deck-alert);
+  border: 1px solid rgba(74, 53, 39, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-chevron {
+    transition: none;
+  }
+}
+
 .presence {
   width: 8px;
   height: 8px;
@@ -343,7 +410,6 @@ body {
 
 .presence-working {
   background: var(--stat-run);
-  animation: deck-pulse 1.6s ease-in-out infinite;
 }
 
 .presence-stuck {

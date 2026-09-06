@@ -60,10 +60,11 @@ interface Props {
   agent: OfficeAgent;
   accent: string;
   states: Map<string, AgentView>;
+  onMarkedRead?: () => void;
 }
 
 /** Center pane: 1:1 chat with one agent (D17.3). Bodies stay human-readable. */
-export default function AgentChat({ agent, accent, states }: Props) {
+export default function AgentChat({ agent, accent, states, onMarkedRead }: Props) {
   const [messages, setMessages] = useState<ChatMessage[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -101,6 +102,25 @@ export default function AgentChat({ agent, accent, states }: Props) {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // Having the chat open is the Slack "open the channel" act: mark it read so
+  // the roster badge and the Main Menu ring glow clear.
+  useEffect(() => {
+    if (!messages) return;
+    let cancelled = false;
+    fetch(`/api/agents/rooms/${encodeURIComponent(agent.room_id)}/read`, {
+      method: "POST",
+    })
+      .then(() => {
+        if (!cancelled) onMarkedRead?.();
+      })
+      .catch(() => {
+        // unread spine unreachable — badge stays, nothing fabricated
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [agent.room_id, messages, onMarkedRead]);
 
   const send = useCallback(async () => {
     const body = draft.trim();

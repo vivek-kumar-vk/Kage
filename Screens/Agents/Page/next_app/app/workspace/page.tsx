@@ -11,17 +11,32 @@ import ProfilePanel from "../../components/deck/ProfilePanel";
 import {
   deriveAgentStates,
   useLiveEvents,
+  useUnread,
   useWorkspace,
 } from "../../lib/office";
 import { useResource, type IdeasResponse } from "../../lib/api";
+
+// Landing view is the orchestrator's chat, not the board room (owner,
+// 2026-09-06). ?agent=<name> deep-links a specific DM — the Main Menu ring
+// links here per node.
+const ORCHESTRATOR = "Deck_Main_Agent";
+
+function initialSelection(): DeckSelection {
+  if (typeof window !== "undefined") {
+    const asked = new URLSearchParams(window.location.search).get("agent");
+    if (asked) return { kind: "agent", id: asked };
+  }
+  return { kind: "agent", id: ORCHESTRATOR };
+}
 
 export default function DeckPage() {
   const workspace = useWorkspace();
   const { events, status } = useLiveEvents();
   const states = useMemo(() => deriveAgentStates(events), [events]);
+  const unread = useUnread();
   const board = useResource<IdeasResponse>("/api/agents/ideas");
 
-  const [selection, setSelection] = useState<DeckSelection>({ kind: "room", id: "board" });
+  const [selection, setSelection] = useState<DeckSelection>(initialSelection);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
 
@@ -62,7 +77,14 @@ export default function DeckPage() {
   let center: ReactNode;
   if (selection.kind === "agent") {
     center = selectedAgent ? (
-      <AgentChat agent={selectedAgent} accent={accentOf(selectedAgent.name)} states={states} />
+      <AgentChat
+        agent={selectedAgent}
+        accent={accentOf(selectedAgent.name)}
+        states={states}
+        onMarkedRead={unread.refresh}
+      />
+    ) : workspace.loading ? (
+      <CenterNote title="Loading roster…" copy="Reading the agent registry." />
     ) : (
       <CenterNote title="Agent not found" copy="The roster may have changed — reload." />
     );
@@ -145,6 +167,7 @@ export default function DeckPage() {
             departments={departments}
             agents={agents}
             states={states}
+            unread={unread.counts}
             selection={selection}
             onSelectAgent={(name) => {
               setSelection({ kind: "agent", id: name });
