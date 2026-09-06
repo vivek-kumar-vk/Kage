@@ -5,34 +5,33 @@ Backlog lives in `PLAN.md` — do not open it while a task is open here.
 
 ---
 
-## Task — item 16 A tail: `Pattern_Learner_Agent` + `Focus_Guard_Agent`
+## Task — the agent roster bottom-up + the harness fleet (owner goal) — SHIPPED 2026-09-06
 
-The Context Engine collector is live (D58): a run at
-`POST :8004/api/agents/context-engine/run` writes four honest snapshots to the
-library and `GET .../latest` reads them. What remains of the awareness layer:
+The owner's goal — "work and verify and create the agents from bottom to top, giving
+them their task and files, then configure the main model with OpenClaw, Hermes and
+the Deepseek harness" — is complete:
 
-- **`Time_Analyst_Agent`** is already re-briefed to read `/latest` — verify the
-  brief renders at :8004 and a real gateway ask answers from it.
-- **`Pattern_Learner_Agent`** — re-brief it on the same `/latest` snapshots,
-  saying "not enough data" honestly until ~6 weeks of real history exists.
-- **`Focus_Guard_Agent`** — a comparison of the day plan against the collected
-  context, not a judgment; no model call unless asked.
+- **Roster (D60):** all 38 agents carry functional briefs + `data_sources`; the ask
+  path injects their data (honest unreachable states); each verified with one real
+  gateway ask.
+- **Harnesses (D61–D61.2):** OpenClaw, dsh and Hermes Agent are all installed
+  repo-locally (one self-contained folder for the future phone host) and verified —
+  OpenClaw ring exchange (P3), dsh one-shot probe ("DSH GATEWAY CHECK OK"), Hermes
+  v0.21.0 with the omniroute provider declared and the screen reporting
+  `hermes: ok` / `dashboard: ok`.
 
-**Done when:** all three briefs are live at :8004, each verified with one real
-gateway ask, and the AGENT DECK board carries the card.
+Decision lines D60–D61.3 in `AGENTS.md`; PLAN items 11/16/20 updated.
 
-**Owner owes (tracked in PLAN/AGENTS D57):**
+**Next task is the owner's pick.** Natural candidates from `PLAN.md`: item 1
+(finance data migration, active) and item 12 (Learning content, next module), with
+item 3 (owner's own agent orchestration) now unblocked by the roster pass.
+
+**Owner owes (tracked in PLAN/AGENTS):**
 - Paste the real Jina key into the OmniRoute dashboard → Providers → Jina
   (embeddings 401 until then).
-- `openclaw onboard --auth-choice anthropic-cli` + Claude Code login.
 - Education-loan statement → real outstanding (D57.1).
-
----
-
-## Done earlier this session
-
-See `active_imple.md` (the overnight build log, all boxes ticked) and
-AGENTS.md D52–D58.
+- OpenClaw: add one real chat channel (item 19); Hermes: create the first profile
+  and run the first real ask (D61.2 — deliberately not done for him).
 
 ---
 

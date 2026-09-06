@@ -86,9 +86,9 @@ Finance, Learning and AGENT DECK are done (D30–D30.2); Model is exempt (D30.3)
 
 ---
 
-## 11 — Repoint the Hermes fleet off the dead local endpoint
+## 11 — Repoint the Hermes fleet off the dead local endpoint *(resolved by the wipe + D61.2)*
 
-- **All 15 Hermes profiles still name `local-model-a` @ `localhost:8080`**, a llama-server that is not running and not coming back. Each profile's `model:` block needs `provider: omniroute`. Deliberately not bulk-edited: it changes what every agent costs and how it behaves, so it is a decision per profile (D25.1).
+- The premise died: the Windows reinstall wiped the old Hermes install with its 15 `local-model-a` profiles, and Hermes was reinstalled fresh repo-locally (D61) with **zero profiles** — there is nothing left to repoint. The omniroute custom_provider is declared install-wide (`install_hermes_provider.py`, D25.1's one entry), so each profile opts in at creation with `model: {default: cfp/deepseek-ai/deepseek-v4-flash-0731, provider: omniroute}` — by hand, per profile (D25.1). The owner's first real profile + ask is owed (no ask was run for him — D25.2).
 - Only three DeepSeek routes on the gateway answer (`cfp/deepseek-ai/…`); `-free` reports "Model is unavailable" upstream and `opencode/` returns 402. If that changes, revisit the model lists in both `install_*_provider.py` scripts.
 
 ---
@@ -119,19 +119,11 @@ Wired end to end: `DayPlanPanel` reads `library/main_menu/day_plan/today/latest`
 
 ---
 
-## 16 — Agent roster expansion: awareness layer + autonomous code agents
+## 16 — Agent roster expansion: awareness layer + autonomous code agents *(trained 2026-09-06, D60)*
 
-Owner's order 2026-09-06: **learning agents first (done), then job agents (done), then finance agents** — light training only, "so they can start working". **Muse Spark (section D) is removed from the plan entirely.** Item 3's wiring is the owner's own orchestration plan once the agents are built and tested.
+Owner's order 2026-09-06: **learning agents first (done), then job agents (done), then finance agents (done)** — light training only, "so they can start working". **Muse Spark (section D) is removed from the plan entirely.** Item 3's wiring is the owner's own orchestration plan once the agents are built and tested.
 
-**Shipped 2026-09-06:**
-- **C — job-hunt agents trained (ENH-37).** `Job_Research_Agent`, `Resume_Agent`, `Interview_Prep_Agent`, `Application_Tracker_Agent` re-briefed with real OFFICE endpoints (:8011), the 2+ Good/Easy defensibility rule, the fixed targeting rules (four portals, Bangalore/Hyderabad/remote, never auto-apply) and the 5-part recall prep format.
-- **Learning crew + notes-search agent trained** (see item 12, D52).
-
-**Still open, in build order:**
-- **A — Awareness layer.** The load-bearing idea: no agent knows what the owner is currently doing, so every planner guesses. **The collector is built 2026-09-06 (D57):** `context_engine.py` on :8004 — one run polls WakaTime (via the Main Menu summary endpoint — actually live, `state: ok`, not the "not wired" the briefs assumed), Google Calendar (D23), `git log --since` today, and every screen's health (discovered by reading each `settings_for_*.py`, never a hardcoded list), writing one honest snapshot per source to `library/context_engine/<source>/today/` (D40). Unreachable written as unreachable (Rule 8). Sync route handlers on purpose — an async handler froze the event loop and the self-probe timed out. 14 offline tests; `Time_Analyst_Agent`'s brief now reads `GET :8004/api/agents/context-engine/latest`. Still open in A: `Pattern_Learner_Agent` (needs ~6 weeks of real history; reports "not enough data" until then), `Focus_Guard_Agent` (a comparison, not a judgment — no model call). The custom Pomodoro tracker stays unspec'd until real logged data exists.
-- **Finance agents** (last in the owner's order): `Finance_Main_Agent`, `Finance_MF_Agent`, `Market_Data_Agent`, `Portfolio_Analyst_Agent` profiles exist; train them on the real Finance endpoints (`sips`, `market/benchmark`, the analysis routers) the same way.
-- **B — Autonomous code agents** (`UI_Builder_Agent`, `Code_Explainer_Agent`, `Bug_Fix_Agent`, `Regression_Watcher_Agent`): unchanged below.
-- **A custom Pomodoro tracker** is the data source for non-office hours; all of it waits on real logged data (supersedes item 12's "time-pattern coach").
+**The roster pass is complete (D60):** all 38 agents — every sub, every main, Agent_Head — carry a functional brief and, where they read data, `data_sources` injected by the ask path (loopback GETs, size-capped, honest unreachable states). Each was verified with one real gateway ask. What remains here is not training: **A's** Pattern_Learner reports "not enough data" until ~6 weeks of real history accumulates, and the Pomodoro tracker waits on real logged data; **B's** four code agents are briefed but their autonomous runs are owner-triggered (their tool surface — what they may actually edit — is the open design question, and it starts from Rule 5: one screen per request, never across the HTTP seam).
 
 **B — Autonomous code agents.** `UI_Steward_Agent` finds drift and writes proposals but edits nothing; these four close the loop.
 - **`UI_Builder_Agent`** — plain-English UI request → edits that screen's own `Page/` files → runs its build and lint → reports the diff. One screen per request, never across the HTTP seam (Rule 5).
@@ -157,12 +149,22 @@ connection map (live vs. untrained vs. not-built) and the pilot report live in
   mains with Slack-style badges, the deck landing view is now the orchestrator chat
   (`?agent=` deep links), the Main Menu ring renders the real 38-agent roster with
   unread glow, and the Model page carries a glass orchestrator chat forwarded through
-  the deck's ask path. Context injection (below) is still the next architectural task.
+  the deck's ask path.
+- **Context injection shipped 2026-09-06 (D60)** — it was the next architectural task
+  and is now done: `data_sources` in `office.json`, fetched by the ask path
+  (loopback-only, ≤4 sources, 4000 chars each), unreachable sources inlined honestly.
+  The pilot's blocking finding is closed.
+- **P3 ring verified end-to-end 2026-09-06 (D42's ask path + D61's fleet):** two mains
+  exchanged a real message through OpenClaw (`tools.agentToAgent` allowlisted among
+  mains, `sessions.visibility=all`, per-main `tools.deny` for write/edit/apply_patch);
+  transcript filed to the library seam. All three harnesses (OpenClaw, dsh, Hermes)
+  are installed repo-locally (D61). Remaining: P1 trace spine, P2 improvement loop,
+  P4 orchestrator v1 hardening, P5 channels/standing orders (one real OpenClaw chat
+  channel is the owner's, item 19).
 - **Pilot done 2026-09-06:** `Time_Analyst_Agent` — 4/4 asks ok, ₹0, honest to the point
-  of refusing to guess; NEEDS_OWNER note path verified via `POST .../notes`. Blocking
-  finding: the ask path is text-only, so briefs that say "read this endpoint" are
-  aspirational — **next task is context injection** (`data_sources` in `office.json`,
-  fetched size-capped by the ask path, ARCHITECTURE.md §4.1).
+  of refusing to guess; NEEDS_OWNER note path verified via `POST .../notes`. Its
+  blocking finding (text-only asks made "read this endpoint" briefs aspirational) is
+  what context injection (D60, above) fixed.
 - **Phases:** P0 decisions filed → P1 trace spine (runs read API + dsh session reader,
   sanitized into the library) → P2 improvement loop, one agent → P3 OpenClaw ring →
   P4 orchestrator v1 → P5 channels/standing orders. One agent at a time throughout.

@@ -1,3 +1,4 @@
+import asyncio
 import re
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -119,6 +120,7 @@ def _agent_entries(conn):
                     "parent": meta.get("parent"),
                     "model": meta.get("model"),
                     "models": meta.get("models"),
+                    "data_sources": meta.get("data_sources"),
                     "description": description,
                 }
             )
@@ -391,6 +393,52 @@ def _resolve_model_pref(agent):
     return None
 
 
+# ---------------------------------------------------------------------
+# Context injection (ARCHITECTURE §4.1). The ask path is a text
+# completion: an agent cannot fetch its own endpoints, so a brief that
+# says "read this URL" is aspirational. office.json `data_sources` names
+# a few loopback GETs; the ask path fetches them before the model call
+# and inlines them, bounded, as "Current data". A failed fetch is inlined
+# as unreachable — data about the seam, never swallowed (Rule 8).
+# ---------------------------------------------------------------------
+SOURCE_TIMEOUT_S = 4
+MAX_SOURCE_CHARS = 4000
+
+
+def _fetch_source(url: str) -> str:
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(url, timeout=SOURCE_TIMEOUT_S) as resp:
+            body = resp.read(MAX_SOURCE_CHARS * 4).decode("utf-8", errors="replace")
+    except Exception as exc:
+        return f"[state: unreachable — {type(exc).__name__}: {exc}]"
+    if len(body) > MAX_SOURCE_CHARS:
+        body = body[:MAX_SOURCE_CHARS] + f"\n... (truncated at {MAX_SOURCE_CHARS} chars)"
+    return body
+
+
+async def _current_data_block(agent) -> str:
+    """The fetched snapshot text appended to the ask's system prompt, or ""
+    when the agent declares no data_sources. Fetches run in threads so a
+    slow seam cannot freeze the event loop (the D58 lesson)."""
+    sources = agent.get("data_sources")
+    if not sources:
+        return ""
+    results = await asyncio.gather(
+        *(asyncio.to_thread(_fetch_source, url) for url in sources)
+    )
+    stamp = datetime.now(IST).replace(microsecond=0).strftime("%Y-%m-%d %H:%M IST")
+    parts = [
+        "",
+        "Current data, fetched at " + stamp
+        + " (bounded; a source that did not answer says so inline — never guess it):",
+    ]
+    for url, body in zip(sources, results):
+        parts.append(f"### {url}\n{body}")
+    return "\n".join(parts)
+
+
 async def _run_ask(name: str, message: Optional[str]):
     """The one ask code path — used by /agents/{name}/ask, the DM composer at
     /agents/{name}/messages, and agent-kind rooms at /rooms/{room_id}/messages.
@@ -442,6 +490,7 @@ async def _run_ask(name: str, message: Optional[str]):
     )
 
     system = _build_system_prompt(agent, all_agents)
+    system += await _current_data_block(agent)
     model_pref = _resolve_model_pref(agent)
 
     try:

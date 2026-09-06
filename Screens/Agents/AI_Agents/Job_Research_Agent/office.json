@@ -1,1 +1,9 @@
-{"department": "learning", "tier": "sub", "parent": "Learning_Main_Agent"}
+{
+  "department": "learning",
+  "tier": "sub",
+  "parent": "Learning_Main_Agent",
+  "data_sources": [
+    "http://127.0.0.1:8011/api/office/applications",
+    "http://127.0.0.1:8011/api/office/overview"
+  ]
+}

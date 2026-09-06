@@ -6,6 +6,7 @@ registry-driven, nothing else needs editing.
 """
 
 import json
+import re
 from pathlib import Path
 
 DEPARTMENTS = [
@@ -21,11 +22,34 @@ DEPARTMENTS = [
 _DEPT_IDS = {dept["id"] for dept in DEPARTMENTS}
 _TIERS = {"head", "main", "sub"}
 
+# Context injection (ARCHITECTURE §4.1): an agent's office.json may name a
+# few GET URLs the ask path fetches and inlines before the model call. They
+# must be loopback — an ask must never reach off this box — and few.
+LOOPBACK_URL = re.compile(r"^https?://(127\.0\.0\.1|localhost)(:\d+)?/\S*$")
+MAX_DATA_SOURCES = 4
+
+
+def _clean_data_sources(raw) -> list | None:
+    if not isinstance(raw, list):
+        return None
+    urls = []
+    for entry in raw:
+        if not isinstance(entry, str):
+            return None
+        url = entry.strip()
+        if not LOOPBACK_URL.match(url) or url in urls:
+            return None
+        urls.append(url)
+    if not urls or len(urls) > MAX_DATA_SOURCES:
+        return None
+    return urls
+
 
 def read_office(agent_dir: Path) -> dict:
     parent = None
     model = None
     models = None
+    data_sources = None
     try:
         data = json.loads((agent_dir / "office.json").read_text(encoding="utf-8"))
         department = data.get("department", "deck")
@@ -33,6 +57,7 @@ def read_office(agent_dir: Path) -> dict:
         parent = data.get("parent") or None
         model = data.get("model")
         models = data.get("models")
+        data_sources = _clean_data_sources(data.get("data_sources"))
     except (OSError, ValueError):
         department, tier = "deck", "sub"
 
@@ -56,6 +81,7 @@ def read_office(agent_dir: Path) -> dict:
         "parent": parent,
         "model": model,
         "models": models,
+        "data_sources": data_sources,
     }
 
 

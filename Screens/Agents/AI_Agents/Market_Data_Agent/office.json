@@ -1,1 +1,9 @@
-{"department": "finance", "tier": "sub", "parent": "Finance_Main_Agent"}
+{
+  "department": "finance",
+  "tier": "sub",
+  "parent": "Finance_Main_Agent",
+  "data_sources": [
+    "http://127.0.0.1:8002/api/finance/market/benchmark",
+    "http://127.0.0.1:8002/api/finance/investments/sip-calendar"
+  ]
+}

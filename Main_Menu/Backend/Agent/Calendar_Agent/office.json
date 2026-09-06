@@ -1,1 +1,8 @@
-{"department": "main_menu", "tier": "sub", "parent": null}
+{
+  "department": "main_menu",
+  "tier": "sub",
+  "parent": null,
+  "data_sources": [
+    "http://127.0.0.1:8000/api/main_menu/calendar/next?limit=3"
+  ]
+}

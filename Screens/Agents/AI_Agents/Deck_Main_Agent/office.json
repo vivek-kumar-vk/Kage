@@ -1,1 +1,8 @@
-{"department": "deck", "tier": "main"}
+{
+  "department": "deck",
+  "tier": "main",
+  "data_sources": [
+    "http://127.0.0.1:8004/api/agents/unread",
+    "http://127.0.0.1:8004/api/agents/runs?limit=20"
+  ]
+}

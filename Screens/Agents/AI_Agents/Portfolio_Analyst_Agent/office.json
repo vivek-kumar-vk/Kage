@@ -1,1 +1,11 @@
-{"department": "finance", "tier": "sub", "parent": "Finance_Main_Agent"}
+{
+  "department": "finance",
+  "tier": "sub",
+  "parent": "Finance_Main_Agent",
+  "data_sources": [
+    "http://127.0.0.1:8002/api/finance/analysis/overview",
+    "http://127.0.0.1:8002/api/finance/analysis/allocation",
+    "http://127.0.0.1:8002/api/finance/analysis/cost-tax",
+    "http://127.0.0.1:8002/api/finance/analysis/behaviour"
+  ]
+}

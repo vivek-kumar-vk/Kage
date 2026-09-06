@@ -36,11 +36,18 @@ PAGE = SCREEN / "Page" / "page_for_hermes.html"
 # THE INSTALL IT REPORTS ON
 # ---------------------------------------------------------------------
 # Hermes keeps everything under one folder. On Windows that is
-# %LOCALAPPDATA%\hermes; HERMES_HOME overrides it, which is how the
-# phone host will point at a different install later.
+# %LOCALAPPDATA%\hermes; HERMES_HOME overrides it. The repo-local install
+# (Screens/Hermes/Setup/hermes_home) is checked before that default, so a
+# checkout that carries its own install (D61, D40's one-self-contained-
+# folder reasoning) is found even when the env var is not set - and this
+# is the same rule run_hermes_dashboard.py follows, so the screen and the
+# runner can never disagree about where the install is.
 def _hermes_home() -> Path:
     if os.environ.get("HERMES_HOME"):
         return Path(os.environ["HERMES_HOME"])
+    local_install = SCREEN / "Setup" / "hermes_home"
+    if local_install.is_dir():
+        return local_install
     local_appdata = os.environ.get("LOCALAPPDATA")
     if local_appdata:
         return Path(local_appdata) / "hermes"

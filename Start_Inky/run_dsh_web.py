@@ -20,8 +20,9 @@ WHAT IT DOES
     so no screen is named in this file (CLAUDE.md Rule 17).
 
 WHAT IT NEEDS
-    dsh on PATH (`npm install -g deepseek-harness`, or however you
-    installed it). Everything else is the standard library.
+    The repo-local dsh install (Screens/Deepseek/Setup/dsh_install,
+    `npm install` inside it) or `dsh` on PATH. Everything else is the
+    standard library.
 
 RUN IT
     cd <repo root>
@@ -51,6 +52,11 @@ PORTS_SNAPSHOT = Path(__file__).resolve().parent / "ports_for_inky.json"
 
 HARNESS_HOST = "127.0.0.1"
 HARNESS_PORT = 3080
+
+# The repo-local dsh install - one self-contained folder for phone/Termux
+# hosting (D40's reasoning), the same pattern as run_openclaw.py.
+LOCAL_DSH_BIN = (PROJECT_ROOT / "Screens" / "Deepseek" / "Setup"
+                 / "dsh_install" / "node_modules" / ".bin")
 
 # dsh's own state folder - $DSH_HOME if set, else ~/.dsh, the same rule
 # dsh itself follows and the same one the Deepseek screen's settings use.
@@ -95,12 +101,17 @@ def trusted_authorities() -> list[str]:
 
 
 def harness_command() -> list[str]:
-    """The `dsh` command to spawn. On Windows npm installs a .cmd shim,
-    which CreateProcess will not run directly."""
+    """The `dsh` command to spawn - the repo-local install first, a PATH
+    install as the fallback. On Windows npm installs a .cmd shim, which
+    CreateProcess will not run directly."""
+    local = LOCAL_DSH_BIN / "dsh.cmd"
+    if local.is_file():
+        return ["cmd", "/c", str(local)]
     found = shutil.which("dsh")
     if not found:
-        print("  dsh is not on PATH. Install the DeepSeek Harness first,")
-        print("  then re-run this. The Deepseek screen will keep saying")
+        print("  dsh is not installed. Install it repo-locally:")
+        print("    cd Screens\\Deepseek\\Setup\\dsh_install && npm install")
+        print("  The Deepseek screen will keep saying")
         print("  'unreachable' until it is - which is the honest state,")
         print("  not a failure of the screen.")
         sys.exit(1)

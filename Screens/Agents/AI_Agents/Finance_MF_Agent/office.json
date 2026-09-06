@@ -1,1 +1,11 @@
-{"department": "finance", "tier": "sub", "parent": "Finance_Main_Agent"}
+{
+  "department": "finance",
+  "tier": "sub",
+  "parent": "Finance_Main_Agent",
+  "data_sources": [
+    "http://127.0.0.1:8002/api/finance/investments/holdings",
+    "http://127.0.0.1:8002/api/finance/analysis/lookthrough",
+    "http://127.0.0.1:8002/api/finance/analysis/overlap",
+    "http://127.0.0.1:8002/api/finance/investments/sip-calendar"
+  ]
+}

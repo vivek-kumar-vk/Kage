@@ -90,6 +90,7 @@ current.png
 # --- Claude Code session plans (ephemeral; outcomes land in PLAN.md) ---
 .zcode/
 .scratch/
+.claude/
 
 # --- Private finance source docs + backfill data (NEVER commit) ---
 *.pdf
@@ -128,3 +129,10 @@ tmp/
 # --- Personal resume files (PII, Rule 7) - never in the public repo ---
 *.docx
 Vivek_Kumar_Resume_*
+
+# --- Hermes Agent installed repo-locally (HERMES_HOME, D60) -------------
+# The installer's output lives here: the hermes-agent code tree, its
+# Python runtime, and every profile's config/state/history. Install
+# artifacts and personal agent state - never in git (Rule 7). On a new
+# host, re-run the installer; it rebuilds this folder.
+Screens/Hermes/Setup/hermes_home/
