@@ -259,6 +259,91 @@ async def list_agent_messages(name: str):
         conn.close()
 
 
+@router.get(cfg.API_PREFIX + "/unread")
+async def unread_summary():
+    """Per-agent-room unread counts: messages the owner has not seen yet.
+    Unread = rows past the room's read marker that the owner did not author
+    (agent replies and system failure notes count; the owner's own lines do
+    not). No marker row yet means everything is unread."""
+    conn = connect()
+    try:
+        markers = {
+            row["room_id"]: row["last_rowid"]
+            for row in conn.execute("SELECT room_id, last_rowid FROM message_reads")
+        }
+        rooms = {
+            row["id"]: row["agent_name"]
+            for row in conn.execute(
+                "SELECT id, agent_name FROM rooms WHERE kind = 'agent'"
+            )
+        }
+
+        agents = {}
+        for room_id, agent_name in rooms.items():
+            last = markers.get(room_id, 0)
+            row = conn.execute(
+                """
+                SELECT COUNT(*) AS c FROM messages
+                WHERE room_id = ? AND rowid > ? AND author != 'user'
+                """,
+                (room_id, last),
+            ).fetchone()
+            agents[agent_name] = row["c"]
+
+        return {
+            "state": "ok",
+            "agents": agents,
+            "rooms": {
+                room_id: agents.get(agent_name, 0)
+                for room_id, agent_name in rooms.items()
+            },
+            "total": sum(agents.values()),
+        }
+    finally:
+        conn.close()
+
+
+@router.post(cfg.API_PREFIX + "/rooms/{room_id}/read")
+async def mark_room_read(room_id: str):
+    """Mark an agent room read up to now (the Slack 'open the channel'
+    primitive). Idempotent: re-reading sets the same or a higher cursor."""
+    conn = connect()
+    try:
+        room = conn.execute(
+            "SELECT id, agent_name FROM rooms WHERE id = ? AND kind = 'agent'",
+            (room_id,),
+        ).fetchone()
+        if not room:
+            return JSONResponse(
+                status_code=404,
+                content={"state": "error", "problem": "unknown room"},
+            )
+
+        row = conn.execute(
+            "SELECT COALESCE(MAX(rowid), 0) AS m FROM messages WHERE room_id = ?",
+            (room_id,),
+        ).fetchone()
+        conn.execute(
+            """
+            INSERT INTO message_reads (room_id, last_rowid, updated_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT(room_id) DO UPDATE SET
+                last_rowid = MAX(last_rowid, excluded.last_rowid),
+                updated_at = excluded.updated_at
+            """,
+            (room_id, row["m"], _now()),
+        )
+        conn.commit()
+        return {
+            "state": "ok",
+            "room_id": room_id,
+            "agent_name": room["agent_name"],
+            "last_rowid": row["m"],
+        }
+    finally:
+        conn.close()
+
+
 def _department_label(department_id):
     for dept in office.DEPARTMENTS:
         if dept["id"] == department_id:

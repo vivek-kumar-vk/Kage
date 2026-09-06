@@ -59,6 +59,14 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 -- Every ask is a run (V2). Append-only; a run is closed by UPDATE, never deleted.
+-- Read markers for DM rooms (unread badges, 2026-09-06). Per-room "read up to
+-- here" cursor over messages.rowid — messages themselves are never edited.
+CREATE TABLE IF NOT EXISTS message_reads (
+    room_id    TEXT PRIMARY KEY REFERENCES rooms(id),
+    last_rowid INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS runs (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     agent_name  TEXT NOT NULL,
