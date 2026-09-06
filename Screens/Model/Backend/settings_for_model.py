@@ -83,6 +83,46 @@ def _gateway_key() -> str:
 GATEWAY_API_KEY = _gateway_key()
 
 # ---------------------------------------------------------------------
+# THE AGENT DECK THE CHAT TALKS THROUGH
+# ---------------------------------------------------------------------
+# The orchestrator chat never calls a model directly - it forwards to the
+# Agent Deck's ask path (D27's one shared ask path), so every run is
+# recorded in the deck's runs table like any other ask. The deck's base
+# URL is discovered, never hardcoded: env wins, then the launcher's port
+# map (Start_Inky/ports_for_inky.json - a generated snapshot whose
+# source of truth is the deck's own settings file). This screen imports
+# nothing from Shared_By_All_Screens/ or from the deck's code (Rule 5).
+def _agents_base_url() -> str:
+    from_env = os.environ.get("AGENTS_BASE_URL", "").strip().rstrip("/")
+    if from_env:
+        return from_env
+    ports_file = PROJECT_ROOT / "Start_Inky" / "ports_for_inky.json"
+    if ports_file.exists():
+        try:
+            import json
+
+            data = json.loads(ports_file.read_text(encoding="utf-8"))
+            for row in data.get("screens", []):
+                if row.get("name") == "Agents":
+                    return f"http://{row['host']}:{row['port']}"
+        except Exception:
+            pass  # fall through - the server reports this honestly
+    return ""
+
+
+AGENTS_BASE_URL = _agents_base_url()
+
+# The agent the plain (no /-command) chat line goes to.
+ORCHESTRATOR_AGENT = os.environ.get("ORCHESTRATOR_AGENT", "Deck_Main_Agent")
+
+# A model ask can legitimately take a while; an /all broadcast multiplies it.
+ASK_TIMEOUT = float(os.environ.get("MODEL_ASK_TIMEOUT", "180"))
+
+# Per-reply cap for the /all broadcast, so eight mains can't produce a
+# megabyte response (plan 5.2: bounded, structurally).
+BROADCAST_REPLY_CAP = 1500
+
+# ---------------------------------------------------------------------
 # API
 # ---------------------------------------------------------------------
 API_PREFIX = "/api/model"

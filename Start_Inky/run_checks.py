@@ -94,6 +94,7 @@ def main() -> int:
     results.append(run_screen_pytest(repo_root, "Learning"))
     results.append(run_screen_pytest(repo_root, "Office"))
     results.append(run_screen_pytest(repo_root, "Agents"))
+    results.append(run_screen_pytest(repo_root, "Model"))
 
     # 2. Finance backend hygiene gate
     backend_gate = (
