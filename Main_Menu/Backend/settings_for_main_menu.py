@@ -114,6 +114,12 @@ try:
 except Exception:
     EMAIL_DECK_URL = os.environ.get("AGENTS_BASE_URL", "http://127.0.0.1:8004")
 
+# The agent ring (2026-09-06): the roster + unread counts the home page's
+# ring nodes show, read live from the same screen the digest posts to.
+# One base URL, resolved once here - never hardcoded in the server file.
+AGENTS_SCREEN_URL = EMAIL_DECK_URL
+AGENTS_ROSTER_TIMEOUT = float(os.environ.get("AGENTS_ROSTER_TIMEOUT", "3"))
+
 # The name printed on the card footer, next to the account address.
 EMAIL_OWNER_NAME = os.environ.get("EMAIL_OWNER_NAME", "SINGH")
 

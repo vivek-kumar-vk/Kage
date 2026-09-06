@@ -304,6 +304,20 @@ def navigation():
 
 
 # =====================================================================
+# AGENT RING - the roster the home page's ring nodes show
+# =====================================================================
+@app.get(cfg.API_PREFIX + "/agents")
+def agent_roster():
+    """One node per agent for the home-page ring. Read-only proxy to the
+    roster + unread counts (agent_roster.py owns the naming, per the
+    email_digest pattern); agents screen down -> honest offline state,
+    empty ring, never a fabricated node."""
+    from agent_roster import fetch_roster
+
+    return fetch_roster()
+
+
+# =====================================================================
 # HOME BRIEF - the noticeboard figures the top cards show
 # =====================================================================
 @app.get(cfg.API_PREFIX + "/home_brief")
