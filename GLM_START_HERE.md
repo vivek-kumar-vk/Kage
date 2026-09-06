@@ -9,12 +9,14 @@ You are implementing in `B:\inky_code`. Read this file first, then follow it exa
 2. **Open only the files a ticket names.** Do not explore the repository. If a ticket does not
    name a file, you do not need it.
 3. **Change only what the ticket's anchor names.** No other line in a named file changes.
-4. **Run the regression command after every ticket** and stop the run if it fails. Do not build
-   the next ticket on top of a red baseline. The regression command is always:
+4. **Run the regression command after every ticket.** It is always:
 
        .venv\Scripts\python Start_Inky\run_checks.py
 
-   All six checks pass right now. That is your baseline. If it is red before you start, stop.
+   **Your baseline today is five of six.** The Agents suite fails on purpose: three async tests
+   used to be skipped silently and one of them fails for a real reason. Ticket Z0 fixes that.
+   Until Z0 is done, "no worse than five of six, and Agents is the only failure" is your
+   baseline. After Z0 it is six of six, and any failure at all stops the run.
 5. **Never invent a value.** If a fetch, a price or a timestamp is unavailable, render it absent
    and dated. Never carry the last known value forward.
 6. **Do not touch** port settings files, the launcher, or anything that discovers screens by
@@ -25,8 +27,69 @@ You are implementing in `B:\inky_code`. Read this file first, then follow it exa
 The main build plan (`BUILD_ORDER.md`) is still being written by Fable and will arrive in
 `C:\Users\vkjha\Project-Audit-OUT\`. Until it does, do not start feature work.
 
-There are three tickets you can do immediately. They are independent of the audit, they are
-mechanical, and everything else is blocked until they are done.
+There are four tickets you can do immediately. They are independent of the audit, they are
+mechanical, and everything else is blocked until they are done. Do Z0 first.
+
+---
+
+## Ticket Z0 — make the three skipped async tests actually run
+
+**Model:** GLM
+
+**Why it is first:** `Screens/Agents/Backend/tests/test_context_injection.py` holds three
+`async def` tests. Without an async plugin configured, pytest skips them with a warning and the
+suite still prints PASS. Every regression command you run depends on this suite telling the
+truth, so it has to run its own tests before anything else is built on top of it.
+
+**Files created (1):** `Screens/Agents/Backend/pytest.ini`
+
+**Anchor:** a new file. No existing file changes.
+
+**Algorithm:**
+1. Create `Screens/Agents/Backend/pytest.ini` containing exactly these three lines:
+
+       [pytest]
+       asyncio_mode = auto
+       testpaths = tests
+
+2. Do not add a `conftest.py`. Do not add markers to the test functions.
+3. Do not change any test file.
+
+**Red test:**
+
+    .venv\Scripts\python -m pytest Screens\Agents\Backend\tests -q
+
+Today this reports `24 passed, 3 skipped`. After this ticket it must report 27 collected with
+**zero skipped**. It will then show one genuine failure, which is expected and is Z0b's job.
+
+**Regression command:**
+
+    .venv\Scripts\python Start_Inky\run_checks.py
+
+**Done when:** the Agents suite runs 27 tests with none skipped.
+
+**Do not:**
+- Do not make the failing test pass by editing the test. The failure is real.
+- Do not delete or mark `xfail` the test that fails. Leave it failing and stop.
+- Do not pin pytest back to 7.4.0. That version is what hid the tests.
+
+**Blocks:** Z0b. **Blocked by:** nothing.
+
+---
+
+## Ticket Z0b — decide where the source-size budget is enforced
+
+**Model:** SONNET. Do not take this ticket yourself. Hand it to Sonnet 5.
+
+**Why Sonnet:** `test_current_data_block_truncates_oversized` asserts that the assembled data
+block carries a `truncated at 4000 chars` notice. It does not. `_current_data_block` in
+`Screens/Agents/Backend/services/agents.py` does no bounding of its own; the `MAX_SOURCE_CHARS`
+cap lives only inside `_fetch_source` at lines 405-417. So the point that builds the prompt
+trusts its producer and enforces no budget. Whether the bound belongs at the fetch, at the
+assembly, or both is a design decision about a silent failure mode, and worker prompts are
+capped at 4,000 tokens. That is Sonnet's call, not a mechanical edit.
+
+**Blocked by:** Z0.
 
 ---
 
@@ -49,8 +112,10 @@ at line 85. It has never been installable, so a fresh install of Kage has always
 3. Change `pdfplumber==0.11.3` to `pdfplumber==0.11.10`.
 4. Change `casparser==0.7.4` to `casparser==1.4.1`. The old pair could not resolve together.
    `casparser` is genuinely used, at `Screens/Finance/Backend/app/services/imports/cas.py:32`.
-5. Add the line `anyio==4.15.1` below `pytest==7.4.0`.
-6. Leave every other line exactly as it is, including `pytest==7.4.0`.
+5. Change `pytest==7.4.0` to `pytest==8.4.2`. The old pin is what silently skipped the async
+   tests in the Agents screen.
+6. Add the line `pytest-asyncio==1.4.0` directly below it.
+7. Leave every other line exactly as it is.
 
 **Resulting file, verbatim:**
 
@@ -63,8 +128,8 @@ at line 85. It has never been installable, so a fresh install of Kage has always
     tenacity==8.2.2
     pdfplumber==0.11.10
     casparser==1.4.1
-    pytest==7.4.0
-    anyio==4.15.1
+    pytest==8.4.2
+    pytest-asyncio==1.4.0
     mcp>=1.2.0,<2
 
 **Red test:**
@@ -80,12 +145,11 @@ Fails today with `ResolutionImpossible`. Must succeed after.
 **Done when:** a dry-run install of the Finance requirements resolves without error.
 
 **Do not:**
-- Do not upgrade `pytest` past 7.4.0. The async tests in the Agents screen fail under pytest 9.
-- Do not add `pytest-asyncio`. Version 1.4.0 requires pytest 8.4 or newer and breaks the pin
-  above. The async tests pass under the anyio plugin instead.
+- Do not keep `pytest==7.4.0`. That pin is what hid three async tests behind a silent skip.
 - Do not "fix" `ruff==2.0.0` by picking a real ruff version. Remove it. Nothing runs ruff.
+- Do not add `mftool` back at any version. Nothing imports it.
 
-**Blocks:** Z2. **Blocked by:** nothing.
+**Blocks:** Z2. **Blocked by:** Z0.
 
 ---
 
@@ -111,7 +175,7 @@ repeated mechanically, not four concerns.
 
 **Algorithm:**
 1. For each of the four files, append a blank line, then the comment line
-   `# Running this screen's test suite.`, then `pytest==7.4.0`, then `anyio==4.15.1`.
+   `# Running this screen's test suite.`, then `pytest==8.4.2`, then `pytest-asyncio==1.4.0`.
 2. Match each file's existing comment style. These files use `#` comments and explain why a
    dependency is there.
 3. Do not add these to any screen without a `Backend/tests/` directory.
@@ -126,8 +190,8 @@ Fails today listing all four files. Must pass after.
 
     .venv\Scripts\python Start_Inky\run_checks.py
 
-**Done when:** all four screen requirements files declare pytest and anyio, and the six checks
-still pass.
+**Done when:** all four screen requirements files declare pytest and pytest-asyncio, and the
+aggregator is no worse than before.
 
 **Do not:**
 - Do not create a shared requirements file. Every screen keeps its own list so it can be

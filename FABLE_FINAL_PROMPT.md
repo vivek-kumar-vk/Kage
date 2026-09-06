@@ -37,22 +37,38 @@ at `C:\Project-Audit` is a copy of that repo and cannot show these.
 - `run_checks.py` names its four screens explicitly at lines 94-97: Learning, Office, Agents,
   Model. Fable's E2 handling of that is correct.
 
-### 1.2 The baseline is green, and what it took to get there
+### 1.2 The baseline was never really green, and one suite is now honestly red
 
-`run_checks.py` now passes all six checks under the repo venv. It did not before today.
-Three environment defects were found and fixed outside the repo:
+`run_checks.py` reported six green checks under the old setup. That report was false. Under
+`pytest==7.4.0` the three async tests in `Screens/Agents/Backend/tests/test_context_injection.py`
+are **silently skipped**, not passed, with only a `PytestUnhandledCoroutineWarning`. The suite
+prints `24 passed, 3 skipped` and the aggregator calls it PASS.
+
+When those three tests are actually executed (pytest 8.4.2 with pytest-asyncio in auto mode),
+**one of them fails for a real reason**: `test_current_data_block_truncates_oversized` asserts
+that the assembled block carries a `truncated at 4000 chars` notice, and it does not.
+`_current_data_block` at `services/agents.py` performs no bounding of its own; the
+`MAX_SOURCE_CHARS` cap lives only inside `_fetch_source` at lines 405-417, which the test
+replaces. So the prompt-assembly point trusts its producer and enforces no budget itself.
+For a system whose worker prompts are capped at 4,000 tokens, that is a finding, not a
+test-only artifact: any future producer that does not route through `_fetch_source` blows the
+budget with nothing to catch it.
+
+**The venv is deliberately left in the honest state**: pytest 8.4.2 with pytest-asyncio 1.4.0
+installed, so the Agents suite reports FAIL rather than hiding three tests. Five of six checks
+pass. Do not "restore" the green by pinning pytest back to 7.4.0; that only re-hides it.
+
+Two further environment defects were found and fixed outside the repo:
 
 | Defect | Detail |
 |---|---|
 | Broken venv | `.venv` pointed at a uv-managed CPython 3.11.16 that no longer exists on disk. Rebuilt on the only installed interpreter, Python 3.12.10. The old one is preserved as `.venv_broken_311`. |
 | Finance requirements uninstallable | `Screens/Finance/Backend/app/requirements.txt` pins `mftool==0.1.0` (does not exist; earliest real release is 1.0.6) and `ruff==2.0.0` (does not exist; ruff is still 0.x, latest 0.16.6). It also pins `pdfplumber==0.11.3` against `casparser==0.7.4`, which pip resolves as **ResolutionImpossible**. This file has never been installable as written. `mftool` is not imported anywhere in the codebase; `casparser` is, at `Screens/Finance/Backend/app/services/imports/cas.py:32`. |
-| Test dependencies unspecified | No screen requirements file lists `pytest`. Only Finance's does, and Finance's cannot install. The suites passed historically only because the global Python 3.12 had accumulated the packages. |
+| Test dependencies unspecified | No screen requirements file lists `pytest` or any async plugin. Only Finance's lists pytest, and Finance's cannot install. The suites ran historically only because the global Python 3.12 had accumulated packages by hand. The missing async plugin is what turned three real tests into silent skips. |
 
-Working versions now in `.venv`, established by trial: `pytest==7.4.0`, `anyio==4.15.1`,
-`pdfplumber 0.11.10`, `casparser 1.4.1`. Note that `pytest-asyncio` must **not** be installed:
-version 1.4.0 requires pytest>=8.4 and breaks the pinned pytest 7.4.0. The async tests in
-`Screens/Agents/Backend/tests/test_context_injection.py` pass under the anyio plugin with
-pytest 7.4.0 and fail under pytest 9.
+Working versions now in `.venv`: `pytest==8.4.2`, `pytest-asyncio==1.4.0`, `anyio==4.15.1`,
+`pdfplumber 0.11.10`, `casparser 1.4.1`. The repo's own pin of `pytest==7.4.0` in the Finance
+requirements is part of the defect, not the fix.
 
 ### 1.3 Toolchain present
 
@@ -119,14 +135,24 @@ The build cannot start until the repo can reproduce its own environment. These c
 block every other ticket, because C1 requires every red test and regression command to run as
 `.venv\Scripts\python`.
 
-1. **Make the environment reproducible.** One pinned, installable dependency set that produces
-   a green `run_checks.py` on a clean machine. It must resolve the three defects in section 1.2
-   by name: the phantom `mftool==0.1.0` and `ruff==2.0.0` pins, the `pdfplumber`/`casparser`
-   conflict, and the missing test dependencies. Record that `pytest` stays at 7.4.0 and that
-   `pytest-asyncio` must not be added. Red test: a clean install followed by a green
-   `run_checks.py`.
-2. **Repair the malformed Anime requirements file** and correct its stale port reference.
-3. **Below the line:** install `gh`, required before anything is pushed.
+1. **Make the async tests actually run, then fix what they reveal.** This is first, because
+   every other ticket's regression command depends on the aggregator telling the truth. It has
+   two halves and they are two tickets: declare the async plugin and its auto mode so the three
+   skipped tests execute (`[GLM]`), and then decide and implement where the source-size bound
+   belongs (`[SONNET]`, because a prompt-budget bound that silently does not apply is exactly a
+   silent-failure ticket). Treat "the test asserts a guarantee the code never made" as a design
+   question about where a budget is enforced, not as a broken test to delete.
+2. **Make the environment reproducible.** One pinned, installable dependency set that produces
+   a genuinely green `run_checks.py` on a clean machine. It must resolve by name: the phantom
+   `mftool==0.1.0` and `ruff==2.0.0` pins, the `pdfplumber`/`casparser` conflict, the undeclared
+   test dependencies, and the `pytest==7.4.0` pin that hides async tests.
+3. **Repair the malformed Anime requirements file** and correct its stale port reference.
+4. **Below the line:** install `gh`, required before anything is pushed.
+
+A wider question for `AUDIT_GAPS.md`, raised by ticket 1: **the check aggregator reports PASS
+for a suite that skipped tests.** A skip is not a pass. Any harness that can report green while
+tests do not execute is an honest-states violation in the tooling itself, and it is the reason
+a real assertion failure sat undetected. Say what the aggregator must do instead.
 
 Rule 22 applies to none of these; they are local facts, not external sources.
 
