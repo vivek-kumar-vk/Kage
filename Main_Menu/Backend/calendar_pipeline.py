@@ -13,6 +13,7 @@ takes one proposal id, it refuses anything not `pending`, and it records
 the Google event id so the write can be undone.
 """
 
+import json
 import threading
 from datetime import date, datetime, timedelta, timezone
 
@@ -116,14 +117,75 @@ def is_connecting():
 # ---------------------------------------------------------------------
 # SYNC - Google events + the WakaTime snapshot
 # ---------------------------------------------------------------------
-def _day_of(event):
+def _day_of(event: dict) -> tuple[str | None, str | None, bool]:
+    """day = IST date of the start instant; start_iso re-serialised +05:30."""
     start = event.get("start") or {}
     if "date" in start:
         return start["date"], None, True
     stamp = start.get("dateTime")
     if not stamp:
         return None, None, False
-    return stamp[:10], stamp, False
+    try:
+        instant = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+    except ValueError:
+        return None, None, False
+    if instant.tzinfo is None:
+        instant = instant.replace(tzinfo=IST)
+    local = instant.astimezone(IST)
+    return local.date().isoformat(), local.isoformat(), False
+
+
+def _window(today: date) -> tuple[str, str]:
+    """(start, end) UTC instants covering [today - DAYS_BACK, today + DAYS_AHEAD]
+    as IST calendar days, so Google's window matches the wall calendar here."""
+    first = today - timedelta(days=cfg.CALENDAR_DAYS_BACK)
+    last = today + timedelta(days=cfg.CALENDAR_DAYS_AHEAD)
+    start_utc = datetime(first.year, first.month, first.day, tzinfo=IST).astimezone(timezone.utc)
+    end_utc = datetime(last.year, last.month, last.day, 23, 59, 59, tzinfo=IST).astimezone(timezone.utc)
+    return start_utc.isoformat(), end_utc.isoformat()
+
+
+def _calendar_freshness() -> dict:
+    """Freshness of the google_calendar source, read from the spine (last
+    two month files, newest line wins). Never invents a refresh."""
+    out = {"state": "never", "last_ok_at": None, "stale_since": None,
+           "last_error": None}
+    directory = spine.spine_dir()
+    newest_ok = None
+    newest_fail = None
+    newest_fail_error = None
+    months = sorted({p.name for p in directory.glob("events_*.jsonl")}, reverse=True)[:2]
+    for name in months:
+        try:
+            with open(directory / name, encoding="utf-8") as fh:
+                for line in fh:
+                    try:
+                        event = json.loads(line)
+                    except ValueError:
+                        continue
+                    if event.get("subject") != "google_calendar":
+                        continue
+                    if event.get("type") == "fetch_succeeded":
+                        if newest_ok is None or event["ts"] > newest_ok:
+                            newest_ok = event["ts"]
+                    elif event.get("type") == "fetch_failed":
+                        if newest_fail is None or event["ts"] > newest_fail:
+                            newest_fail = event["ts"]
+                            newest_fail_error = (event.get("payload") or {}).get("error")
+        except OSError:
+            continue
+    if newest_ok:
+        try:
+            ok_at = datetime.fromisoformat(newest_ok)
+        except ValueError:
+            return out
+        age_hours = (datetime.now(IST) - ok_at).total_seconds() / 3600.0
+        out["last_ok_at"] = newest_ok
+        out["state"] = "fresh" if age_hours < 6 else "stale"
+        out["stale_since"] = (ok_at + timedelta(hours=6)).isoformat(timespec="seconds")
+        if newest_fail and newest_fail > newest_ok:
+            out["last_error"] = newest_fail_error
+    return out
 
 
 def sync_cycle():
@@ -139,11 +201,8 @@ def sync_cycle():
             _emit("fetch_failed", "google_calendar", error=detail)
             return {"state": state, "detail": detail}
 
-        window_start = date.today() - timedelta(days=cfg.CALENDAR_DAYS_BACK)
-        window_end = date.today() + timedelta(days=cfg.CALENDAR_DAYS_AHEAD)
-        items = google.list_events(
-            window_start.isoformat() + "T00:00:00Z",
-            window_end.isoformat() + "T23:59:59Z")
+        window_start, window_end = _window(datetime.now(IST).date())
+        items = google.list_events(window_start, window_end)
 
         rows = []
         for item in items:
@@ -165,11 +224,11 @@ def sync_cycle():
                 "location": item.get("location"),
                 "by_agent": 1 if private.get("kage_agent") == "1" else 0,
             })
-        store.replace_events(window_start.isoformat(), window_end.isoformat(), rows)
+        store.replace_events(window_start, window_end, rows)
         _emit("fetch_succeeded", "google_calendar",
               data_as_of=datetime.now(IST).isoformat(timespec="seconds"),
               items=len(rows))
-        store.set_meta("last_sync", datetime.now().isoformat(timespec="seconds"))
+        store.set_meta("last_sync", datetime.now(IST).isoformat(timespec="seconds"))
         store.set_meta("last_error", "")
 
         # How much is actually mirrored, for the card footer. The account
@@ -213,7 +272,7 @@ def background_loop():
         except Exception:  # noqa: BLE001
             pass
         try:
-            now = datetime.now()
+            now = datetime.now(IST)
             today = now.date().isoformat()
             # The marker lives in the store, not in this process: otherwise
             # every restart after CALENDAR_AGENT_HOUR runs the agent again,
@@ -239,21 +298,23 @@ def _hm(seconds):
     return f"{hours}h {minutes}m" if hours else f"{minutes}m"
 
 
-def _clock(iso):
+def _clock(iso: str | None) -> str | None:
     if not iso:
         return None
     try:
-        return datetime.fromisoformat(iso.replace("Z", "+00:00")).strftime(
-            "%I:%M%p").lstrip("0").lower()
+        instant = datetime.fromisoformat(iso.replace("Z", "+00:00"))
     except ValueError:
         return None
+    if instant.tzinfo is None:
+        instant = instant.replace(tzinfo=IST)
+    return instant.astimezone(IST).strftime("%I:%M%p").lstrip("0").lower()
 
 
 def month(year=None, month_number=None):
     """Everything one month grid needs, in one call: which days have
     something, and what kind, so a cell can carry its marker without the
     card fetching 30 days one at a time."""
-    today = date.today()
+    today = datetime.now(IST).date()
     year = year or today.year
     month_number = month_number or today.month
     first, last = store.month_bounds(year, month_number)
@@ -299,6 +360,7 @@ def month(year=None, month_number=None):
         "event_count": int(store.get_meta("event_count") or 0),
         "connecting": _connecting,
         "syncing": _syncing,
+        "freshness": _calendar_freshness(),
         "credentials_path": str(google.credentials_file()),
         "auto_write": cfg.CALENDAR_AUTO_WRITE,
         "pending_proposals": len(pending),
@@ -343,7 +405,7 @@ def whats_next(limit=3):
     """The WHAT'S NEXT list under the grid. Real events only - a pending
     proposal is not on the calendar yet and never appears here."""
     state, detail = connection_state()
-    now = datetime.now()
+    now = datetime.now(IST)
     rows = store.upcoming(now.isoformat(timespec="seconds"),
                           now.date().isoformat(), limit)
     return {
