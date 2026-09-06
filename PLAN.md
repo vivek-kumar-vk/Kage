@@ -22,6 +22,7 @@ Item numbers never change (Rule 11). Gaps mean that item closed.
 | 15 | Day Plan card becomes agent-owned | **shipped 2026-09-06** |
 | 16 | Agent roster expansion | **active** (learning → job → finance) |
 | 19 | OpenClaw — configure real channels/models | queued (owner, not Claude) |
+| 20 | Agent architecture (OpenClaw ring / traces / improvement loop / orchestrator) | **active** (pilot done, context injection next) |
 
 Items 1, 2 and 12 may run in parallel; everything else is sequential.
 Whole backlog: roughly **70–100 focused hours**, excluding the owner's own figures,
@@ -142,6 +143,26 @@ Owner's order 2026-09-06: **learning agents first (done), then job agents (done)
 
 ---
 
+## 20 — Agent architecture: OpenClaw main-agent ring, trace spine, improvement loop, orchestrator
+
+The owner's topology, locked 2026-09-06: sub-agents are workers on OmniRoute and never
+talk to each other; each page's main agent collects its subs' results and only the mains
+join the OpenClaw ring (agent-to-agent messaging allowlisted among mains). Owner approves
+every brief change; the orchestrator is owner-triggered first. Full design, the
+connection map (live vs. untrained vs. not-built) and the pilot report live in
+`.scratch/agent-architecture/`.
+
+- **Pilot done 2026-09-06:** `Time_Analyst_Agent` — 4/4 asks ok, ₹0, honest to the point
+  of refusing to guess; NEEDS_OWNER note path verified via `POST .../notes`. Blocking
+  finding: the ask path is text-only, so briefs that say "read this endpoint" are
+  aspirational — **next task is context injection** (`data_sources` in `office.json`,
+  fetched size-capped by the ask path, ARCHITECTURE.md §4.1).
+- **Phases:** P0 decisions filed → P1 trace spine (runs read API + dsh session reader,
+  sanitized into the library) → P2 improvement loop, one agent → P3 OpenClaw ring →
+  P4 orchestrator v1 → P5 channels/standing orders. One agent at a time throughout.
+
+---
+
 ## 19 — OpenClaw: configure real channels/models
 
 Shipped 2026-09-05 (D44): screen at `:8006`, local repo-relative install, gateway live and reporting real health. **Model provider done 2026-09-06 (D44.2):** owner chose his **Claude Pro subscription** directly — `openclaw onboard --auth-choice anthropic-cli`, model refs on the `claude-cli` runtime (OpenClaw reuses the logged-in Claude Code, Pro limits; no setup token stored). This settles the OmniRoute-vs-own-providers question: **own providers, Anthropic direct.** Gateway moved to token auth (`run_openclaw.py` `--auth token`, token in `openclaw.json` `gateway.auth`; still loopback-only). Verified: `openclaw agent -m` returns a real Claude reply; screen reports `openclaw: ok`. What's left:
@@ -163,6 +184,7 @@ Anything in `.scratch/` that is not listed here is deletable (D34.1).
 | `.scratch/finance-redesign/mockups/` | Aurum mockups — the reference for any tab not yet re-skinned (Rule 13) |
 | `.scratch/finance-os-build/gates/check_{backend,frontend}_hygiene.py` | Live dependency of `Start_Inky/run_checks.py` (D39) — not deletable. `gate_phaseN.py` in the same folder are dead. |
 | `.scratch/agents-workspace/` | The house-style template for writing a screen brief |
+| `.scratch/agent-architecture/` | Item 20: ARCHITECTURE.md, connection_map.png (+ generator), pilot_time_analyst.md |
 | `qwen_agent_port/` | Item 1 old-code extracts (gitignored) |
 
 ---
