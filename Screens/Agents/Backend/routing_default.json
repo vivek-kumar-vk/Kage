@@ -1,0 +1,17 @@
+{
+  "complexity_budget": 12,
+  "youtube_passive_budget_min": 180,
+  "budget": {"per_call_usd": 0.05, "per_agent_day_usd": 0.10, "per_day_usd": 0.30, "t2_share_max": 0.05},
+  "tasks": {
+    "categorise": {"tier": "T0", "chain": ["local-7b", "glm-5.3-flash"], "max_tokens": 200},
+    "narrate":    {"tier": "T1", "chain": ["glm-5.3-flash", "opencode/glm-5.2", "local-7b"], "max_tokens": 600},
+    "verify":     {"tier": "T2", "chain": ["claude-sonnet-5"], "max_tokens": 800}
+  },
+  "models": {
+    "local-7b":        {"provider": "local-llama", "tier": "T0", "enabled": false},
+    "glm-5.3-flash":   {"provider": "zai",         "tier": "T1", "enabled": true},
+    "opencode/glm-5.2":{"provider": "opencode",    "tier": "T1", "enabled": true},
+    "claude-sonnet-5": {"provider": "anthropic",   "tier": "T2", "enabled": true},
+    "muse-spark-1.2-contributor-free": {"provider": "opencode", "tier": "T1", "enabled": false}
+  }
+}
