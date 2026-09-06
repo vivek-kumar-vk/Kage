@@ -136,3 +136,6 @@ Vivek_Kumar_Resume_*
 # artifacts and personal agent state - never in git (Rule 7). On a new
 # host, re-run the installer; it rebuilds this folder.
 Screens/Hermes/Setup/hermes_home/
+
+# Superseded virtualenv kept as a fallback after the 3.12 rebuild.
+.venv_broken_311/
