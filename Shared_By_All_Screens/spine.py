@@ -121,7 +121,9 @@ def emit(producer: str, type: str, subject: str, payload: dict, *,
         try:
             lock_fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             break
-        except FileExistsError:
+        except (FileExistsError, PermissionError):
+            # PermissionError is contention too on Windows: the name can be in
+            # delete-pending while the previous holder's unlink completes.
             try:
                 if time.time() - lock_path.stat().st_mtime > STALE_LOCK_S:
                     lock_path.unlink(missing_ok=True)
