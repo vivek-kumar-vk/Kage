@@ -4,12 +4,17 @@
 <title>Model — Kage</title>
 <style>
   :root { --bg:#0b0d10; --panel:#12161b; --line:#232a33; --ink:#dfe6ee;
-          --dim:#8b98a8; --ok:#57d9a3; --bad:#ff6b6b; }
+          --dim:#8b98a8; --ok:#57d9a3; --bad:#ff6b6b; --amber:#ff9d5c; }
   * { box-sizing:border-box; }
   html,body { height:100%; margin:0; background:var(--bg); color:var(--ink);
               font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+  body { background:
+           radial-gradient(1200px 700px at 80% -10%, rgba(87,120,217,0.07), transparent 60%),
+           radial-gradient(900px 600px at 10% 110%, rgba(255,157,92,0.05), transparent 55%),
+           var(--bg); }
   header { display:flex; align-items:center; gap:12px; padding:10px 16px;
-           border-bottom:1px solid var(--line); background:var(--panel); }
+           border-bottom:1px solid rgba(255,255,255,0.06); background:rgba(18,22,27,0.72);
+           backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
   header b { letter-spacing:.14em; font-weight:600; }
   a { color:var(--dim); text-decoration:none; }
   a:hover { color:var(--ink); }
@@ -17,13 +22,53 @@
   .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
   #state { color:var(--dim); }
   .spacer { flex:1; }
-  #panel { max-width:640px; margin:14vh auto; padding:24px;
-           border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+  /* Glass panel: translucent, blurred, one light border, a soft top sheen. */
+  .glass { border:1px solid rgba(255,255,255,0.09); border-radius:12px;
+           background:linear-gradient(160deg, rgba(30,37,46,0.78), rgba(14,17,21,0.66));
+           backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+           box-shadow:0 12px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06); }
+  #panel { max-width:640px; margin:14vh auto; padding:24px; }
   #panel h2 { margin:0 0 10px; font-size:15px; }
   #panel p { color:var(--dim); }
-  code { background:#0b0d10; border:1px solid var(--line); border-radius:4px;
+  code { background:rgba(11,13,16,0.8); border:1px solid var(--line); border-radius:4px;
          padding:2px 6px; display:inline-block; }
   ul { padding-left:18px; } li { margin:6px 0; }
+
+  /* ---- the orchestrator chat, docked bottom-right (plan 6.1) ---- */
+  #chat { position:fixed; right:16px; bottom:16px; width:360px; height:320px;
+          display:flex; flex-direction:column; overflow:hidden; z-index:20; }
+  #chat .head { display:flex; align-items:center; gap:8px; padding:8px 12px;
+                border-bottom:1px solid rgba(255,255,255,0.07);
+                font-size:11px; letter-spacing:.12em; color:var(--dim); }
+  #chat .head b { color:var(--ink); font-weight:600; }
+  #chat .head .spacer { flex:1; }
+  #transcript { flex:1; overflow-y:auto; padding:10px 12px; display:flex;
+                flex-direction:column; gap:8px; font-size:12.5px; }
+  #transcript .msg { white-space:pre-wrap; word-break:break-word; }
+  #transcript .who { color:var(--dim); font-size:10px; letter-spacing:.1em;
+                     display:block; margin-bottom:1px; }
+  #transcript .user .who { color:var(--amber); }
+  #transcript .err { color:var(--bad); }
+  #transcript .sys { color:var(--dim); font-size:11px; }
+  #hints { display:none; flex-wrap:wrap; gap:4px; padding:6px 10px;
+           border-top:1px solid rgba(255,255,255,0.06); }
+  #hints button { font:10.5px/1.4 ui-monospace,Consolas,monospace; color:var(--dim);
+                  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+                  border-radius:6px; padding:2px 7px; cursor:pointer; }
+  #hints button:hover { color:var(--ink); border-color:var(--amber); }
+  #chat .inputrow { display:flex; gap:6px; padding:8px 10px;
+                    border-top:1px solid rgba(255,255,255,0.07); }
+  #chatin { flex:1; background:rgba(11,13,16,0.75); color:var(--ink);
+            border:1px solid rgba(255,255,255,0.1); border-radius:8px;
+            padding:7px 9px; font:12.5px ui-monospace,Consolas,monospace; outline:none; }
+  #chatin:focus { border-color:rgba(255,157,92,0.55); }
+  #chatin::placeholder { color:#5b6672; }
+  #chatsend { background:rgba(255,157,92,0.12); color:var(--amber);
+              border:1px solid rgba(255,157,92,0.35); border-radius:8px;
+              padding:6px 12px; font:11px ui-monospace,Consolas,monospace;
+              letter-spacing:.08em; cursor:pointer; }
+  #chatsend:disabled { opacity:.45; cursor:default; }
+  #chatsend:hover:not(:disabled) { background:rgba(255,157,92,0.22); }
 </style>
 
 <header>
@@ -39,7 +84,7 @@
      just renders blank. This screen therefore FORWARDS to the dashboard
      when the gateway is up, and shows the panel below when it is down so
      the browser never leaves Kage stranded on a connection error. -->
-<section id="panel" hidden>
+<section id="panel" class="glass" hidden>
   <h2 id="ptitle">The model gateway is not answering.</h2>
   <p id="why"></p>
   <p>This screen only <em>reports on</em> the gateway — it does not run it.
@@ -49,6 +94,25 @@
     <li>or double-click <code>Start_Inky\Start_Everything.bat</code>, which
         starts the gateway in its own window before the screens.</li>
   </ul>
+</section>
+
+<!-- The orchestrator chat: every line is forwarded by OUR backend to the
+     Agent Deck's one ask path (D27), so a run is recorded on the deck like
+     any other ask. Plain text -> Deck_Main_Agent; "/name text" -> that
+     agent; "/all text" -> every main-tier agent. The chat works whatever
+     the gateway's state - a gateway problem comes back as an honest
+     inline error, not a broken panel. -->
+<section id="chat" class="glass">
+  <div class="head"><b>ORCHESTRATOR</b><span>via agent deck</span>
+    <span class="spacer"></span><span id="chatstate"></span></div>
+  <div id="transcript">
+    <div class="msg sys">plain text → Deck_Main_Agent · /name text → that agent · /all text → every main</div>
+  </div>
+  <div id="hints"></div>
+  <div class="inputrow">
+    <input id="chatin" placeholder="message, or / for agents" autocomplete="off">
+    <button id="chatsend">SEND</button>
+  </div>
 </section>
 
 <script>
@@ -84,4 +148,101 @@ async function check() {
 }
 check();
 setInterval(check, 10000);   // it forwards on its own when the gateway comes up
+
+// ---------------------------------------------------------------------
+// The chat. One in-flight ask at a time; an ask can take a while (it is
+// a real model run on the deck), so SEND stays disabled until it lands.
+// ---------------------------------------------------------------------
+const transcript = document.getElementById('transcript');
+const chatin = document.getElementById('chatin');
+const chatsend = document.getElementById('chatsend');
+const hints = document.getElementById('hints');
+const chatstate = document.getElementById('chatstate');
+let agents = [];      // [{name, tier}] from our backend's passthrough
+let pending = false;
+
+function addMsg(cls, who, text) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + cls;
+  if (who) {
+    const w = document.createElement('span');
+    w.className = 'who';
+    w.textContent = who;
+    div.appendChild(w);
+  }
+  div.appendChild(document.createTextNode(text));
+  transcript.appendChild(div);
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+async function send() {
+  const text = chatin.value.trim();
+  if (!text || pending) return;
+  chatin.value = '';
+  hideHints();
+  addMsg('user', 'YOU', text);
+  pending = true;
+  chatsend.disabled = true;
+  chatstate.textContent = 'asking…';
+  try {
+    const res = await fetch('/api/model/chat', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: text }),
+    });
+    const body = await res.json();
+    if (body.broadcast) {
+      for (const row of body.replies || []) {
+        if (row.state === 'ok') addMsg('agent', row.agent, row.reply || '');
+        else addMsg('err', row.agent, row.problem || row.state);
+      }
+    } else if (body.state === 'ok') {
+      addMsg('agent', body.agent, body.reply || '(empty reply)');
+    } else {
+      addMsg('err', null, body.problem || body.state || ('HTTP ' + res.status));
+    }
+  } catch (e) {
+    addMsg('err', null, 'the Model screen itself is unreachable: ' + e);
+  }
+  pending = false;
+  chatsend.disabled = false;
+  chatstate.textContent = '';
+  chatin.focus();
+}
+
+chatsend.addEventListener('click', send);
+chatin.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+
+// ---- /-command autocomplete: a hint line, not a dropdown library ----
+function hideHints() { hints.style.display = 'none'; hints.innerHTML = ''; }
+function showHints(prefix) {
+  const want = prefix.toLowerCase().replace(/_agent$/, '');
+  const names = agents
+    .map((a) => a.name)
+    .filter((n) => n.toLowerCase().replace(/_agent$/, '').startsWith(want))
+    .slice(0, 8);
+  if (prefix !== '' && names.length === 0) { hideHints(); return; }
+  hints.innerHTML = '';
+  const options = prefix === '' ? ['all', ...names.slice(0, 7)] : names;
+  for (const name of options) {
+    const b = document.createElement('button');
+    b.textContent = '/' + name;
+    b.addEventListener('click', () => {
+      chatin.value = '/' + name + ' ';
+      hideHints();
+      chatin.focus();
+    });
+    hints.appendChild(b);
+  }
+  hints.style.display = 'flex';
+}
+chatin.addEventListener('input', () => {
+  const m = chatin.value.match(/^\/([A-Za-z0-9_]*)$/);
+  if (m) showHints(m[1]); else hideHints();
+});
+
+fetch('/api/model/agents')
+  .then((r) => r.json())
+  .then((body) => { agents = body.agents || []; })
+  .catch(() => { agents = []; });   // no roster -> no hints, chat still works
 </script>
