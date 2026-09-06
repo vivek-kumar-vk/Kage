@@ -56,6 +56,11 @@ type MonthPayload = {
   auto_write: boolean;
   pending_proposals: number;
   agent: { state: string; detail: string; backend: string; last_run: string | null };
+  freshness: {
+    state: "fresh" | "stale" | "never";
+    last_ok_at: string | null;
+    stale_since: string | null;
+  };
 };
 
 type DayPayload = {
@@ -98,13 +103,19 @@ async function getJSON<T>(path: string): Promise<T | null> {
   }
 }
 
-/** Wall-clock time of an ISO stamp, for the footer. */
+/** Wall-clock time of an ISO stamp, for the footer — always IST, so the
+    card agrees with Google Calendar's own times for the same event. */
 function clockOf(iso?: string | null): string {
   if (!iso) return "—";
   const parsed = new Date(iso);
   if (Number.isNaN(parsed.getTime())) return "—";
   return parsed
-    .toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })
+    .toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Asia/Kolkata",
+    })
     .toUpperCase();
 }
 
@@ -114,8 +125,24 @@ function dayLabel(day: string): string {
   const parsed = new Date(`${day}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return day;
   return parsed
-    .toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      timeZone: "Asia/Kolkata",
+    })
     .toUpperCase();
+}
+
+/** Age of an ISO stamp: the footer shows how long ago a sync happened,
+    never a bare clock (Rule 22 — a stale clock reads as current). */
+function agoOf(iso: string | null, now: number): string {
+  if (!iso) return "never";
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "never";
+  const seconds = Math.max(0, Math.floor((now - parsed.getTime()) / 1000));
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 172800) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
 }
 
 function CalendarIcon() {
@@ -165,6 +192,7 @@ export function CalendarPanel() {
   const [mode, setMode] = useState<"cal" | "waka">("cal");
   const [cursor, setCursor] = useState<{ year: number; month: number } | null>(null);
   const [month, setMonth] = useState<MonthPayload | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const [next, setNext] = useState<NextPayload | null>(null);
   const [waka, setWaka] = useState<WakaPayload | null>(null);
 
@@ -173,6 +201,12 @@ export function CalendarPanel() {
   const cardRef = useRef<HTMLElement | null>(null);
   const closeTimer = useRef<number | null>(null);
   const dayCache = useRef<Map<string, DayPayload>>(new Map());
+
+  // keep the footer's age honest: re-tick every 30 s like the Email card
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
 
   const loadMonth = useCallback(async (year?: number, monthNumber?: number) => {
     const query = year && monthNumber ? `?year=${year}&month=${monthNumber}` : "";
@@ -427,15 +461,22 @@ export function CalendarPanel() {
             </p>
           )}
 
-          {/* Footer, same shape as the Email card's: when it is connected it
-              says which account and when it last synced; when it is not, it
-              says so rather than showing a blank. */}
-          <p className="num mt-2 border-t border-[#232323] pt-1.5 text-[8px] text-dim">
-            {month?.state === "ok"
-              ? `SYNCED ${clockOf(month.synced_at)} · ${month.event_count} EVENTS`
-              : month?.connecting
-                ? "AWAITING GOOGLE CONSENT"
-                : "UNCONNECTED"}
+          {/* Footer, same shape as the Email card's. The age travels with
+              the clock: never a bare sync time (Rule 22), and a stale
+              source says so in amber instead of looking current. */}
+          <p
+            className="num mt-2 border-t border-[#232323] pt-1.5 text-[8px] text-dim"
+            style={month?.freshness?.state === "stale" ? { color: AMBER } : undefined}
+          >
+            {month?.connecting
+              ? "AWAITING GOOGLE CONSENT"
+              : month?.freshness?.state === "never"
+                ? "NEVER SYNCED"
+                : month?.freshness?.state === "stale"
+                  ? `SYNCED ${agoOf(month.freshness.last_ok_at, now)} · ${month.event_count} EVENTS · STALE SINCE ${clockOf(month.freshness.stale_since)}`
+                  : month?.state === "ok"
+                    ? `SYNCED ${agoOf(month.freshness?.last_ok_at ?? month.synced_at, now)} · ${month.event_count} EVENTS`
+                    : "UNCONNECTED"}
           </p>
         </>
       ) : (
