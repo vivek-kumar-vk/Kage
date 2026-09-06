@@ -12,6 +12,7 @@ import json
 import shutil
 import sys
 import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
@@ -50,6 +51,122 @@ def load_routing() -> dict:
         path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(default, path)
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _prices_path() -> Path:
+    return spine.spine_dir() / "_model_prices.json"
+
+
+PRICES_PATH: Path = _prices_path()
+
+
+def load_prices() -> dict:
+    """{model: {"provider", "usd_per_1k_in", "usd_per_1k_out"}} from the
+    spine dir, copying model_prices_default.json there on first use. Paid
+    models have no row until the owner supplies prices (D-05): they are
+    refused, never guessed."""
+    path = _prices_path()
+    if not path.is_file():
+        default = Path(__file__).resolve().parents[1] / "model_prices_default.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(default, path)
+    rows = json.loads(path.read_text(encoding="utf-8"))
+    return {row["model"]: row for row in rows}
+
+
+def spend_today() -> dict:
+    """Spend computed by reading the spine events files directly (no
+    Storage HTTP — the seam must work when Storage is down). A null
+    cost_usd counts as the full per_call_usd: the conservative reading of
+    an absent number (Rule 22), never a fabricated zero."""
+    routing = load_routing()
+    per_call = (routing.get("budget") or {}).get("per_call_usd", 0.05)
+    today = datetime.now(spine.IST).date()
+    days_7 = {(today - timedelta(days=offset)).isoformat() for offset in range(7)}
+    months = {day.strftime("%Y-%m") for day in
+              [today] + [today - timedelta(days=offset) for offset in range(7)]}
+    cost_today = 0.0
+    calls = calls_t2 = calls_7d = calls_t2_7d = 0
+    by_agent: dict[str, float] = {}
+    for month in sorted(months):
+        path = spine.spine_dir() / f"events_{month}.jsonl"
+        if not path.is_file():
+            continue
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except ValueError:
+                    continue  # torn last line: skipped, never guessed
+                if event.get("type") != "llm_call":
+                    continue
+                day = (event.get("ts") or "")[:10]
+                tier = (event.get("payload") or {}).get("tier")
+                cost = event.get("cost_usd")
+                if cost is None:
+                    cost = per_call
+                if day == today.isoformat():
+                    calls += 1
+                    cost_today += cost
+                    if tier == "T2":
+                        calls_t2 += 1
+                    agent = event.get("subject") or "unknown"
+                    by_agent[agent] = by_agent.get(agent, 0.0) + cost
+                if day in days_7:
+                    calls_7d += 1
+                    if tier == "T2":
+                        calls_t2_7d += 1
+    return {
+        "day": today.isoformat(),
+        "cost_usd": round(cost_today, 6),
+        "calls": calls,
+        "calls_t2": calls_t2,
+        "calls_7d": calls_7d,
+        "calls_t2_7d": calls_t2_7d,
+        "by_agent": by_agent,
+    }
+
+
+def budget_status() -> dict:
+    routing = load_routing()
+    budget = routing.get("budget") or {}
+    cap = budget.get("per_day_usd", 0.30)
+    spend = spend_today()
+    degraded = spend["cost_usd"] >= cap
+    reason = None
+    if degraded:
+        # The ts of the event that crossed the cap, walked in file order.
+        running = 0.0
+        crossed_at = None
+        path = spine.spine_dir() / f"events_{spend['day'][:7]}.jsonl"
+        if path.is_file():
+            with open(path, encoding="utf-8") as fh:
+                for line in fh:
+                    try:
+                        event = json.loads(line)
+                    except ValueError:
+                        continue
+                    if (event.get("type") != "llm_call"
+                            or (event.get("ts") or "")[:10] != spend["day"]):
+                        continue
+                    running += event.get("cost_usd") if event.get("cost_usd") is not None \
+                        else per_call
+                    if running >= cap and crossed_at is None:
+                        crossed_at = event["ts"]
+                        break
+        if crossed_at:
+            reason = f"day cap {cap} reached at {crossed_at[11:16]}"
+    t2_share = (spend["calls_t2_7d"] / spend["calls_7d"]) if spend["calls_7d"] else 0.0
+    return {
+        "degraded": degraded,
+        "reason": reason,
+        "spend_usd": spend["cost_usd"],
+        "cap_usd": cap,
+        "t2_share": round(t2_share, 4),
+    }
 
 
 def _headers():
@@ -153,14 +270,57 @@ def _chain(routing: dict, task_class: str, model: Optional[str]) -> list[str]:
 
 
 def _budget_check(task_class: str, agent_id: str, model: str, est_tokens: int) -> None:
-    """No-op in K-08; K-09 gives it the real gate (raises OmniBudgetError,
-    which skips the rung without an attempt)."""
-    return None
+    """The budget gate (K-09). Raises OmniBudgetError, checked in this
+    order: no price, day cap, agent cap, call cap, T2 share. T0 (free)
+    rungs are never blocked."""
+    routing = load_routing()
+    budget = routing.get("budget") or {}
+    models = routing.get("models") or {}
+    tier = (models.get(model) or {}).get("tier") or "none"
+    row = load_prices().get(model)
+    if row is None and tier != "T0":
+        raise OmniBudgetError(f"no price for {model}")
+
+    if tier == "T0":
+        estimate = 0.0
+    else:
+        estimate = est_tokens / 1000.0 * max(row["usd_per_1k_in"], row["usd_per_1k_out"])
+
+    spend = spend_today()
+    per_day = budget.get("per_day_usd", 0.30)
+    per_agent = budget.get("per_agent_day_usd", 0.10)
+    per_call = budget.get("per_call_usd", 0.05)
+
+    if tier != "T0" and spend["cost_usd"] + estimate > per_day:
+        raise OmniBudgetError(
+            f"day cap {per_day} reached at {datetime.now(spine.IST).strftime('%H:%M')}"
+        )
+    if tier != "T0" and spend["by_agent"].get(agent_id, 0.0) + estimate > per_agent:
+        raise OmniBudgetError(f"agent cap {per_agent} reached for {agent_id}")
+    if estimate > per_call:
+        raise OmniBudgetError(f"call cap {per_call}")
+    if tier == "T2":
+        share = (spend["calls_t2_7d"] + 1) / (spend["calls_7d"] + 1)
+        if share > budget.get("t2_share_max", 0.05):
+            raise OmniBudgetError(
+                f"t2 share {round(share, 4)} over {budget.get('t2_share_max', 0.05)}"
+            )
 
 
 def _cost_usd(model: str, usage: dict | None) -> float | None:
-    """Prices arrive with K-09; until then the honest number is None."""
-    return None
+    """Real cost from real usage; None when the gateway sent no usage or
+    the model has no price row. Never an estimate, never a zero (Rule 22)."""
+    if not usage:
+        return None
+    tokens_in = usage.get("prompt_tokens")
+    tokens_out = usage.get("completion_tokens")
+    if tokens_in is None or tokens_out is None:
+        return None
+    row = load_prices().get(model)
+    if row is None:
+        return None
+    return round(tokens_in / 1000.0 * row["usd_per_1k_in"]
+                 + tokens_out / 1000.0 * row["usd_per_1k_out"], 6)
 
 
 async def _post_rung(rung: str, max_tokens: int, messages: list[dict]):

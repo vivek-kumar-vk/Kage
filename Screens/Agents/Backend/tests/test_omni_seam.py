@@ -32,6 +32,14 @@ def spine_dir(tmp_path, monkeypatch):
     shutil_target = BACKEND / "routing_default.json"
     (target / "_routing.json").write_text(shutil_target.read_text(encoding="utf-8"),
                                           encoding="utf-8")
+    # K-09's gate refuses unpriced paid rungs; these tests exercise the paid
+    # rung, so the prices file names it.
+    (target / "_model_prices.json").write_text(json.dumps([
+        {"model": "glm-5.3-flash", "provider": "zai",
+         "usd_per_1k_in": 0.0002, "usd_per_1k_out": 0.0006},
+        {"model": "opencode/glm-5.2", "provider": "opencode",
+         "usd_per_1k_in": 0.0, "usd_per_1k_out": 0.0},
+    ]), encoding="utf-8")
     monkeypatch.setattr(cfg, "OMNIROUTE_MODEL", None)
     monkeypatch.setattr(cfg, "GATEWAY_API_KEY", None)
     return target
