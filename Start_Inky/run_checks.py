@@ -98,13 +98,13 @@ def main() -> int:
 
     # 2. Finance backend hygiene gate
     backend_gate = (
-        repo_root / ".scratch" / "finance-os-build" / "gates" / "check_backend_hygiene.py"
+        repo_root / "Screens" / "Finance" / "Backend" / "checks" / "check_backend_hygiene.py"
     )
     results.append(run_hygiene_gate(backend_gate, "backend hygiene (finance)"))
 
     # 3. Finance frontend hygiene gate
     frontend_gate = (
-        repo_root / ".scratch" / "finance-os-build" / "gates" / "check_frontend_hygiene.py"
+        repo_root / "Screens" / "Finance" / "Backend" / "checks" / "check_frontend_hygiene.py"
     )
     results.append(run_hygiene_gate(frontend_gate, "frontend hygiene (finance)"))
 
