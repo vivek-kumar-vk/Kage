@@ -23,6 +23,7 @@ import settings_for_agents as cfg
 sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
 
 from Shared_By_All_Screens import spine  # noqa: E402
+from Shared_By_All_Screens import sanitize as _sanitize_mod  # noqa: E402
 
 
 class OmniError(RuntimeError): ...
@@ -388,6 +389,11 @@ async def ask_omni_detailed(system: str, prompt: str, *, model: Optional[str] = 
     models = routing.get("models") or {}
     est_tokens = (len(system) + len(prompt)) // 4 + max_tokens
 
+    # One mapping per call: both messages are sanitised with it, and every
+    # reply is restored against it before leaving the seam.
+    system, mapping_id = _sanitize_mod.sanitize(system)
+    prompt, _ = _sanitize_mod.sanitize(prompt, mapping_id=mapping_id)
+
     schema_text = None
     if response_schema is not None:
         schema_text = ("\n\nRespond with exactly one JSON object matching this schema:\n"
@@ -411,12 +417,14 @@ async def ask_omni_detailed(system: str, prompt: str, *, model: Optional[str] = 
         ]
         messages = base_messages
         outcome = None
+        unresolved: list[str] = []
         for _attempt in range(2):  # one attempt, one schema repair
             try:
                 text, usage = await _post_rung(rung, max_tokens, messages)
             except OmniError as exc:
                 last_error, last_schema_failure = exc, False
                 break  # next rung, fresh
+            text, unresolved = _sanitize_mod.desanitize(text, mapping_id)
             if response_schema is None:
                 outcome = (text, usage, None)
                 break
@@ -453,7 +461,7 @@ async def ask_omni_detailed(system: str, prompt: str, *, model: Optional[str] = 
             "schema_valid": True if response_schema is None else obj is not None,
             "latency_ms": int((time.monotonic() - started) * 1000),
             "degraded": rung != chain[0],
-            "unresolved_tokens": [],
+            "unresolved_tokens": unresolved,
         }
         spine.emit(
             "agents", "llm_call", agent_id, event_payload,
