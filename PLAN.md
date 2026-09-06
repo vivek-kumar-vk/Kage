@@ -152,6 +152,12 @@ every brief change; the orchestrator is owner-triggered first. Full design, the
 connection map (live vs. untrained vs. not-built) and the pilot report live in
 `.scratch/agent-architecture/`.
 
+- **Orchestrator surfaces shipped overnight 2026-09-06 (D59–D59.3):** the unread
+  spine (`message_reads` + `/unread` + read markers), the deck roster grouped under
+  mains with Slack-style badges, the deck landing view is now the orchestrator chat
+  (`?agent=` deep links), the Main Menu ring renders the real 38-agent roster with
+  unread glow, and the Model page carries a glass orchestrator chat forwarded through
+  the deck's ask path. Context injection (below) is still the next architectural task.
 - **Pilot done 2026-09-06:** `Time_Analyst_Agent` — 4/4 asks ok, ₹0, honest to the point
   of refusing to guess; NEEDS_OWNER note path verified via `POST .../notes`. Blocking
   finding: the ask path is text-only, so briefs that say "read this endpoint" are

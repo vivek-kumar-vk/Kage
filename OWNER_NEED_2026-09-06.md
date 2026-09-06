@@ -13,7 +13,11 @@ Things only you can do. Nothing here blocks tonight's build; it's what's still o
 4. **Agent Deck chat (new tonight):** the unread badges and the Main Menu ring glow
    count messages agents send you. Opening an agent's chat clears its badge. First
    load starts from zero — badges only make sense after a few runs.
-5. **OpenClaw chat channel** (D44.2 tail, your call): a real channel (WhatsApp/Telegram/
+5. **Model page chat (new this afternoon):** :8001 now has an orchestrator chat
+   (plain text → Deck_Main_Agent, `/name text` → any agent, `/all text` → every main).
+   You only see it while the gateway is down — once the gateway answers, the page
+   forwards to the dashboard as before.
+6. **OpenClaw chat channel** (D44.2 tail, your call): a real channel (WhatsApp/Telegram/
    Discord) so OpenClaw reaches you outside the browser. Owner's choice, not started.
 
 — Claude, overnight session 2026-09-06
