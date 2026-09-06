@@ -12,11 +12,19 @@ import settings_for_agents as cfg
 from db import connect
 from services import events
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
+
+from Shared_By_All_Screens import spine  # noqa: E402
+
 router = APIRouter()
 
 IST = timezone(timedelta(hours=5, minutes=30))
 STATUSES = ["ideas", "todo", "in_progress", "done"]
 PRIORITIES = ["low", "medium", "high", "critical"]
+COMPLEXITY_BUDGET = 12
 WORD_RE = re.compile(r"[a-z0-9]+")
 
 
@@ -26,6 +34,7 @@ class IdeaCreate(BaseModel):
     area: Optional[str] = ""
     source: Optional[str] = "user"
     priority: Optional[str] = "medium"
+    closes: Optional[str] = None
 
 
 class IdeaUpdate(BaseModel):
@@ -186,6 +195,12 @@ def _open_ideas(conn):
     ).fetchall()
 
 
+def _open_count(conn):
+    return conn.execute(
+        "SELECT COUNT(*) AS n FROM ideas WHERE status != 'done'"
+    ).fetchone()["n"]
+
+
 @router.get(cfg.API_PREFIX + "/ideas")
 async def list_ideas():
     conn = connect()
@@ -208,7 +223,12 @@ async def list_ideas():
             """
         ).fetchall()
 
-        return {"state": "ok", "ideas": [_idea_api(conn, row) for row in rows]}
+        return {
+            "state": "ok",
+            "ideas": [_idea_api(conn, row) for row in rows],
+            "open": _open_count(conn),
+            "budget": COMPLEXITY_BUDGET,
+        }
     finally:
         conn.close()
 
@@ -227,6 +247,18 @@ async def create_idea(payload: IdeaCreate):
 
         conn = connect()
         try:
+            open_n = _open_count(conn)
+            if open_n >= COMPLEXITY_BUDGET and not payload.closes:
+                return JSONResponse(
+                    status_code=409,
+                    content={
+                        "ok": False,
+                        "problem": f"{open_n} open ideas; close one first or pass closes:<id>",
+                        "open": open_n,
+                        "budget": COMPLEXITY_BUDGET,
+                    },
+                )
+
             exact = conn.execute(
                 """
                 SELECT *
@@ -256,6 +288,16 @@ async def create_idea(payload: IdeaCreate):
             enh_key = _next_enh_key(conn)
             order_index = _bottom_order_index(conn, "ideas")
 
+            closed_row = None
+            if payload.closes:
+                closed_row = _get_idea_row(conn, payload.closes)
+                if not closed_row:
+                    return _fail("closes: idea not found", 404)
+                conn.execute(
+                    "UPDATE ideas SET status = 'done', updated_at = ? WHERE id = ?",
+                    (_now(), payload.closes),
+                )
+
             conn.execute(
                 """
                 INSERT INTO ideas (
@@ -278,6 +320,23 @@ async def create_idea(payload: IdeaCreate):
                 ),
             )
             conn.commit()
+
+            try:
+                spine.emit(
+                    "agents", "ticket_opened", idea_id,
+                    {"key": enh_key, "title": title, "closes": payload.closes},
+                )
+                if closed_row is not None:
+                    spine.emit(
+                        "agents", "ticket_closed", payload.closes,
+                        {"key": closed_row["enh_key"]},
+                    )
+            except spine.SpineWriteError as exc:
+                events.emit(
+                    source="board", type_="error",
+                    text=f"spine write failed: {exc}",
+                    agent_name="board", department="lobby",
+                )
 
             row = _get_idea_row(conn, idea_id)
             response = {"ok": True, "item": _idea_api(conn, row)}
@@ -376,6 +435,18 @@ async def move_idea(idea_id: str, payload: StatusMove):
             conn.commit()
 
             row = _get_idea_row(conn, idea_id)
+
+            if status == "done":
+                try:
+                    spine.emit(
+                        "agents", "ticket_closed", idea_id, {"key": row["enh_key"]}
+                    )
+                except spine.SpineWriteError as exc:
+                    events.emit(
+                        source="board", type_="error",
+                        text=f"spine write failed: {exc}",
+                        agent_name="board", department="lobby",
+                    )
 
             events.emit(
                 source="board",
