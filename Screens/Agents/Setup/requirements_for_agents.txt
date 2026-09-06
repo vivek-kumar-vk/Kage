@@ -2,3 +2,7 @@ fastapi
 uvicorn[standard]
 pydantic
 httpx
+
+# Running this screen's test suite.
+pytest==8.4.2
+pytest-asyncio==1.4.0

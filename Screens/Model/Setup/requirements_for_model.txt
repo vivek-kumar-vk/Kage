@@ -16,3 +16,7 @@ uvicorn[standard]>=0.27
 # over plain HTTP with the standard library - no client library, no
 # database of its own. The gateway itself (OmniRoute or similar) is
 # installed and managed separately, not here.
+
+# Running this screen's test suite.
+pytest==8.4.2
+pytest-asyncio==1.4.0
