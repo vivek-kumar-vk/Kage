@@ -86,23 +86,12 @@ def _nav_points(conn, symbol: str, days: int | None = None) -> list[dict]:
 
 
 def _benchmark_points(conn, days: int | None = None) -> list[dict]:
-    """Benchmark closes from the local ledger; refreshed from yfinance
-    when older than 7 days (pull-through, never a live dependency)."""
+    """Benchmark closes from the local ledger only — reads never fetch.
+    A stale series is used as is; the review's behaviour.benchmark carries
+    data_as_of so staleness is visible instead of papered over."""
     rows = conn.execute(
-        "SELECT MAX(date) AS latest FROM price_history WHERE symbol = ?",
-        (BENCHMARK_SYMBOL,)).fetchone()
-    latest = rows[0] if rows and rows[0] else ""
-    try:
-        stale = (date.today() - datetime.strptime(latest, "%Y-%m-%d").date()).days > 7
-    except ValueError:
-        stale = True
-    if stale:
-        try:
-            market_data.backfill_benchmark(BENCHMARK_SYMBOL)
-        except Exception:  # noqa: BLE001
-            pass
-    sql = "SELECT date, price FROM price_history WHERE symbol = ? ORDER BY date ASC"
-    rows = conn.execute(sql, (BENCHMARK_SYMBOL,)).fetchall()
+        "SELECT date, price FROM price_history WHERE symbol = ? ORDER BY date ASC",
+        (BENCHMARK_SYMBOL,)).fetchall()
     points = [{"date": r["date"], "close": float(r["price"])} for r in rows]
     return points[-days:] if days else points
 
@@ -138,43 +127,8 @@ def _point_to_point_returns(points: list[dict], key: str) -> dict:
 
 
 # ---------------------------------------------------------------- XIRR
-def _xirr(flows: list[tuple[str, float]]) -> float | None:
-    """Money-weighted annual return on (iso_date, amount) flows — buys
-    negative, the current value positive. Bisection on the rate; None
-    when the flows cannot bracket a root (all one sign, no buys)."""
-    if not flows:
-        return None
-    days: list[tuple[float, float]] = []
-    try:
-        t0 = min(datetime.strptime(d, "%Y-%m-%d").date() for d, _ in flows).toordinal()
-    except ValueError:
-        return None
-    for d, amt in flows:
-        try:
-            t = (datetime.strptime(d, "%Y-%m-%d").date().toordinal() - t0) / 365.0
-        except ValueError:
-            continue
-        days.append((t, float(amt)))
-    if not (any(a > 0 for _, a in days) and any(a < 0 for _, a in days)):
-        return None
-
-    def pv(rate: float) -> float:
-        return sum(amt / ((1.0 + rate) ** t) for t, amt in days)
-
-    lo, hi = -0.9, 10.0
-    flo = pv(lo)
-    if flo * pv(hi) > 0:
-        return None
-    for _ in range(80):
-        mid = (lo + hi) / 2.0
-        fm = pv(mid)
-        if abs(fm) < 0.005:
-            break
-        if flo * fm <= 0:
-            hi = mid
-        else:
-            lo, flo = mid, fm
-    return _round(((lo + hi) / 2.0) * 100, 2)
+# One XIRR (K-16): the shared bisection implementation replaced the local one.
+from services.calculations.xirr import xirr as _xirr  # noqa: E402
 
 
 # ---------------------------------------------------------------- facts
@@ -274,7 +228,7 @@ def _fund_facts_out(data: dict) -> dict:
 
 
 # ---------------------------------------------------------------- sheets
-def fund_sheet(conn, hid: int) -> dict:
+def fund_sheet(conn, hid: int, allow_fetch: bool = False) -> dict:
     hrows = portfolio.holdings_with_value(conn)
     holding = next((r for r in hrows if r["id"] == hid), None)
     if holding is None:
@@ -315,7 +269,9 @@ def fund_sheet(conn, hid: int) -> dict:
         sheet["reason"] = "listed instrument — NAV-based maths only"
         return sheet
 
-    ref = fund_reference.fetch_fund_page(symbol, holding.get("name"))
+    ref = (fund_reference.fetch_fund_page(symbol, holding.get("name"))
+           if allow_fetch else
+           {"state": "pending", "reason": "reference page not fetched (reads never fetch)"})
     lots = conn.execute(
         "SELECT purchase_date, units, cost_per_unit FROM lots "
         "WHERE holding_id = ? ORDER BY purchase_date ASC", (hid,)).fetchall()
@@ -358,7 +314,7 @@ def fund_sheet(conn, hid: int) -> dict:
     return sheet
 
 
-def stock_sheet(conn, symbol: str) -> dict:
+def stock_sheet(conn, symbol: str, allow_fetch: bool = False) -> dict:
     """A directly-held stock or watchlist name: price, series, range,
     fundamentals (yfinance info, cached 24h)."""
     sym = market_data.normalize_symbol(symbol)
@@ -387,7 +343,7 @@ def stock_sheet(conn, symbol: str) -> dict:
     sector_map = (_load("sector_for_stocks") or {}).get("sectors") or {}
     out["sector"] = sector_map.get(sym.lower())
     cached = fund_reference._cached(f"yfinfo:{sym}", 1)
-    if cached is None:
+    if cached is None and allow_fetch:
         try:
             import yfinance
             info = yfinance.Ticker(sym).info or {}
@@ -517,8 +473,10 @@ def _behaviour(conn, holdings: list[dict]) -> dict:
     """Per-fund and whole-portfolio risk ratios vs the benchmark, from the
     ledger's own series — nothing live."""
     bench = _benchmark_points(conn, LOOKBACK_DAYS)
+    bench_as_of = bench[-1]["date"] if bench else None
     out = {"benchmark": {"symbol": BENCHMARK_SYMBOL, "name": BENCHMARK_NAME,
                          "risk_free_rate_pct": RF_PCT,
+                         "data_as_of": bench_as_of,
                          "return_1y_pct": None, "volatility_pct": None},
            "portfolio": {"has_data": False}, "funds": []}
     if bench:

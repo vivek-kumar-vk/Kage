@@ -18,16 +18,17 @@ _RET_EQUITY = "indian_equity"
 _RET_CASH = "savings_account"
 
 
-def _scalar(conn, sql: str, params: tuple = (), default: float = 0.0) -> float:
+def _scalar(conn, sql: str, params: tuple = ()) -> float | None:
+    """None for no row / NULL / NaN / inf — never a stand-in number."""
     row = conn.execute(sql, params).fetchone()
     if not row or row[0] is None:
-        return default
+        return None
     try:
         v = float(row[0])
     except (TypeError, ValueError):
-        return default
+        return None
     if v != v or v in (float("inf"), float("-inf")):  # NaN / inf
-        return default
+        return None
     return v
 
 
@@ -58,34 +59,38 @@ def _total_debt(conn) -> float:
     )
 
 
-def _monthly_emi(conn) -> float:
+def _monthly_emi(conn) -> float | None:
     return _scalar(
         conn,
         "SELECT SUM(emi) FROM debts WHERE status='active' AND archived_at IS NULL",
     )
 
 
-def _weighted_rate(conn) -> float:
+def _weighted_rate(conn) -> float | None:
     total = _total_debt(conn)
-    return _safe_div(
-        _scalar(
-            conn,
-            """SELECT SUM(outstanding * COALESCE(interest_rate,0)) FROM debts
-               WHERE status='active' AND archived_at IS NULL""",
-        ),
-        total,
+    if not total:
+        return None
+    numerator = _scalar(
+        conn,
+        """SELECT SUM(outstanding * COALESCE(interest_rate,0)) FROM debts
+           WHERE status='active' AND archived_at IS NULL""",
     )
+    if numerator is None:
+        return None
+    return _safe_div(numerator, total)
 
 
-def _monthly_net(conn) -> float:
+def _monthly_net(conn) -> float | None:
     return _scalar(
         conn,
         "SELECT monthly_net FROM salary ORDER BY effective_date DESC, id DESC LIMIT 1",
     )
 
 
-def _monthly_expenses(conn) -> float:
+def _monthly_expenses(conn) -> float | None:
     total = _scalar(conn, "SELECT SUM(-amount) FROM transactions WHERE amount < 0")
+    if total is None:
+        return None
     return _safe_div(total, _months_span(conn))
 
 
@@ -135,23 +140,24 @@ def _holdings(conn) -> list:
 _UNPRICEABLE = ("bond", "other")
 
 
-def _valuation(conn) -> tuple[float, float, dict[str, float]]:
-    """(market_value, invested, name_map). Market value uses the latest price
-    where one exists and falls back to avg cost; bond/other stay excluded
-    (unpriceable, never read as 0)."""
+def _valuation(conn) -> tuple[float, float, dict[str, float], list[str]]:
+    """(market_value, invested, name_map, unpriced_symbols). A holding with
+    no price row is excluded from both totals and listed in ledger order —
+    never valued at cost (Rule 22: absent is absent)."""
     prices = {s: v[-1] for s, v in _price_series(conn).items()}
     names: dict[str, float] = {}
     market = invested = 0.0
+    unpriced: list[str] = []
     for h in _holdings(conn):
         units = float(h["units"] or 0)
-        cost = units * float(h["avg_cost"] or 0)
         names[h["symbol"]] = h["name"] or h["symbol"]
-        if (h["type"] or "").lower() in _UNPRICEABLE:
-            continue
-        invested += cost
         price = prices.get(h["symbol"])
-        market += units * price if price is not None else cost
-    return market, invested, names
+        if price is None:
+            unpriced.append(h["symbol"])
+            continue
+        invested += units * float(h["avg_cost"] or 0)
+        market += units * price
+    return market, invested, names, unpriced
 
 
 def _add_months(d: _dt.date, months: int) -> _dt.date:
@@ -172,9 +178,9 @@ def _pct(cur: float, base: float) -> float | None:
 # --- 1. net worth ------------------------------------------------------------
 
 def net_worth(conn) -> dict:
-    invest_mv, _invested, _names = _valuation(conn)
-    cash = max(_cash_balance(conn), 0.0)
-    assets = invest_mv + cash
+    invest_mv, _invested, _names, unpriced = _valuation(conn)
+    cash = _cash_balance(conn)
+    assets = invest_mv + (cash if cash is not None else 0.0)
     liabilities = _total_debt(conn)
 
     trend = [
@@ -190,14 +196,15 @@ def net_worth(conn) -> dict:
         month_abs = round(trend[-1]["net_worth"] - trend[-2]["net_worth"], 2)
 
     return {
-        "net_worth": round(assets - liabilities, 2),
+        "net_worth": round(assets - (liabilities or 0.0), 2),
         "assets": round(assets, 2),
-        "liabilities": round(liabilities, 2),
+        "liabilities": round(liabilities, 2) if liabilities is not None else None,
+        "unpriced": unpriced,
         "all_time_pct": all_time,
         "month_change_pct": month_change,
         "month_change_abs": month_abs,
         "trend": trend,
-        "projection": _projection(conn, invest_mv, cash, liabilities),
+        "projection": _projection(conn, invest_mv, cash or 0.0, liabilities or 0.0),
     }
 
 
@@ -207,13 +214,18 @@ def _projection(conn, invest: float, cash: float, debt: float) -> list[dict]:
     debt amortises at its weighted rate. Assumptions, not promises."""
     if invest == 0 and cash == 0 and debt == 0:
         return []
+    net = _monthly_net(conn)
+    monthly = _monthly_expenses(conn)
+    if net is None or monthly is None:
+        # No salary (or no spend history): a projection would invent a surplus.
+        return []
     assumptions = reference.load("india_planning_assumptions")
     rets = assumptions.get("expected_returns_pct", {})
     r_m = float(rets.get(_RET_EQUITY, 11.0)) / 100 / 12
     c_m = float(rets.get(_RET_CASH, 3.0)) / 100 / 12
-    wr_m = _weighted_rate(conn) / 100 / 12
-    emi = _monthly_emi(conn)
-    surplus = _monthly_net(conn) - _monthly_expenses(conn) - emi
+    wr_m = (_weighted_rate(conn) or 0.0) / 100 / 12
+    emi = _monthly_emi(conn) or 0.0
+    surplus = net - monthly - emi
     rule = _sweep_rule(conn)
     to_cash = max(surplus, 0.0) * rule["emergency"] / 100
     to_invest = max(surplus, 0.0) * (rule["investments"] + rule["goals"]) / 100
@@ -262,7 +274,7 @@ def cashflow(conn) -> dict:
 # --- 3. portfolio pulse ------------------------------------------------------
 
 def portfolio_pulse(conn) -> dict:
-    value, invested, names = _valuation(conn)
+    value, invested, names, unpriced = _valuation(conn)
     holdings = _holdings(conn)
     series = _price_series(conn)
 
@@ -317,6 +329,7 @@ def portfolio_pulse(conn) -> dict:
         "xirr_pct": xirr_pct,
         "holdings_count": len(holdings),
         "asset_classes": len(classes),
+        "unpriced": unpriced,
         "best_today": best,
     }
 
@@ -325,21 +338,24 @@ def portfolio_pulse(conn) -> dict:
 
 def emergency_fund(conn) -> dict:
     monthly = _monthly_expenses(conn)
-    target = 6.0 * monthly
-    balance = max(_cash_balance(conn), 0.0)
-    surplus = _monthly_net(conn) - monthly - _monthly_emi(conn)
-    earmark = max(surplus, 0.0) * _sweep_rule(conn)["emergency"] / 100
+    balance = max(_cash_balance(conn) or 0.0, 0.0)
+    net = _monthly_net(conn)
+    emi = _monthly_emi(conn)
+    surplus = (net - monthly - (emi or 0.0)) if (net is not None and monthly is not None) else None
+    target = 6.0 * monthly if monthly is not None else None
+    earmark = max(surplus, 0.0) * _sweep_rule(conn)["emergency"] / 100 if surplus is not None else None
     eta = None
-    if target > 0 and balance < target and earmark > 0:
+    if (surplus is not None and target is not None
+            and target > 0 and balance < target and earmark > 0):
         months_needed = math.ceil((target - balance) / earmark)
         eta = _add_months(_dt.date.today(), months_needed).isoformat()[:10]
     return {
         "balance": round(balance, 2),
-        "target": round(target, 2),
-        "monthly_expenses": round(monthly, 2),
-        "monthly_earmark": round(earmark, 2),
-        "months_covered": round(_safe_div(balance, monthly), 2),
-        "progress": round(min(_safe_div(balance, target), 1.0), 4),
+        "target": round(target, 2) if target is not None else None,
+        "monthly_expenses": round(monthly, 2) if monthly is not None else None,
+        "monthly_earmark": round(earmark, 2) if earmark is not None else None,
+        "months_covered": round(_safe_div(balance, monthly), 2) if monthly else None,
+        "progress": round(min(_safe_div(balance, target), 1.0), 4) if target else None,
         "eta_date": eta,
     }
 
@@ -353,6 +369,8 @@ def debt_status(conn) -> dict:
            ORDER BY outstanding DESC"""
     ).fetchall()
     total = sum(float(r["outstanding"] or 0) for r in rows)
+    emi = _monthly_emi(conn)
+    weighted = _weighted_rate(conn)
     loans = []
     for r in rows:
         outstanding = float(r["outstanding"] or 0)
@@ -366,8 +384,8 @@ def debt_status(conn) -> dict:
         })
     return {
         "total_debt": round(total, 2),
-        "total_emi": round(_monthly_emi(conn), 2),
-        "weighted_rate": round(_weighted_rate(conn), 3),
+        "total_emi": round(emi, 2) if emi is not None else None,
+        "weighted_rate": round(weighted, 3) if weighted is not None else None,
         "count": len(loans),
         "loans": loans,
     }
@@ -379,22 +397,28 @@ def surplus_allocation(conn) -> dict:
     net = _monthly_net(conn)
     expenses = _monthly_expenses(conn)
     emi = _monthly_emi(conn)
-    surplus = net - expenses - emi
+    if net is None or expenses is None:
+        surplus = None
+        note = "no salary recorded" if net is None else None
+    else:
+        surplus = net - expenses - (emi or 0.0)
+        note = None
     rule = _sweep_rule(conn)
     allocation: list[dict] = []
-    if surplus > 0:
+    if surplus is not None and surplus > 0:
         allocation = [
             {"category": "Emergency / Buffer", "amount": round(surplus * rule["emergency"] / 100, 2)},
             {"category": "Investments", "amount": round(surplus * rule["investments"] / 100, 2)},
             {"category": "Goals", "amount": round(surplus * rule["goals"] / 100, 2)},
         ]
     return {
-        "surplus": round(surplus, 2),
-        "monthly_net": round(net, 2),
-        "monthly_expenses": round(expenses, 2),
-        "monthly_emi": round(emi, 2),
+        "surplus": round(surplus, 2) if surplus is not None else None,
+        "monthly_net": round(net, 2) if net is not None else None,
+        "monthly_expenses": round(expenses, 2) if expenses is not None else None,
+        "monthly_emi": round(emi, 2) if emi is not None else None,
         "rule": {k: round(v) for k, v in rule.items()},
         "allocation": allocation,
+        "note": note,
     }
 
 
@@ -433,7 +457,10 @@ def goals_overview(conn) -> dict:
                .get("targets", {}))
     exp_ret, vol = blended_return_and_vol(assumptions, targets)
 
-    surplus = _monthly_net(conn) - _monthly_expenses(conn) - _monthly_emi(conn)
+    net = _monthly_net(conn)
+    expenses = _monthly_expenses(conn)
+    surplus = (net - expenses - (_monthly_emi(conn) or 0.0)) \
+        if (net is not None and expenses is not None) else 0.0
     per_goal = max(surplus, 0.0) * _sweep_rule(conn)["goals"] / 100 / len(rows) if rows else 0.0
 
     out = []
@@ -471,78 +498,70 @@ def goals_overview(conn) -> dict:
 # --- 8. top actions ----------------------------------------------------------
 
 def top_actions(conn) -> dict:
-    actions: list[dict] = []
-    surplus = _monthly_net(conn) - _monthly_expenses(conn) - _monthly_emi(conn)
+    """Observations only: a fact plus its named threshold, never an
+    instruction and never an amount to pay. The buyer decides."""
+    observations: list[dict] = []
 
-    # 1. highest-APR debt first — the costliest rupee in the book
+    # 1. highest-APR debt — the costliest Rupee in the book
     worst = conn.execute(
         """SELECT lender, type, outstanding, interest_rate FROM debts
            WHERE status='active' AND archived_at IS NULL AND outstanding > 0
            ORDER BY COALESCE(interest_rate,0) DESC LIMIT 1"""
     ).fetchone()
-    if worst and surplus > 0:
+    if worst:
         rate = float(worst["interest_rate"] or 0)
-        outstanding = float(worst["outstanding"] or 0)
-        amount = min(outstanding, math.floor(surplus * 0.5 / 1000) * 1000)
-        if amount >= 1000:
-            bleed = outstanding * rate / 100 / 12
-            actions.append({
-                "title": f"Pay ₹{amount:,.0f} off the {(worst['lender'] or worst['type'] or 'loan').lower()}",
-                "detail": (f"{rate:g}% APR bleeds ₹{bleed:,.0f}/mo — "
-                           "highest-interest Rupee in the book."
-                           if rate > 0 else "Close it before it grows."),
-                "urgent": rate > 20,
-            })
+        name = (worst["lender"] or worst["type"] or "loan").strip()
+        observations.append({
+            "flag": "debt_apr",
+            "severity": "flag" if rate > 20 else "watch",
+            "detail": f"{name} at {rate:g}% APR (threshold 20%)",
+        })
 
-    # 2. emergency fund gap → suggested monthly SIP
+    # 2. emergency fund gap vs the 6-month target
     ef = emergency_fund(conn)
-    gap = ef["target"] - ef["balance"]
-    if gap > 0:
-        earmark = ef.get("monthly_earmark") or 0.0
-        step = max(earmark, math.ceil(gap / 12 / 500) * 500)
-        saved = None
-        if earmark > 0:
-            saved = math.ceil(gap / earmark) - math.ceil(gap / step)
-        actions.append({
-            "title": f"Raise emergency SIP to ₹{step:,.0f}",
-            "detail": (f"Closes the 6-month gap {saved} months sooner."
-                       if saved and saved > 0 else
-                       f"₹{gap:,.0f} short of the 6-month target."),
-            "urgent": False,
+    target = ef.get("target")
+    balance = ef.get("balance") or 0.0
+    if target is not None and target > balance:
+        observations.append({
+            "flag": "emergency_gap",
+            "severity": "watch",
+            "detail": f"₹{target - balance:,.0f} short of the 6-month target",
         })
 
-    # 3. allocation drift vs the reference targets (only with enough priced data)
+    # 3. allocation drift vs the reference targets (threshold 5pp)
     drift = _allocation_drift(conn)
-    if drift:
-        actions.append({
-            "title": f"Rebalance → +{drift['delta']:.0f}% {drift['asset_class']}",
-            "detail": f"Allocation drifted {drift['delta']:.0f}% past your band.",
-            "urgent": False,
+    if drift and drift["delta"] > 5:
+        observations.append({
+            "flag": "allocation_drift",
+            "severity": "watch",
+            "detail": f"{drift['asset_class']} sits {drift['delta']:.0f}pp "
+                      f"over its target (threshold 5pp)",
         })
 
-    # data-quality actions keep their place at the end
+    # data-quality observations keep their place at the end
     dh = conn.execute("SELECT * FROM data_health WHERE id = 1").fetchone()
     if dh:
         if (dh["unmatched_transactions"] or 0) > 0:
-            actions.append(
-                {
-                    "title": "Review unmatched transactions",
-                    "detail": f"{dh['unmatched_transactions']} transactions need a category",
-                }
-            )
+            observations.append({
+                "flag": "unmatched_transactions", "severity": "info",
+                "detail": f"{dh['unmatched_transactions']} transactions need a category",
+            })
         if not dh["price_last_refresh"]:
-            actions.append(
-                {"title": "Refresh prices", "detail": "No price refresh on record yet"}
-            )
+            observations.append({
+                "flag": "no_price_refresh", "severity": "info",
+                "detail": "No price refresh on record yet",
+            })
         if not dh["cas_last_import"]:
-            actions.append(
-                {"title": "Import a CAS statement", "detail": "No holdings snapshot imported"}
-            )
-    if _total_debt(conn) > 0 and _monthly_emi(conn) <= 0:
-        actions.append(
-            {"title": "Add EMI details", "detail": "Active debt has no EMI recorded"}
-        )
-    return {"actions": actions[:4], "count": len(actions[:4])}
+            observations.append({
+                "flag": "no_cas_import", "severity": "info",
+                "detail": "No holdings snapshot imported",
+            })
+    if _total_debt(conn) is not None and (_monthly_emi(conn) or 0.0) <= 0:
+        observations.append({
+            "flag": "no_emi", "severity": "info",
+            "detail": "Active debt has no EMI recorded",
+        })
+    return {"observations": observations, "count": len(observations)}
 
 
 def _allocation_drift(conn) -> dict | None:
