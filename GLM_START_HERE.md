@@ -13,10 +13,14 @@ You are implementing in `B:\inky_code`. Read this file first, then follow it exa
 
        .venv\Scripts\python Start_Inky\run_checks.py
 
-   **Your baseline today is five of six.** The Agents suite fails on purpose: three async tests
-   used to be skipped silently and one of them fails for a real reason. Ticket Z0 fixes that.
-   Until Z0 is done, "no worse than five of six, and Agents is the only failure" is your
-   baseline. After Z0 it is six of six, and any failure at all stops the run.
+   **Your baseline is five of six, and it stays five of six all night.** The Agents suite fails
+   on purpose. Three async tests used to be skipped silently; one of them fails for a real
+   reason, and fixing that is Sonnet's job, not yours. So your rule is:
+
+   > Agents may fail, with exactly one failing test, named
+   > `test_current_data_block_truncates_oversized`. Everything else must pass.
+
+   Any other failure, or a second failing test in Agents, means **stop and change nothing more**.
 5. **Never invent a value.** If a fetch, a price or a timestamp is unavailable, render it absent
    and dated. Never carry the last known value forward.
 6. **Do not touch** port settings files, the launcher, or anything that discovers screens by
@@ -244,7 +248,44 @@ Anime setup notes cite port 8005.
 
 ---
 
-## After these three
+## Overnight protocol — the owner is asleep, nobody will answer you
 
-Stop and wait. The audit output lands in `C:\Users\vkjha\Project-Audit-OUT\BUILD_ORDER.md`.
-Take its tickets in dependency order, one per session, under the standing rules above.
+**Order:** Z0, then Z1, then Z2, then Z3. **Skip Z0b entirely.** It is marked SONNET and it
+blocks nothing. Leave it for the morning.
+
+After Z3, the audit output should exist at `C:\Users\vkjha\Project-Audit-OUT\BUILD_ORDER.md`.
+If it does not, stop and wait. Do not invent work.
+
+### Gate every audit ticket before you take it
+
+`BUILD_ORDER.md` was written by another model and has not been reviewed by a human. Before
+starting any ticket in it, check all four of these. If any fails, **skip that ticket**, write
+one line about it in your log, and move to the next one.
+
+1. It carries all twelve contract fields.
+2. It is tagged `[GLM]`. If it is tagged `[SONNET]`, skip it, always, whatever it contains.
+3. Its red test is a command you can actually run, starting with `.venv\Scripts\python`.
+4. Every file path it names exists, or the ticket says it creates that file.
+
+Never repair a malformed ticket by guessing what it meant. Skipping is correct; inventing is not.
+
+### Keep a log
+
+Append one line per ticket to `B:\inky_code\OVERNIGHT_LOG.md`: the ticket id, started or
+skipped, the reason if skipped, and the aggregator result afterwards. That file is the first
+thing the owner reads in the morning, so it must be honest about what did not happen.
+
+### Stop immediately, and change nothing further, if
+
+- the aggregator shows any failure beyond the one permitted Agents test,
+- two tickets in a row fail their red test,
+- a ticket asks you to touch a port settings file, the launcher, or screen discovery,
+- or `BUILD_ORDER.md` changes while you are working from it.
+
+A stopped run that leaves a clean tree is a good outcome. A run that pushed through eight
+tickets on a broken baseline is not.
+
+### Do not push
+
+Commit locally if you like. Do not push to the remote and do not open a pull request. The
+owner reviews in the morning.
