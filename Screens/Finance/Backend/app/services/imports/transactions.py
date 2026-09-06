@@ -98,9 +98,17 @@ def assemble_xirr_cashflows(
 
 
 def compute_xirr(
-    transactions: list[dict], current_value: float, valuation_date: date | None = None
+    transactions: list[dict], current_value: float
 ) -> float | None:
-    cashflows = assemble_xirr_cashflows(transactions, current_value, valuation_date)
-    if not cashflows:
-        return None
-    return xirr(cashflows)
+    """flows: [{"date": ISO, "amount": positive cost}]. Buys become
+    negative flows; the current value is dated today IST. Returns the
+    annualised return as a FRACTION (percent / 100) or None."""
+    from datetime import datetime, timedelta, timezone
+
+    today_ist = datetime.now(
+        timezone(timedelta(hours=5, minutes=30))
+    ).date().isoformat()
+    flows = [(entry["date"], -float(entry["amount"])) for entry in transactions]
+    flows.append((today_ist, float(current_value)))
+    percent = xirr(flows)
+    return None if percent is None else percent / 100.0

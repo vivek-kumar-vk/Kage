@@ -1,37 +1,44 @@
-from decimal import Decimal, getcontext
-from typing import List, Tuple
-from services.db import connect
-from services.agents.supervisor import sanitize_for_cloud_llm
+"""Money-weighted annual return (K-16): bracketed bisection on
+(ISO date, amount) flows — buys negative, the current value positive.
+Floats only; the module never mutates global Decimal precision. Pure."""
 
-def xirr(cashflows: List[Tuple[Decimal, Decimal]]) -> Decimal:
-    getcontext().prec = 10
+from datetime import datetime
 
-    def net_present_value(rate: Decimal) -> Decimal:
-        return sum(amount / (1 + rate) ** (i / 365) for i, amount in cashflows)
 
-    def xirr_newton(cashflows: List[Tuple[Decimal, Decimal]], guess: Decimal) -> Decimal:
-        npv = net_present_value(guess)
-        if npv == 0:
-            return guess
-        derivative = sum(i * amount / (1 + guess) ** ((i + 1) / 365) for i, amount in cashflows)
-        return guess - npv / derivative
+def xirr(flows: list[tuple[str, float]]) -> float | None:
+    """Annualised percent rounded to 2 dp, or None when the flows are
+    empty, carry any unparsable date (the whole call, not the flow), are
+    single-signed, or cannot bracket a root in [-0.99, 10.0]."""
+    if not flows:
+        return None
+    days: list[tuple[float, float]] = []
+    try:
+        t0 = min(datetime.strptime(d, "%Y-%m-%d").date().toordinal() for d, _ in flows)
+    except (ValueError, TypeError):
+        return None
+    for d, amt in flows:
+        try:
+            t = (datetime.strptime(d, "%Y-%m-%d").date().toordinal() - t0) / 365.0
+        except (ValueError, TypeError):
+            return None
+        days.append((t, float(amt)))
+    if not (any(a > 0 for _, a in days) and any(a < 0 for _, a in days)):
+        return None
 
-    def xirr_bisection(cashflows: List[Tuple[Decimal, Decimal]], low: Decimal, high: Decimal) -> Decimal:
-        while high - low > Decimal('0.00001'):
-            mid = (low + high) / Decimal('2')
-            if net_present_value(mid) * net_present_value(low) < 0:
-                high = mid
-            else:
-                low = mid
-        return low
+    def pv(rate: float) -> float:
+        return sum(amt / ((1.0 + rate) ** t) for t, amt in days)
 
-    low = Decimal('0.0001')
-    high = Decimal('0.5')
-    guess = Decimal('0.1')
-
-    for _ in range(10):
-        guess = xirr_newton(cashflows, guess)
-        if abs(net_present_value(guess)) < Decimal('0.00001'):
-            return guess
-
-    return xirr_bisection(cashflows, low, high)
+    lo, hi = -0.99, 10.0
+    flo = pv(lo)
+    if flo * pv(hi) > 0:
+        return None
+    for _ in range(80):
+        mid = (lo + hi) / 2.0
+        fm = pv(mid)
+        if abs(fm) < 0.005:
+            return round(mid * 100, 2)
+        if flo * fm <= 0:
+            hi = mid
+        else:
+            lo, flo = mid, fm
+    return round(((lo + hi) / 2.0) * 100, 2)
