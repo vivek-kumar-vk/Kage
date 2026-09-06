@@ -21,6 +21,25 @@ import email_digest
 import email_gmail
 import email_store
 import settings_for_main_menu as cfg
+import trace_every_action
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from Shared_By_All_Screens import spine  # noqa: E402
+
+
+def _emit(kind, subject, **payload):
+    """One spine event for a fetch. A failed spine write is traced and
+    dropped, never raised: the sync continues and the source shows stale."""
+    try:
+        spine.emit("main_menu", kind, subject, payload)
+    except spine.SpineWriteError as exc:
+        trace_every_action.trace("main_menu", "error", "spine_write_failed",
+                                 target=subject, outcome="fail",
+                                 detail={"problem": str(exc)})
 
 CATEGORY_META = [
     {"key": "newsletters", "label": "NEWSLETTERS"},
@@ -82,6 +101,7 @@ def sync_cycle():
 def _sync_cycle_inner():
     email_store.init_db()
     email_store.set_state("last_sync_at", _utcnow())
+    _emit("fetch_attempted", "gmail")
 
     missing = email_gmail.libs_missing()
     if missing:
@@ -116,6 +136,10 @@ def _sync_cycle_inner():
 
     email_store.set_state("last_sync_ok_epoch", str(time.time()))
     email_store.set_state("last_sync_ok_at", _utcnow())
+    _emit("fetch_succeeded", "gmail",
+          data_as_of=datetime.now(timezone(timedelta(hours=5, minutes=30)))
+          .replace(microsecond=0).isoformat(),
+          items=len(rows))
     email_store.set_state("connection", "connected")
     email_store.set_state("last_error", "")
     return {"state": "ok", "fetched": len(rows), "new": new_count,
@@ -125,6 +149,7 @@ def _sync_cycle_inner():
 def _fail(state, detail):
     email_store.set_state("connection", state)
     email_store.set_state("last_error", detail)
+    _emit("fetch_failed", "gmail", error=detail)
     return {"state": state, "detail": detail}
 
 

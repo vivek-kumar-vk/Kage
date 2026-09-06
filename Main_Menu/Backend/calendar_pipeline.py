@@ -14,13 +14,35 @@ the Google event id so the write can be undone.
 """
 
 import threading
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import calendar_agent
 import calendar_google as google
 import calendar_store as store
 import settings_for_main_menu as cfg
+import trace_every_action
 import wakatime_client as waka
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from Shared_By_All_Screens import spine  # noqa: E402
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def _emit(kind, subject, **payload):
+    """One spine event for a fetch. A failed spine write is traced and
+    dropped, never raised: the sync continues and the source shows stale
+    (Rule 22's consequence), which is the honest state."""
+    try:
+        spine.emit("main_menu", kind, subject, payload)
+    except spine.SpineWriteError as exc:
+        trace_every_action.trace("main_menu", "error", "spine_write_failed",
+                                 target=subject, outcome="fail",
+                                 detail={"problem": str(exc)})
 
 _sync_lock = threading.Lock()
 _syncing = False
@@ -109,10 +131,12 @@ def sync_cycle():
     failure is recorded rather than raised."""
     global _syncing
     _syncing = True
+    _emit("fetch_attempted", "google_calendar")
     try:
         state, detail = connection_state()
         if state != "ok":
             store.set_meta("last_error", detail)
+            _emit("fetch_failed", "google_calendar", error=detail)
             return {"state": state, "detail": detail}
 
         window_start = date.today() - timedelta(days=cfg.CALENDAR_DAYS_BACK)
@@ -142,6 +166,9 @@ def sync_cycle():
                 "by_agent": 1 if private.get("kage_agent") == "1" else 0,
             })
         store.replace_events(window_start.isoformat(), window_end.isoformat(), rows)
+        _emit("fetch_succeeded", "google_calendar",
+              data_as_of=datetime.now(IST).isoformat(timespec="seconds"),
+              items=len(rows))
         store.set_meta("last_sync", datetime.now().isoformat(timespec="seconds"))
         store.set_meta("last_error", "")
 
@@ -155,16 +182,22 @@ def sync_cycle():
         # WakaTime rides the same loop: the free plan's 7-day window is
         # snapshotted before it rolls off, whatever the plan.
         if cfg.WAKATIME_SNAPSHOT_ENABLED and waka.api_key():
+            _emit("fetch_attempted", "wakatime")
             try:
                 waka.snapshot_recent(store, days=7)
+                _emit("fetch_succeeded", "wakatime",
+                      data_as_of=datetime.now(IST).isoformat(timespec="seconds"),
+                      items=7)
                 store.set_meta("last_waka_snapshot",
                                datetime.now().isoformat(timespec="seconds"))
             except waka.WakaTimeError as problem:
+                _emit("fetch_failed", "wakatime", error=str(problem))
                 store.set_meta("last_waka_error", str(problem))
 
         return {"state": "ok", "events": len(rows)}
     except Exception as problem:  # noqa: BLE001 - a sync that dies must say so
         store.set_meta("last_error", str(problem))
+        _emit("fetch_failed", "google_calendar", error=str(problem))
         return {"state": "error", "detail": str(problem)}
     finally:
         _syncing = False
