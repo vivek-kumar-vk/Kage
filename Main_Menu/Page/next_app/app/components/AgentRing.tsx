@@ -6,14 +6,19 @@ import { useAgentRoster, type AgentNode } from "../lib/agents";
 /** The agent ring - one real node per agent, read live from the Agent
     Deck (2026-09-06, replaces the decorative 30-glyph placeholder ring).
 
-    Two circles: main-tier agents (plus the head) on the inner ring, each
-    a little bigger with its model id printed just below it inside the
-    ring; sub-agents on the outer ring as small circles. A node glows
-    amber while its agent has unread messages; hovering shows the agent
-    name; clicking lands in that agent's Agent Deck chat.
+    One line for everybody (owner's call 2026-09-06): main-tier agents
+    (plus the head) and sub-agents all sit centred ON the drawn circle,
+    mains a little bigger with their model id printed just below the node.
+    Mains are slotted at even intervals among the subs so the big nodes
+    never bunch up. The live particle core still fills the centre
+    (CenterCore renders it behind this ring).
 
-    The ring is deliberately static (no spin): hover and click are real
-    controls now, and a moving target is hostile to both. */
+    The whole track turns slowly - `.ring-track` in globals.css, 90 s per
+    revolution - and each node counter-turns (`.ring-node-upright`) so its
+    glyph and label stay upright; both animations stop under
+    prefers-reduced-motion. A node glows amber while its agent has unread
+    messages; hovering shows the agent name; clicking lands in that agent's
+    Agent Deck chat. */
 
 const AMBER = "#ff7a00";
 const INK_DIM = "#6b7079";
@@ -95,59 +100,89 @@ function AgentNodeCircle({
   );
 }
 
+/** One node on the track. The positioner's rotate/translate/rotate-back
+    puts the node on its circle upright; the counter-spin wrapper cancels
+    the track's own rotation so the label never tilts. */
+function RingNode({
+  agent,
+  angle,
+  radius,
+  deckUrl,
+  size,
+  showModel,
+}: {
+  agent: AgentNode;
+  angle: number;
+  radius: number;
+  deckUrl: string;
+  size: number;
+  showModel: boolean;
+}) {
+  return (
+    <div
+      className="absolute"
+      style={{
+        transform: `rotate(${angle}deg) translate(${radius}px) rotate(${-angle}deg) translate(-50%, -50%)`,
+      }}
+    >
+      <div className="ring-node-upright">
+        <AgentNodeCircle agent={agent} deckUrl={deckUrl} size={size} showModel={showModel} />
+      </div>
+    </div>
+  );
+}
+
 export function AgentRing({ radius }: { radius: number }) {
   const { data, loading } = useAgentRoster();
   const agents = data?.state === "ok" ? data.agents : [];
   const deckUrl = data?.deck_url ?? "/workspace";
 
-  // Main-tier + head agents take the inner circle; subs the outer one.
-  const inners = agents.filter((a) => a.tier === "main" || a.tier === "head");
+  // One line for everybody. Mains (plus the head) are slotted at even
+  // intervals among the subs - the +0.5 offset never collides because
+  // mains are far fewer than half the roster - so the big nodes stay
+  // spread around the circle.
+  const mains = agents.filter((a) => a.tier === "main" || a.tier === "head");
   const subs = agents.filter((a) => a.tier !== "main" && a.tier !== "head");
 
-  const innerRadius = Math.round(radius * 0.55);
-  const outerRadius = Math.round(radius * 0.95);
+  const total = mains.length + subs.length;
+  const mainSlots = new Set(
+    mains.map((_, i) => Math.round(((i + 0.5) * total) / Math.max(mains.length, 1)) % total),
+  );
+  const ordered: AgentNode[] = [];
+  let nextMain = 0;
+  let nextSub = 0;
+  for (let slot = 0; slot < total; slot++) {
+    if (mainSlots.has(slot) && nextMain < mains.length) ordered.push(mains[nextMain++]);
+    else if (nextSub < subs.length) ordered.push(subs[nextSub++]);
+    else if (nextMain < mains.length) ordered.push(mains[nextMain++]);
+  }
+
+  // Node centres ride the drawn circle itself.
+  const ringRadius = Math.round(radius * 0.98);
 
   return (
     <div className="absolute left-1/2 top-1/2" style={{ width: 0, height: 0 }}>
-      {inners.map((agent, i) => {
-        const angle = inners.length > 0 ? (360 / inners.length) * i : 0;
-        return (
-          <div
+      {/* the track: everything aboard spins together, around the centre
+          point this zero-size div sits on */}
+      <div className="ring-track absolute inset-0" style={{ transformOrigin: "0 0" }}>
+        {ordered.map((agent, i) => (
+          <RingNode
             key={agent.name}
-            className="absolute"
-            style={{
-              transform: `rotate(${angle}deg) translate(${innerRadius}px) rotate(${-angle}deg) translate(-50%, -50%)`,
-            }}
-          >
-            <AgentNodeCircle
-              agent={agent}
-              deckUrl={deckUrl}
-              size={agent.tier === "main" ? 52 : 46}
-              showModel
-            />
-          </div>
-        );
-      })}
-      {subs.map((agent, i) => {
-        const angle = subs.length > 0 ? (360 / subs.length) * i : 0;
-        return (
-          <div
-            key={agent.name}
-            className="absolute"
-            style={{
-              transform: `rotate(${angle}deg) translate(${outerRadius}px) rotate(${-angle}deg) translate(-50%, -50%)`,
-            }}
-          >
-            <AgentNodeCircle agent={agent} deckUrl={deckUrl} size={32} showModel={false} />
-          </div>
-        );
-      })}
+            agent={agent}
+            angle={total > 0 ? (360 / total) * i : 0}
+            radius={ringRadius}
+            deckUrl={deckUrl}
+            size={agent.tier === "main" || agent.tier === "head" ? 44 : 28}
+            showModel={agent.tier === "main" || agent.tier === "head"}
+          />
+        ))}
+      </div>
       {!loading && agents.length === 0 ? (
         <span
           className="num absolute whitespace-nowrap text-[9px] tracking-wide"
           style={{
             color: INK_DIM,
-            top: outerRadius + 26,
+            top: ringRadius + 34,
             transform: "translateX(-50%)",
           }}
         >

@@ -39,9 +39,9 @@ function useRingSize() {
   return size;
 }
 
-/** The centre column: the agent ring spinning around the live 3D particle
-    core - the reference image's focal element. (The Kage.GG title block
-    now lives in the TopBar.) */
+/** The centre column: the turning agent ring around the live 3D particle
+    core - every main and sub aboard one circle (owner's call 2026-09-06).
+    (The Kage.GG title block lives in the TopBar.) */
 export function CenterCore() {
   const { box, radius } = useRingSize();
 
