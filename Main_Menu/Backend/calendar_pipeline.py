@@ -22,6 +22,7 @@ import calendar_google as google
 import calendar_store as store
 import settings_for_main_menu as cfg
 import trace_every_action
+import watchdog
 import wakatime_client as waka
 
 import sys
@@ -271,6 +272,10 @@ def background_loop():
             sync_cycle()
         except Exception:  # noqa: BLE001
             pass
+        try:
+            watchdog.run_if_due(datetime.now(IST))
+        except Exception as problem:  # noqa: BLE001
+            store.set_meta("last_watchdog_error", str(problem))
         try:
             now = datetime.now(IST)
             today = now.date().isoformat()
