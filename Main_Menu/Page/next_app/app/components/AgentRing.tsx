@@ -8,10 +8,12 @@ import { useAgentRoster, type AgentNode } from "../lib/agents";
 
     One line for everybody (owner's call 2026-09-06): main-tier agents
     (plus the head) and sub-agents all sit centred ON the drawn circle,
-    mains a little bigger with their model id printed just below the node.
-    Mains are slotted at even intervals among the subs so the big nodes
-    never bunch up. The live particle core still fills the centre
-    (CenterCore renders it behind this ring).
+    mains a little bigger, nothing written under any node (owner's call:
+    the labels pushed the circles off the line). Mains are slotted at
+    even intervals among the subs so the big nodes never bunch up, and
+    every node gets one equal 360/N slot - the same distance between
+    each pair all the way round. The live particle core still fills the
+    centre (CenterCore renders it behind this ring).
 
     The whole track turns slowly - `.ring-track` in globals.css, 90 s per
     revolution - and each node counter-turns (`.ring-node-upright`) so its
@@ -34,12 +36,10 @@ function AgentNodeCircle({
   agent,
   deckUrl,
   size,
-  showModel,
 }: {
   agent: AgentNode;
   deckUrl: string;
   size: number;
-  showModel: boolean;
 }) {
   const [hover, setHover] = useState(false);
   const isMain = agent.tier === "main" || agent.tier === "head";
@@ -47,7 +47,7 @@ function AgentNodeCircle({
 
   return (
     <div
-      className="relative flex flex-col items-center gap-1"
+      className="relative flex items-center justify-center"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
     >
@@ -73,14 +73,6 @@ function AgentNodeCircle({
       >
         {initialsOf(agent.name)}
       </a>
-      {showModel ? (
-        <span
-          className="num text-[7px] leading-none tracking-wide"
-          style={{ color: INK_DIM, maxWidth: 84, overflow: "hidden" }}
-        >
-          {agent.model ?? "main"}
-        </span>
-      ) : null}
       {hover ? (
         <span
           className="pointer-events-none absolute whitespace-nowrap rounded border px-2 py-1 text-[10px]"
@@ -109,14 +101,12 @@ function RingNode({
   radius,
   deckUrl,
   size,
-  showModel,
 }: {
   agent: AgentNode;
   angle: number;
   radius: number;
   deckUrl: string;
   size: number;
-  showModel: boolean;
 }) {
   return (
     <div
@@ -126,7 +116,7 @@ function RingNode({
       }}
     >
       <div className="ring-node-upright">
-        <AgentNodeCircle agent={agent} deckUrl={deckUrl} size={size} showModel={showModel} />
+        <AgentNodeCircle agent={agent} deckUrl={deckUrl} size={size} />
       </div>
     </div>
   );
@@ -173,7 +163,6 @@ export function AgentRing({ radius }: { radius: number }) {
             radius={ringRadius}
             deckUrl={deckUrl}
             size={agent.tier === "main" || agent.tier === "head" ? 44 : 28}
-            showModel={agent.tier === "main" || agent.tier === "head"}
           />
         ))}
       </div>
