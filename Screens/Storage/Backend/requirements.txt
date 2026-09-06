@@ -1,0 +1,3 @@
+
+# added with K-23: FastAPI multipart forms (Storage /books/upload) require it
+python-multipart==0.0.20
