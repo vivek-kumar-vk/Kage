@@ -19,6 +19,27 @@ HOW_LONG_WE_WAIT = 20
 FETCH_ATTEMPTS = 3
 RETRY_PAUSE_SECONDS = 4
 
+import sys
+
+SOURCE_MFAPI = "mfapi"
+SOURCE_AMFI = "amfi_nav"
+SOURCE_YF = "yfinance"
+SOURCE_BSE = "bse"
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[5]))
+
+from Shared_By_All_Screens import spine  # noqa: E402
+
+
+def _emit_fetch(kind: str, source: str, **payload) -> None:
+    """One spine fetch event for a market-data source. A failed spine write
+    is traced to stderr and re-raised: the record must be loud."""
+    try:
+        spine.emit("finance", kind, source, payload)
+    except spine.SpineWriteError as exc:
+        print(f"spine write failed for {kind}/{source}: {exc}", file=sys.stderr)
+        raise
+
 
 def _get(address: str) -> tuple[bool, dict | str]:
     request = urllib.request.Request(address, method="GET")
@@ -158,12 +179,17 @@ def _amfi_navall_text(today: date | None = None) -> tuple[bool, str]:
         "https://www.amfiindia.com/spages/NAVAll.txt", method="GET"
     )
     request.add_header("User-Agent", "INKY/1.0 (personal finance screen)")
+    _emit_fetch("fetch_attempted", SOURCE_AMFI)
     try:
         with urllib.request.urlopen(request, timeout=HOW_LONG_WE_WAIT) as response:
             text = response.read().decode("utf-8", errors="replace")
     except Exception as problem:
+        _emit_fetch("fetch_failed", SOURCE_AMFI,
+                    error=f"could not reach amfiindia.com: {problem}"[:300])
         return False, f"could not reach amfiindia.com: {problem}"
     if "Scheme Code" not in text[:2000] and ";" not in text[:2000]:
+        _emit_fetch("fetch_failed", SOURCE_AMFI,
+                    error="amfiindia.com answered with something that is not NAVAll.txt"[:300])
         return False, "amfiindia.com answered with something that is not NAVAll.txt"
     for old in CACHE_DIR.glob("amfi_navall_*.txt"):
         if old.name != path.name:
@@ -172,6 +198,8 @@ def _amfi_navall_text(today: date | None = None) -> tuple[bool, str]:
             except OSError:
                 pass
     path.write_text(text, encoding="utf-8")
+    _emit_fetch("fetch_succeeded", SOURCE_AMFI,
+                data_as_of=f"{stamp[:4]}-{stamp[4:6]}-{stamp[6:]}", items=1)
     return True, text
 
 
@@ -295,14 +323,17 @@ def normalize_symbol(symbol: str, asset_type: str | None = None) -> str:
     return (symbol or "").strip().upper().replace(" ", "")
 
 
-def get_last_cached_price(symbol: str) -> dict | None:
+def get_last_cached_price(symbol: str, *, now: date | None = None) -> dict | None:
+    now = now or date.today()
     with connect() as db:
         row = db.execute(
-            "SELECT price, currency, source FROM price_history "
+            "SELECT price, currency, source, date FROM price_history "
             "WHERE symbol = ? ORDER BY date DESC LIMIT 1",
             (normalize_symbol(symbol),),
         ).fetchone()
     if row:
+        as_of = row["date"]
+        age_days = (now - date.fromisoformat(as_of)).days
         return {
             "has_data": True,
             "symbol": symbol,
@@ -310,6 +341,9 @@ def get_last_cached_price(symbol: str) -> dict | None:
             "currency": row["currency"],
             "source": row["source"],
             "cached": True,
+            "as_of": as_of,
+            "age_days": age_days,
+            "stale": age_days > 2,
         }
     return None
 
@@ -460,63 +494,119 @@ def get_current_price(symbol: str, asset_type: str) -> dict:
     }
 
 
+def _source_of(name: str | None) -> str | None:
+    name = (name or "").lower()
+    if "mfapi" in name:
+        return SOURCE_MFAPI
+    if "amfi" in name:
+        return SOURCE_AMFI
+    if "yfinance" in name:
+        return SOURCE_YF
+    if "bse" in name:
+        return SOURCE_BSE
+    return None
+
+
 def batch_refresh(symbols: list[str], budget_s: int = 120) -> dict:
     results: dict[str, float | None] = {}
     failures: list[dict] = []
     start = time.time()
+    tallies: dict[str, dict] = {}
+
+    def _tally(source: str) -> dict:
+        # First mark of a source is its fetch_attempted: emitted before the
+        # source's first request where this function drives it, and lazily
+        # when the request happens inside a primitive this file cannot wrap.
+        if source not in tallies:
+            tallies[source] = {"ok": 0, "failed": 0, "dates": [], "first_error": None}
+            _emit_fetch("fetch_attempted", source)
+        return tallies[source]
+
+    spine_failure = None
     with connect() as db:
         for sym in symbols:
             if time.time() - start > budget_s:
                 break
-            res = get_current_price(sym, "stock")
-            # A cached hit is not a quote: yfinance 404s on every AMFI code, so
-            # without this the NAV feed is never consulted once any history
-            # exists, and the stale cached price gets re-stamped as today.
-            if not res.get("has_data") or res.get("cached"):
-                nav = latest_nav(sym)
-                if nav.get("has_data"):
-                    res = {
-                        "has_data": True,
-                        "price": nav["nav"],
-                        "currency": "INR",
-                        "source": nav["where_from"],
-                        # AMFI/mfapi publish with a lag — keep the NAV's own date
-                        "quote_date": nav.get("nav_date"),
-                    }
-                elif not res.get("has_data"):
-                    res = nav
+            try:
+                res = get_current_price(sym, "stock")
+                # A cached hit is not a quote: yfinance 404s on every AMFI code, so
+                # without this the NAV feed is never consulted once any history
+                # exists, and the stale cached price gets re-stamped as today.
+                if not res.get("has_data") or res.get("cached"):
+                    mfapi = _tally(SOURCE_MFAPI)  # latest_nav's first request is mfapi
+                    nav = latest_nav(sym)
+                    if nav.get("has_data"):
+                        mfapi["ok"] += 1
+                        if nav.get("nav_date"):
+                            mfapi["dates"].append(nav["nav_date"])
+                        res = {
+                            "has_data": True,
+                            "price": nav["nav"],
+                            "currency": "INR",
+                            "source": nav["where_from"],
+                            # AMFI/mfapi publish with a lag — keep the NAV's own date
+                            "quote_date": nav.get("nav_date"),
+                        }
+                    elif not res.get("has_data"):
+                        res = nav
 
-            if res.get("has_data"):
-                results[sym] = res["price"]
-                if res.get("cached"):
-                    continue  # nothing new to record
-                try:
-                    # Stamping every quote "today" would fabricate a fresh point
-                    # on a stale NAV, and a duplicate price makes the day change
-                    # read a false 0.00. Store the quote under its own date.
-                    quote_date = _iso_date(res.get("quote_date") or "") or date.today().isoformat()
-                    db.execute(
-                        "INSERT OR IGNORE INTO price_history "
-                        "(symbol, date, price, source, currency) "
-                        "VALUES (?, ?, ?, ?, ?)",
-                        (
-                            normalize_symbol(sym),
-                            quote_date,
-                            res["price"],
-                            res.get("source", "unknown"),
-                            res.get("currency", "INR"),
-                        ),
-                    )
-                except Exception:
-                    pass
-            else:
-                results[sym] = None
-                failures.append({"symbol": sym, "note": res.get("note", "unknown error")})
-        db.execute(
-            "UPDATE data_health SET price_last_refresh = ? WHERE id = 1",
-            (datetime.now().isoformat(),),
-        )
+                if res.get("has_data"):
+                    results[sym] = res["price"]
+                    if res.get("cached"):
+                        continue  # nothing new to record
+                    try:
+                        # Stamping every quote "today" would fabricate a fresh point
+                        # on a stale NAV, and a duplicate price makes the day change
+                        # read a false 0.00. Store the quote under its own date.
+                        quote_date = _iso_date(res.get("quote_date") or "") or date.today().isoformat()
+                        db.execute(
+                            "INSERT OR IGNORE INTO price_history "
+                            "(symbol, date, price, source, currency) "
+                            "VALUES (?, ?, ?, ?, ?)",
+                            (
+                                normalize_symbol(sym),
+                                quote_date,
+                                res["price"],
+                                res.get("source", "unknown"),
+                                res.get("currency", "INR"),
+                            ),
+                        )
+                    except Exception as exc:
+                        print(f"price_history insert failed for {sym}: {exc}",
+                              file=sys.stderr)
+                        failures.append({"symbol": sym, "note": f"insert failed: {exc}"})
+                    else:
+                        source_name = _source_of(res.get("source"))
+                        if source_name:
+                            tally = _tally(source_name)
+                            tally["ok"] += 1
+                            tally["dates"].append(quote_date)
+                else:
+                    results[sym] = None
+                    note = res.get("note", "unknown error")
+                    failures.append({"symbol": sym, "note": note})
+                    source_name = _source_of(res.get("where_from") or res.get("source"))
+                    if source_name:
+                        tally = _tally(source_name)
+                        tally["failed"] += 1
+                        if tally["first_error"] is None:
+                            tally["first_error"] = note
+            except spine.SpineWriteError as exc:
+                # Data first, then the record: the failure re-raises after commit.
+                spine_failure = exc
+                break
         db.commit()
+
+    for source, tally in tallies.items():
+        if tally["ok"] >= 1:
+            data_as_of = max(tally["dates"]) if tally["dates"] else None
+            _emit_fetch("fetch_succeeded", source,
+                        data_as_of=data_as_of, items=tally["ok"])
+        else:
+            _emit_fetch("fetch_failed", source,
+                        error=(tally["first_error"] or "no successful request")[:300])
+    if spine_failure is not None:
+        raise spine_failure
     return {"prices": results, "failures": failures}
 
 
