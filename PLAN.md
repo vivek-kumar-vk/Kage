@@ -10,9 +10,10 @@ above the cut line, B-01…B-19 below). Ticket-by-ticket history with deviations
 - **Aggregator fully green** — `.venv\Scripts\python Start_Inky\run_checks.py` → exit 0,
   all 10 checks PASS, no permitted failures.
 - **Above the cut line: 18 / 25.** 7 left, all behind one owner decision (K-06).
-- **Below the cut line: 2 / 19** (B-02, B-03). 17 left.
-- **Whole plan: 20 / 44 ≈ 45%.**
-- Branch `vivek/main-menu-rubric-agentic-os` pushed to origin through `a440944`.
+- **Below the cut line: 3 / 19** (B-02, B-03, B-04). 16 left. B-04 code done; owner
+  owes a 2-minute browser pixel pass (§4.7).
+- **Whole plan: 21 / 44 ≈ 48%.**
+- Branch `vivek/main-menu-rubric-agentic-os` pushed to origin through `dc99df6`.
 
 ---
 
@@ -23,11 +24,11 @@ finish with a browser pass (Rule 15).
 
 | # | Ticket | What | Notes |
 |---|--------|------|-------|
-| 1 | **B-04** `[GLM]` | Storage page: three trigger cards + `<dialog>` drawers (Code Structure / Agent Tree / Kage Data Schema) reading the B-03 endpoints | `STORAGE_TAB_SPEC.md §3–6`. Hand-rolled `cfg.PAGE`. Visual pass: 3 cards one row at 1440×900, drawer <200 ms, `prefers-reduced-motion` kills the slide. **B-03 shipped, so this is unblocked.** |
-| 2 | **B-07** `[GLM]` | Books shelf + upload button + read-progress control on the Storage page | Backend contract from K-23 is shipped (`POST /books/upload`, `/books/{slug}/read`, `GET /books`). Presentation only. Visual pass. |
-| 3 | **B-06** `[GLM]` | Email card compact presentation | `UI_IA_PLAN.md §2.2`. Cosmetic. Visual pass. |
-| 4 | **B-17** `[GLM]` | Wire A4–A7 to their endpoints (`/api/learning/research/digest`, `/api/office/applications/read`, weekly books insight, monthly proposals) | Agents exist; verify each endpoint answers before wiring the UI. 3 evenings. |
-| 5 | **B-13** `[GLM]` | Pomodoro tray app (Windows) writing the `§13.1` log format into `kage-data/inbox/pomodoro/` | Producer only — the K-23 ingest adapter already consumes that folder. 2 evenings. |
+| ~~B-04~~ | ~~`[GLM]`~~ | ~~Storage structure cards + drawers~~ | **Code shipped `dc99df6`.** Owner owes the browser pixel pass — §4.7. |
+| 1 | **B-07** `[GLM]` | Books shelf + upload button + read-progress control on the Storage page | Backend contract from K-23 is shipped (`POST /books/upload`, `/books/{slug}/read`, `GET /books`). Presentation only. Visual pass. |
+| 2 | **B-06** `[GLM]` | Email card compact presentation | `UI_IA_PLAN.md §2.2`. Cosmetic. Visual pass. |
+| 3 | **B-17** `[GLM]` | Wire A4–A7 to their endpoints (`/api/learning/research/digest`, `/api/office/applications/read`, weekly books insight, monthly proposals) | Agents exist; verify each endpoint answers before wiring the UI. 3 evenings. |
+| 4 | **B-13** `[GLM]` | Pomodoro tray app (Windows) writing the `§13.1` log format into `kage-data/inbox/pomodoro/` | Producer only — the K-23 ingest adapter already consumes that folder. 2 evenings. |
 
 **B-18** `[GLM]` (delete dead code: `the_fallback_chain.py`, `Agent/Calendar_Agent/calendar_agent.py`,
 Finance `services/agents/*.py`, `Screens/Storage/Backend/services/sanitize.py`, archive
@@ -113,12 +114,19 @@ Gate B-12 / B-19 / B-11 / B-05 respectively (see §3).
 One minute with the calendar card open at `127.0.0.1:8000`: footer text, hover popover time,
 reduced-motion, 390×844. Code shipped (`bb45945`); only the human check is outstanding.
 
-### 4.7 · D-14 — `test_the_rules_are_followed.py`
+### 4.7 · B-04 visual pass  ← ~2 minutes at `127.0.0.1:8009`
+Code shipped (`dc99df6`), verified headless (render fns run against the live endpoints).
+Not verified in a real browser — the Claude-in-Chrome extension was not connected. Check:
+three cards fit one row at 1440×900, a drawer opens <200 ms with no layout shift behind it,
+`prefers-reduced-motion` disables the slide, Esc closes, at 390×844 the cards stack.
+
+### 4.8 · D-14 — `test_the_rules_are_followed.py`
 The rotate module exists on the live box; this test does not (absent from Fable's export).
 Owner says whether to write it.
 
-### 4.8 · B-15 — Playwright harness at all?
-Yes/no on automating the presentation-ticket visual checks.
+### 4.9 · B-15 — Playwright harness at all?
+Yes/no on automating the presentation-ticket visual checks. (Would remove the need for §4.6
+and §4.7 hand-checks.)
 
 ---
 
