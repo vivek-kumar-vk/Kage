@@ -1,5 +1,4 @@
 import sys
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -15,14 +14,7 @@ import seed
 from services import agents, board, events, runs, context_engine
 
 
-@asynccontextmanager
-async def lifespan(_app):
-    events.start_demo()
-    yield
-    events.stop_demo()
-
-
-app = FastAPI(title=cfg.SCREEN_LABEL, lifespan=lifespan)
+app = FastAPI(title=cfg.SCREEN_LABEL)
 
 init_db()
 seed.run()

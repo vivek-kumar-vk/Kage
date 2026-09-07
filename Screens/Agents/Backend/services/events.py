@@ -2,13 +2,11 @@
 
 One append-only events table + one SSE endpoint. Everything the stage renders
 (pops, typing, bubbles, glows) is driven by these events, and every event has a
-real producer: an OmniRoute run (source=run), a board edit (source=board), or
-the ambient demo generator (source=demo, sim=1 — always labeled as simulated).
+real producer: an OmniRoute run (source=run) or a board edit (source=board).
 """
 
 import asyncio
 import json
-import random
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -28,9 +26,6 @@ KEEP_EVENTS = 3000
 
 _subscribers: set = set()
 _real_active: set = set()  # agents with a live real (source=run) run right now
-_demo_active: set = set()  # agents mid demo-burst, so bursts can overlap
-_bg_tasks: set = set()  # keep fire-and-forget burst tasks referenced
-_demo_task = None
 
 
 def _now():
@@ -134,132 +129,3 @@ async def stream_events(request: Request):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
-
-
-# --- ambient demo generator (sim=1, clearly labeled client-side) ---
-
-DEMO_ACTIONS = {
-    "model": [
-        "routing a completion through the gateway",
-        "checking model quotas",
-        "timing a latency probe",
-        "refreshing the model roster",
-    ],
-    "finance": [
-        "reconciling today's numbers",
-        "sweeping the ledger for stale rows",
-        "pricing a watchlist row",
-        "drafting the money brief",
-    ],
-    "learning": [
-        "rescheduling a recall card",
-        "summarizing a finance primer",
-        "drafting a 3-question quiz",
-        "tidying the week plan",
-    ],
-    "deck": [
-        "triaging the idea board",
-        "drafting an enhancement card",
-        "running a UI sweep",
-        "watching for drifted screens",
-    ],
-    "anime": [
-        "refreshing the seasonal list",
-        "checking watch-list availability",
-        "tagging new episodes",
-        "pruning dead links",
-    ],
-    "lobby": [
-        "watching the board",
-        "collecting status from the floor",
-    ],
-}
-
-
-def _demo_roster():
-    entries = []
-
-    for root in cfg.AI_AGENTS_DIRS:
-        if not (root.exists() and root.is_dir()):
-            continue
-        for path in sorted(root.iterdir()):
-            if not path.is_dir():
-                continue
-            if not (path / "identity.md").exists() and not (path / "description.txt").exists():
-                continue
-            meta = office.read_office(path)
-            entries.append((path.name, meta["department"], meta["tier"]))
-
-    return entries
-
-
-async def _demo_burst():
-    roster = _demo_roster()
-    candidates = [
-        (name, dept)
-        for name, dept, tier in roster
-        if tier != "head" and name not in _real_active and name not in _demo_active
-    ]
-    if not candidates:
-        return
-
-    name, dept = random.choice(candidates)
-    actions = DEMO_ACTIONS.get(dept) or DEMO_ACTIONS["deck"]
-    _demo_active.add(name)
-    try:
-        emit(source="demo", type_="started", agent_name=name, department=dept, sim=True)
-        await asyncio.sleep(random.uniform(0.8, 1.6))
-        emit(
-            source="demo",
-            type_="output",
-            text=random.choice(actions),
-            agent_name=name,
-            department=dept,
-            sim=True,
-        )
-        await asyncio.sleep(random.uniform(1.2, 2.4))
-
-        if random.random() < 0.25 and dept != "lobby":
-            emit(
-                source="demo",
-                type_="output",
-                text=random.choice(actions),
-                agent_name=name,
-                department=dept,
-                sim=True,
-            )
-            await asyncio.sleep(random.uniform(1.0, 2.0))
-
-        emit(source="demo", type_="done", agent_name=name, department=dept, sim=True)
-    finally:
-        _demo_active.discard(name)
-
-
-async def _demo_loop():
-    # Keep the stage alive for reviews: up to 3 overlapping bursts so two or
-    # three agents are usually mid-task somewhere. Still sim=1 throughout.
-    await asyncio.sleep(2.0)
-    while True:
-        try:
-            if len(_demo_active) < 3:
-                task = asyncio.create_task(_demo_burst())
-                _bg_tasks.add(task)
-                task.add_done_callback(_bg_tasks.discard)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            pass
-        await asyncio.sleep(random.uniform(2.0, 5.0))
-
-
-def start_demo():
-    global _demo_task
-    if cfg.DEMO_EVENTS and (_demo_task is None or _demo_task.done()):
-        _demo_task = asyncio.create_task(_demo_loop())
-
-
-def stop_demo():
-    global _demo_task
-    if _demo_task is not None:
-        _demo_task.cancel()
-        _demo_task = None
