@@ -74,6 +74,27 @@ def run_hygiene_gate(gate_path: Path, label: str) -> Tuple[str, str, int]:
         return (label, "FAIL", 1)
 
 
+def run_generator_gate(script_path: Path, label: str) -> Tuple[str, str, int]:
+    """Run the structure-docs generator and assert it exits 0 (STORAGE_TAB_SPEC section 1)."""
+    if not script_path.is_file():
+        print(f"ERROR: generator not found at {script_path}", file=sys.stderr)
+        return (label, "FAIL", 1)
+    try:
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.stderr:
+            sys.stderr.write(result.stderr)
+        status = "PASS" if result.returncode == 0 else "FAIL"
+        return (label, status, result.returncode)
+    except Exception as e:
+        print(f"ERROR running {label}: {e}", file=sys.stderr)
+        return (label, "FAIL", 1)
+
+
 def print_summary(results: List[Tuple[str, str, int]]) -> None:
     """Print a formatted summary block of all check results."""
     print("\n==== run_checks summary ====")
@@ -107,6 +128,10 @@ def main() -> int:
         repo_root / "Screens" / "Finance" / "Backend" / "checks" / "check_frontend_hygiene.py"
     )
     results.append(run_hygiene_gate(frontend_gate, "frontend hygiene (finance)"))
+
+    # 4. Structure-docs generator exits 0 (reads only; writes kage-data/structure/)
+    generator = repo_root / "Start_Inky" / "generate_structure_docs.py"
+    results.append(run_generator_gate(generator, "structure docs generator"))
 
     # Summary
     print_summary(results)

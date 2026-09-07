@@ -30,7 +30,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from db import init_db  # noqa: E402
 import seed  # noqa: E402
 from services import seam, rag, trader, library  # noqa: E402
-from services import spine_api, ingest  # noqa: E402
+from services import spine_api, ingest, structure  # noqa: E402
 
 app = FastAPI(title=cfg.SCREEN_LABEL)
 
@@ -55,6 +55,7 @@ app.include_router(trader.router)
 app.include_router(library.router)
 app.include_router(spine_api.router)
 app.include_router(ingest.router)
+app.include_router(structure.router)
 
 
 @app.get("/")
