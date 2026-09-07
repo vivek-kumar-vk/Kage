@@ -405,6 +405,15 @@ SOURCE_TIMEOUT_S = 4
 MAX_SOURCE_CHARS = 4000
 
 
+def _bounded(body: str) -> str:
+    """Cap one source body at MAX_SOURCE_CHARS with a visible notice. Applied
+    at the fetch and again at assembly so a producer that ignores the bound
+    still cannot blow the worker's prompt budget (Z0b)."""
+    if len(body) > MAX_SOURCE_CHARS:
+        return body[:MAX_SOURCE_CHARS] + f"\n... (truncated at {MAX_SOURCE_CHARS} chars)"
+    return body
+
+
 def _fetch_source(url: str) -> str:
     import urllib.request
 
@@ -413,9 +422,7 @@ def _fetch_source(url: str) -> str:
             body = resp.read(MAX_SOURCE_CHARS * 4).decode("utf-8", errors="replace")
     except Exception as exc:
         return f"[state: unreachable — {type(exc).__name__}: {exc}]"
-    if len(body) > MAX_SOURCE_CHARS:
-        body = body[:MAX_SOURCE_CHARS] + f"\n... (truncated at {MAX_SOURCE_CHARS} chars)"
-    return body
+    return _bounded(body)
 
 
 async def _current_data_block(agent) -> str:
@@ -435,7 +442,7 @@ async def _current_data_block(agent) -> str:
         + " (bounded; a source that did not answer says so inline — never guess it):",
     ]
     for url, body in zip(sources, results):
-        parts.append(f"### {url}\n{body}")
+        parts.append(f"### {url}\n{_bounded(body)}")
     return "\n".join(parts)
 
 
